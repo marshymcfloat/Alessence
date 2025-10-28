@@ -25,9 +25,23 @@ export class AuthController {
   @UseGuards(AuthGuard('local'))
   @Post('login')
   async login(@Request() req, @Res({ passthrough: true }) res: Response) {
+    const sevenDays = 7 * 24 * 60 * 60 * 1000;
+    const expiryDate = new Date(Date.now() + sevenDays);
     const user = req.user;
-    const accessToken = await this.authService.login(user);
 
-    return accessToken;
+    const { access_token } = await this.authService.login(user);
+
+    res.cookie('acces_token', access_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      expires: expiryDate,
+    });
+
+    return {
+      message: 'Login Success',
+      user: req.user,
+      token: { value: access_token, expires: expiryDate.toISOString() },
+    };
   }
 }

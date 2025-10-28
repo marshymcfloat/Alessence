@@ -1,7 +1,9 @@
+import React from "react";
+
 const page = () => {
   return (
     <div>
-      <h1>Hi, welcome sa dashboard</h1>
+      <h1>dashboard</h1>
     </div>
   );
 };
