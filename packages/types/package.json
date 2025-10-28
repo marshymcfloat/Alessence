@@ -1,0 +1,30 @@
+{
+  "name": "@repo/types",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "buld": "tsc",
+    "dev": "tsc -w",
+    "lint": "eslint . --max-warnings 0"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./nest": {
+      "types": "./src/nest.ts",
+      "default": "./dist/nest.js"
+    }
+  },
+  "dependencies": {
+    "@repo/eslint-config": "workspace:*",
+    "@repo/typescript-config": "workspace:*",
+    "@types/eslint": "^9.6.1",
+    "@types/node": "^24.9.1",
+    "eslint": "^9.38.0",
+    "nestjs-zod": "^5.0.1",
+    "typescript": "^5.9.3",
+    "zod": "^4.1.12"
+  }
+}
