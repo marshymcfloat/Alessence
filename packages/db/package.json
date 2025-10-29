@@ -7,9 +7,17 @@
     "lint": "eslint . --no-warnings 0"
   },
   "exports": {
+    "./enums": {
+      "types": "./src/enums.ts",
+      "default": "./dist/enums.js"
+    },
     ".": {
       "types": "./src/index.ts",
       "default": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./src/server.ts",
+      "default": "./dist/server.js"
     }
   },
   "dependencies": {
@@ -21,6 +29,7 @@
     "@types/node": "^24.9.1",
     "dotenv": "^17.2.3",
     "eslint": "^9.38.0",
+    "server-only": "^0.0.1",
     "typescript": "^5.9.3"
   },
   "devDependencies": {

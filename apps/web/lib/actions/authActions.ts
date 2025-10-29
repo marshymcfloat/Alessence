@@ -2,6 +2,7 @@
 
 import { AuthLoginTypes } from "@repo/types";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 export async function authLoginAction(values: AuthLoginTypes) {
   try {
@@ -47,5 +48,23 @@ export async function authLoginAction(values: AuthLoginTypes) {
   } catch (error) {
     console.error("There is an unexpected error occured", error);
     return { success: false, error: "There is an unexpected error occured" };
+  }
+}
+
+export async function logoutAction() {
+  console.log("triggered");
+  const cookieHeader = await cookies();
+  try {
+    cookieHeader.delete("access_token");
+    redirect("/");
+  } catch (err) {
+    console.error(
+      "There is unexpected error occured while attempting to logout"
+    );
+
+    return {
+      success: false,
+      error: "There is unexpected error occured while attempting to logout",
+    };
   }
 }
