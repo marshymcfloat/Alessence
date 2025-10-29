@@ -1,4 +1,5 @@
 export * from "./next schemas/authSchemas";
+export * from "./next schemas/subjectSchema";
 
 export type SafeUser = {
   id: string;

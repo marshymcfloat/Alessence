@@ -31,8 +31,15 @@ model Subject{
 
   title String
   description String?
+  sem SemesterEnum @default(FIRST)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+}
+
+
+enum SemesterEnum {
+  FIRST
+  SECOND
 }

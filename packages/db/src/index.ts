@@ -1,2 +1,3 @@
-export * from "@prisma/client";
-export * from "./client.js";
+import "server-only";
+
+export * from "./db";
