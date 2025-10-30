@@ -1,7 +1,4 @@
-// packages/db/src/db.ts
-
-// 🚨 REMOVED: import "server-only";
-
+import "server-only";
 import { PrismaClient } from "@prisma/client";
 import { withAccelerate } from "@prisma/extension-accelerate";
 
@@ -25,5 +22,5 @@ if (process.env.NODE_ENV !== "production") {
   globalForPrisma.prisma = prisma;
 }
 
-// Re-export enums and types from Prisma
+// Re-export everything from @prisma/client
 export * from "@prisma/client";

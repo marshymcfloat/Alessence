@@ -1,5 +1,3 @@
-// src/components/FloatingAddButton.tsx
-
 "use client";
 
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";

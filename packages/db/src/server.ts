@@ -1,1 +1,3 @@
-export * from "./db";
+import "server-only";
+
+export * from "./instance";

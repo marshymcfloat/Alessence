@@ -1,6 +1,6 @@
 import z from "zod";
 
-import { SemesterEnum } from "@repo/db/enums";
+import { SemesterEnum } from "@repo/db";
 export const createSubjectSchema = z.object({
   title: z
     .string()

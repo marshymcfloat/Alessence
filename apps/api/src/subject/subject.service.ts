@@ -8,6 +8,14 @@ import { DbService } from 'src/db/db.service';
 export class SubjectService {
   constructor(private readonly dbService: DbService) {}
 
+  async getAll(): Promise<Subject[]> {
+    const subjects = await this.dbService.subject.findMany({
+      where: { isEnrolled: true },
+    });
+
+    return subjects;
+  }
+
   async create(createSubjectDTO: CreateSubjectDTO): Promise<Subject> {
     const { title, description, semester } = createSubjectDTO;
     try {

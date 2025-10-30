@@ -1,6 +1,7 @@
 "use server";
 
 import { CreateSubjectTypes } from "@repo/types";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 export async function createSubjectAction(values: CreateSubjectTypes) {
@@ -35,6 +36,9 @@ export async function createSubjectAction(values: CreateSubjectTypes) {
       };
     }
 
+    console.log(data);
+
+    revalidatePath(`/${data.userId}/dashboard`);
     return {
       success: true,
       message: "Created subject successfully",
@@ -48,6 +52,42 @@ export async function createSubjectAction(values: CreateSubjectTypes) {
     return {
       success: false,
       error: "There is an unexpected error occured while posting a new subject",
+    };
+  }
+}
+
+export async function getEnrolledSubject() {
+  try {
+    const cookieHeader = await cookies();
+    const token = cookieHeader.get("access_token");
+
+    const response = await fetch(`${process.env.FETCH_BASE_URL}/subject`, {
+      headers: {
+        "Content-Type": "Application/json",
+        Cookie: `${token?.name}=${token?.value}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (!response) {
+      return {
+        success: false,
+        error:
+          data.message ||
+          "There is something wrong while attempting to fetch enrolled subjects",
+      };
+    }
+
+    return { data: data.subjects };
+  } catch (error) {
+    console.error(
+      "There was an unexpected error occured while fetching enrolled subjects"
+    );
+    return {
+      success: false,
+      error:
+        "There was an unexpected error occured while fetching enrolled subjects",
     };
   }
 }

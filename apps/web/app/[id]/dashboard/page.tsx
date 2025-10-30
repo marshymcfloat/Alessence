@@ -1,17 +1,20 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import FloatingAddButton from "./FloatingAddButton";
 import LogoutButton from "@/components/LogoutButton";
+import FloatingAddButton from "@/components/dashboard/FloatingAddButton";
+import EnrolledSubjectsDataContainer from "@/components/dashboard/EnrolledSubjectsDataContainer";
+import { Suspense } from "react";
 
 const page = () => {
   return (
     <div>
-      <Card className="w-[200px]">
+      <Card className="w-[400px]">
         <CardHeader>
           <CardTitle>Progress Tracker</CardTitle>
         </CardHeader>
         <CardContent>
-          <h1 className="font-medium">Subjects</h1>
-          <p className="text-sm tracking-wide font-light">Taxation</p>
+          <Suspense fallback={<h1>Loading...</h1>}>
+            <EnrolledSubjectsDataContainer />
+          </Suspense>
         </CardContent>
       </Card>
       <LogoutButton />

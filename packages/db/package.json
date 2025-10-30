@@ -7,10 +7,6 @@
     "lint": "eslint . --no-warnings 0"
   },
   "exports": {
-    "./enums": {
-      "types": "./src/enums.ts",
-      "default": "./dist/enums.js"
-    },
     ".": {
       "types": "./src/index.ts",
       "default": "./dist/index.js"
