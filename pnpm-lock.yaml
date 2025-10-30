@@ -220,6 +220,9 @@ importers:
         specifier: ^4.1.12
         version: 4.1.12
     devDependencies:
+      '@repo/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@repo/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
