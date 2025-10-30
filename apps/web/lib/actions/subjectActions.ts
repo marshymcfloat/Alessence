@@ -1,10 +1,17 @@
 "use server";
 
-import { CreateSubjectTypes } from "@repo/types";
+import {
+  ActionReturnType,
+  CreateNewSubjectReturnType,
+  CreateSubjectTypes,
+  GetAllSubjectReturnType,
+} from "@repo/types";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
-export async function createSubjectAction(values: CreateSubjectTypes) {
+export async function createSubjectAction(
+  values: CreateSubjectTypes
+): Promise<ActionReturnType<CreateNewSubjectReturnType>> {
   const cookieStore = await cookies();
   const token = cookieStore.get("access_token");
 
@@ -36,8 +43,6 @@ export async function createSubjectAction(values: CreateSubjectTypes) {
       };
     }
 
-    console.log(data);
-
     revalidatePath(`/${data.userId}/dashboard`);
     return {
       success: true,
@@ -56,7 +61,9 @@ export async function createSubjectAction(values: CreateSubjectTypes) {
   }
 }
 
-export async function getEnrolledSubject() {
+export async function getEnrolledSubject(): Promise<
+  ActionReturnType<GetAllSubjectReturnType>
+> {
   try {
     const cookieHeader = await cookies();
     const token = cookieHeader.get("access_token");
@@ -79,7 +86,7 @@ export async function getEnrolledSubject() {
       };
     }
 
-    return { data: data.subjects };
+    return { success: true, data: data };
   } catch (error) {
     console.error(
       "There was an unexpected error occured while fetching enrolled subjects"

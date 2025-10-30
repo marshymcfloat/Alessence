@@ -4,9 +4,13 @@ import EnrolledSubjectsCard from "./EnrolledSubjectsCard";
 const EnrolledSubjectsDataContainer = async () => {
   const data = await getEnrolledSubject();
 
+  console.log(data);
+
   return (
     <>
-      <EnrolledSubjectsCard enrolledSubjects={data ? data.data : undefined} />
+      <EnrolledSubjectsCard
+        enrolledSubjects={data && data.data ? data.data.subjects : []}
+      />
     </>
   );
 };
