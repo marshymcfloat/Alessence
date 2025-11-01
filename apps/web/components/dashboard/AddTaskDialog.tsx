@@ -5,13 +5,13 @@ import {
 } from "@/components/ui/dialog";
 import AddTaskForm from "./AddTaskForm";
 
-const AddTaskDialog = () => {
+const AddTaskDialog = ({ onClose }: { onClose: () => void }) => {
   return (
     <DialogContent>
       <DialogHeader>
         <DialogTitle>Add Task</DialogTitle>
       </DialogHeader>
-      <AddTaskForm />
+      <AddTaskForm onClose={onClose} />
     </DialogContent>
   );
 };

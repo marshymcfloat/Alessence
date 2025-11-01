@@ -120,11 +120,11 @@ const FloatingAddButton = () => {
         open={isAddSubjectDialogOpen}
         onOpenChange={setIsAddSubjectDialogOpen}
       >
-        <AddSubjectDialog />
+        <AddSubjectDialog onClose={() => setIsAddSubjectDialogOpen(false)} />
       </Dialog>
 
       <Dialog open={isAddTaskDialogOpen} onOpenChange={setIsAddTaskDialogOpen}>
-        <AddTaskDialog />
+        <AddTaskDialog onClose={() => setIsAddTaskDialogOpen(false)} />
       </Dialog>
     </>
   );

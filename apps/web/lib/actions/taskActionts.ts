@@ -8,7 +8,8 @@ import {
   GetAllTasksReturnType,
   UpdateTaskStatusReturnType,
 } from "@repo/types";
-import { revalidatePath } from "next/cache";
+import { da } from "date-fns/locale";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { cookies } from "next/headers";
 
 export async function createTaskAction(
@@ -33,7 +34,7 @@ export async function createTaskAction(
       credentials: "include",
     });
 
-    const data = await response.json();
+    const data: CreateNewTaskReturnType = await response.json();
 
     if (!response.ok) {
       return {
@@ -41,6 +42,9 @@ export async function createTaskAction(
         error: "There is an error while attempting to send",
       };
     }
+
+    revalidateTag("tasks", "max");
+    revalidatePath(`/${data.userId}/dashboard`);
 
     return { success: true, data, message: "success" };
   } catch (error) {
@@ -54,7 +58,6 @@ export async function createTaskAction(
     };
   }
 }
-
 export async function getAllTasks(): Promise<
   ActionReturnType<GetAllTasksReturnType>
 > {

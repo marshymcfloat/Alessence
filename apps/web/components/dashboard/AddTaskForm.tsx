@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { createTaskSchema, CreateTaskTypes } from "@repo/types";
 import React from "react";
 import { useForm } from "react-hook-form";
-import z from "zod";
 import {
   Form,
   FormControl,
@@ -20,12 +19,14 @@ import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import { SelectValue } from "@radix-ui/react-select";
 import SubjectSelectInput from "./SubjectSelectInput";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createTaskAction } from "@/lib/actions/taskActionts";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 
-const AddTaskForm = () => {
+const AddTaskForm = ({ onClose }: { onClose: () => void }) => {
+  const queryClient = useQueryClient();
+
   const form = useForm({
     resolver: zodResolver(createTaskSchema),
     mode: "onChange",
@@ -42,14 +43,21 @@ const AddTaskForm = () => {
     mutationFn: createTaskAction,
     onSuccess: (data) => {
       if (!data.success) {
-        toast(data.error || "task creation failed");
+        toast.error(data.error || "Failed to create the task.");
         return;
       }
 
-      toast(data.message || "task creation success");
+      toast.success(data.message || "Task created successfully!");
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      form.reset();
+      onClose();
+    },
+    onError: (error) => {
+      toast.error(
+        error.message || "An unexpected error occurred. Please try again."
+      );
     },
   });
-
   const disabled = !form.formState.isValid || !form.formState.dirtyFields;
 
   const today = new Date();
@@ -153,33 +161,30 @@ const AddTaskForm = () => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Status</FormLabel>
-
-                <FormControl>
-                  <Select>
+                <Select onValueChange={field.onChange} value={field.value}>
+                  <FormControl>
                     <SelectTrigger className="lg:w-[140px]">
                       <SelectValue placeholder="Select Status" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PLANNED">Planned</SelectItem>
-                      <SelectItem value="ON_PROGRESS">On progress</SelectItem>
-                      <SelectItem value="DONE">Done</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </FormControl>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="PLANNED">Planned</SelectItem>
+                    <SelectItem value="ON_PROGRESS">On progress</SelectItem>
+                    <SelectItem value="DONE">Done</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
               </FormItem>
             )}
           />
         </div>
 
         <div className="flex justify-end">
-          <Button
-            disabled={disabled || isPending || form.formState.isSubmitting}
-          >
-            {isPending ||
-              (form.formState.isSubmitting && (
-                <LoaderCircle className="animate-spin" />
-              ))}
-            Create task
+          <Button disabled={disabled || isPending}>
+            {isPending ? (
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            ) : null}
+            <span>Create task</span>
           </Button>
         </div>
       </form>

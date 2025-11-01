@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { useMutation } from "@tanstack/react-query";
 import { createSubjectAction } from "@/lib/actions/subjectActions";
 import { toast } from "sonner";
-const AddSubjectForm = () => {
+const AddSubjectForm = ({ onClose }: { onClose: () => void }) => {
   const form = useForm<CreateSubjectTypes>({
     resolver: zodResolver(createSubjectSchema),
     defaultValues: {
@@ -43,6 +43,7 @@ const AddSubjectForm = () => {
       }
 
       toast(data.message || "Creation success");
+      onClose();
     },
   });
 
