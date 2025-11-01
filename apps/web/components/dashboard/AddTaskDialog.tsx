@@ -3,17 +3,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import AddSubjectForm from "./AddSubjectForm";
+import AddTaskForm from "./AddTaskForm";
 
-const AddSubjectDialog = () => {
+const AddTaskDialog = () => {
   return (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Add Subject</DialogTitle>
+        <DialogTitle>Add Task</DialogTitle>
       </DialogHeader>
-      <AddSubjectForm />
+      <AddTaskForm />
     </DialogContent>
   );
 };
 
-export default AddSubjectDialog;
+export default AddTaskDialog;

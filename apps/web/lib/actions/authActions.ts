@@ -56,7 +56,8 @@ export async function logoutAction() {
   const cookieHeader = await cookies();
   try {
     cookieHeader.delete("access_token");
-    redirect("/");
+
+    return { success: true };
   } catch (err) {
     console.error(
       "There is unexpected error occured while attempting to logout"
