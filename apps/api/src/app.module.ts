@@ -3,6 +3,7 @@ import { AuthModule } from './auth/auth.module';
 import { DbModule } from './db/db.module';
 import { ConfigModule } from '@nestjs/config';
 import { SubjectModule } from './subject/subject.module';
+import { TaskModule } from './task/task.module';
 
 @Module({
   imports: [
@@ -12,6 +13,7 @@ import { SubjectModule } from './subject/subject.module';
       isGlobal: true,
     }),
     SubjectModule,
+    TaskModule,
   ],
   controllers: [],
   providers: [],

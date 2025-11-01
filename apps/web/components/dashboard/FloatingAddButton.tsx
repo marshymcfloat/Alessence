@@ -1,11 +1,12 @@
 "use client";
 
-import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog } from "@/components/ui/dialog";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import AddSubjectDialog from "./AddSubjectDialog";
+import AddTaskDialog from "./AddTaskDialog";
 
 const menuVariants = {
   open: {
@@ -35,7 +36,8 @@ const menuItemVariants = {
 
 const FloatingAddButton = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddSubjectDialogOpen, setIsAddSubjectDialogOpen] = useState(false);
+  const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
 
   const buttonClasses = clsx(
     "fixed bottom-4 right-4 flex items-center justify-center cursor-pointer",
@@ -43,7 +45,7 @@ const FloatingAddButton = () => {
   );
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <>
       <motion.div
         layout
         onClick={() => {
@@ -51,7 +53,6 @@ const FloatingAddButton = () => {
             setIsExpanded(true);
           }
         }}
-        onMouseLeave={() => setIsExpanded(false)}
         className={buttonClasses}
         style={{
           borderRadius: isExpanded ? "1rem" : "9999px",
@@ -89,21 +90,22 @@ const FloatingAddButton = () => {
               animate="open"
               exit="closed"
             >
-              <DialogTrigger asChild>
-                <motion.span
-                  className="hover:bg-neutral-700 p-1 rounded-md px-3 w-full text-left"
-                  variants={menuItemVariants}
-                  onClick={() => setIsExpanded(false)}
-                >
-                  Add Subject
-                </motion.span>
-              </DialogTrigger>
-
               <motion.span
-                className="hover:bg-neutral-700 p-1 rounded-md px-3 w-full text-left"
+                className="cursor-pointer hover:bg-neutral-700 p-1 rounded-md px-3 w-full text-left"
                 variants={menuItemVariants}
                 onClick={() => {
-                  console.log("Add Task Clicked!");
+                  setIsAddSubjectDialogOpen(true);
+                  setIsExpanded(false);
+                }}
+              >
+                Add Subject
+              </motion.span>
+
+              <motion.span
+                className="cursor-pointer hover:bg-neutral-700 p-1 rounded-md px-3 w-full text-left"
+                variants={menuItemVariants}
+                onClick={() => {
+                  setIsAddTaskDialogOpen(true);
                   setIsExpanded(false);
                 }}
               >
@@ -114,8 +116,17 @@ const FloatingAddButton = () => {
         </AnimatePresence>
       </motion.div>
 
-      <AddSubjectDialog />
-    </Dialog>
+      <Dialog
+        open={isAddSubjectDialogOpen}
+        onOpenChange={setIsAddSubjectDialogOpen}
+      >
+        <AddSubjectDialog onClose={() => setIsAddSubjectDialogOpen(false)} />
+      </Dialog>
+
+      <Dialog open={isAddTaskDialogOpen} onOpenChange={setIsAddTaskDialogOpen}>
+        <AddTaskDialog onClose={() => setIsAddTaskDialogOpen(false)} />
+      </Dialog>
+    </>
   );
 };
 

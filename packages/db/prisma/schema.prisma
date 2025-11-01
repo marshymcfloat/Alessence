@@ -34,13 +34,35 @@ model Subject{
   sem SemesterEnum @default(FIRST)
   isEnrolled Boolean? @default(true)
 
+  tasks Task[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+}
+
+model Task {
+  id Int @id @default(autoincrement())
+  title String
+  description String
+  deadline DateTime
+
+  status TaskStatusEnum @default(PLANNED)
+  subject Subject? @relation(fields: [subjectId], references: [id])
+  subjectId Int?
+
+  creataedAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 
 enum SemesterEnum {
   FIRST
   SECOND
+}
+
+enum TaskStatusEnum {
+  PLANNED
+  ON_PROGRESS
+  DONE
 }

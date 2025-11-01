@@ -1,7 +1,8 @@
-import { Subject } from "@repo/db";
+import { Subject, Task } from "@repo/db";
 
 export * from "./next schemas/authSchemas";
 export * from "./next schemas/subjectSchema";
+export * from "./next schemas/taskSchema";
 
 export type SafeUser = {
   id: String;
@@ -25,5 +26,20 @@ export type ActionReturnType<T = any> = {
 
 export type CreateNewSubjectReturnType = {
   newSubject: Subject;
+  userId: String;
+};
+
+export type CreateNewTaskReturnType = {
+  newTask: Task;
+  userId: String;
+};
+
+export type GetAllTasksReturnType = {
+  allTasks: Task[];
+  userId: String;
+};
+
+export type UpdateTaskStatusReturnType = {
+  updatedTask: Task;
   userId: String;
 };

@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import LogoutButton from "@/components/LogoutButton";
 import FloatingAddButton from "@/components/dashboard/FloatingAddButton";
 import EnrolledSubjectsDataContainer from "@/components/dashboard/EnrolledSubjectsDataContainer";
 import { Suspense } from "react";
+import KanbanDataContainer from "@/components/dashboard/KanbanDataContainer";
 
 const page = () => {
   return (
@@ -17,7 +17,10 @@ const page = () => {
           </Suspense>
         </CardContent>
       </Card>
-      <LogoutButton />
+      <Suspense fallback={<h1>Loading...</h1>}>
+        <KanbanDataContainer />
+      </Suspense>
+
       <FloatingAddButton />
     </div>
   );
