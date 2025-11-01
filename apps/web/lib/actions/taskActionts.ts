@@ -1,11 +1,14 @@
 "use server";
 
+import { TaskStatusEnum } from "@repo/db";
 import {
   ActionReturnType,
   CreateNewTaskReturnType,
   CreateTaskTypes,
   GetAllTasksReturnType,
+  UpdateTaskStatusReturnType,
 } from "@repo/types";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 export async function createTaskAction(
@@ -82,7 +85,7 @@ export async function getAllTasks(): Promise<
       };
     }
 
-    return { success: true, message: "Fetching tasks successful", data: data };
+    return { success: true, message: "Fetching tasks successful", data };
   } catch (error) {
     console.error(
       "There is an unexpected error occured while trying to fetch all tasks"
@@ -92,5 +95,46 @@ export async function getAllTasks(): Promise<
       error:
         "There is an unexpected error occured while trying to fetch all tasks",
     };
+  }
+}
+
+export async function updateTaskStatus(
+  id: number,
+  status: TaskStatusEnum
+): Promise<ActionReturnType<UpdateTaskStatusReturnType>> {
+  const cookieHeader = await cookies();
+  try {
+    const token = cookieHeader.get("access_token");
+
+    const response = await fetch(
+      `${process.env.FETCH_BASE_URL}/task/${id}?status=${status}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          cookie: `${token?.name}=${token?.value}`,
+        },
+        credentials: "include",
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(
+        errorData.message || "There was an error updating the task."
+      );
+    }
+
+    const data: UpdateTaskStatusReturnType = await response.json();
+
+    revalidatePath(`/${data.userId}/dashboard`);
+    return { success: true, data };
+  } catch (error) {
+    console.error(
+      "There was an unexpected error while attempting to update status of a task",
+      error
+    );
+
+    throw error;
   }
 }

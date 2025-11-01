@@ -1,5 +1,9 @@
-import { Injectable } from '@nestjs/common';
-import { Task } from '@repo/db';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Task, TaskStatusEnum } from '@repo/db';
 import { CreateTaskDTO } from '@repo/types/nest';
 import { DbService } from 'src/db/db.service';
 
@@ -30,5 +34,28 @@ export class TaskService {
     });
 
     return newTask;
+  }
+
+  async updateTaskStatus(id: number, status: TaskStatusEnum) {
+    try {
+      const updatedTask = await this.dbService.task.update({
+        where: { id },
+        data: { status },
+      });
+
+      if (!updatedTask) {
+        throw new BadRequestException();
+      }
+
+      return updatedTask;
+    } catch (error) {
+      console.error(
+        'There is an error while attempting to update task status',
+        error,
+      );
+      throw new BadRequestException(
+        'There is an en error occured while attempting to update task status',
+      );
+    }
   }
 }

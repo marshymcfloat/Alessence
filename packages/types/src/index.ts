@@ -38,3 +38,8 @@ export type GetAllTasksReturnType = {
   allTasks: Task[];
   userId: String;
 };
+
+export type UpdateTaskStatusReturnType = {
+  updatedTask: Task;
+  userId: String;
+};

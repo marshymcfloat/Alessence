@@ -25,6 +25,7 @@ import {
   type HTMLAttributes,
   type ReactNode,
   useContext,
+  useEffect,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
@@ -212,6 +213,12 @@ export const KanbanProvider = <
 }: KanbanProviderProps<T, C>) => {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
 
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const sensors = useSensors(
     useSensor(MouseSensor),
     useSensor(TouchSensor),
@@ -241,28 +248,40 @@ export const KanbanProvider = <
     }
 
     const activeColumn = activeItem.column;
+
     const overColumn =
-      overItem?.column ||
-      columns.find((col) => col.id === over.id)?.id ||
-      columns[0]?.id;
+      overItem?.column || columns.find((col) => col.id === over.id)?.id;
 
-    if (activeColumn !== overColumn) {
-      let newData = [...data];
-      const activeIndex = newData.findIndex((item) => item.id === active.id);
-      const overIndex = newData.findIndex((item) => item.id === over.id);
-
-      newData[activeIndex].column = overColumn;
-      newData = arrayMove(newData, activeIndex, overIndex);
-
-      onDataChange?.(newData);
+    if (!overColumn || activeColumn === overColumn) {
+      return;
     }
 
+    // --- FIX START: Use .map() for an immutable update ---
+    let newData = data.map((item) => {
+      if (item.id === active.id) {
+        // This is the item we want to update.
+        // Return a *new* object with the modified 'column'.
+        return { ...item, column: overColumn };
+      }
+      // For all other items, return them unchanged.
+      return item;
+    });
+    // --- FIX END ---
+
+    // Now that the column is updated immutably, we can handle the reordering.
+    const activeIndex = newData.findIndex((item) => item.id === active.id);
+    const overIndex = newData.findIndex((item) => item.id === over.id);
+
+    if (overIndex !== -1) {
+      newData = arrayMove(newData, activeIndex, overIndex);
+    }
+
+    onDataChange?.(newData);
     onDragOver?.(event);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     setActiveCardId(null);
-
     onDragEnd?.(event);
 
     const { active, over } = event;
@@ -276,63 +295,69 @@ export const KanbanProvider = <
     const oldIndex = newData.findIndex((item) => item.id === active.id);
     const newIndex = newData.findIndex((item) => item.id === over.id);
 
-    newData = arrayMove(newData, oldIndex, newIndex);
+    if (oldIndex === -1 || newIndex === -1) {
+      return;
+    }
 
+    newData = arrayMove(newData, oldIndex, newIndex);
     onDataChange?.(newData);
   };
 
   const announcements: Announcements = {
     onDragStart({ active }) {
       const { name, column } = data.find((item) => item.id === active.id) ?? {};
-
       return `Picked up the card "${name}" from the "${column}" column`;
     },
     onDragOver({ active, over }) {
       const { name } = data.find((item) => item.id === active.id) ?? {};
       const newColumn = columns.find((column) => column.id === over?.id)?.name;
-
       return `Dragged the card "${name}" over the "${newColumn}" column`;
     },
     onDragEnd({ active, over }) {
       const { name } = data.find((item) => item.id === active.id) ?? {};
       const newColumn = columns.find((column) => column.id === over?.id)?.name;
-
       return `Dropped the card "${name}" into the "${newColumn}" column`;
     },
     onDragCancel({ active }) {
       const { name } = data.find((item) => item.id === active.id) ?? {};
-
       return `Cancelled dragging the card "${name}"`;
     },
   };
 
+  const staticLayout = (
+    <div
+      className={cn(
+        "grid size-full auto-cols-fr grid-flow-col gap-4",
+        className
+      )}
+    >
+      {columns.map((column) => children(column))}
+    </div>
+  );
+
   return (
     <KanbanContext.Provider value={{ columns, data, activeCardId }}>
-      <DndContext
-        accessibility={{ announcements }}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
-        onDragStart={handleDragStart}
-        sensors={sensors}
-        {...props}
-      >
-        <div
-          className={cn(
-            "grid size-full auto-cols-fr grid-flow-col gap-4",
-            className
-          )}
+      {isMounted ? (
+        <DndContext
+          accessibility={{ announcements }}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+          onDragOver={handleDragOver}
+          onDragStart={handleDragStart}
+          sensors={sensors}
+          {...props}
         >
-          {columns.map((column) => children(column))}
-        </div>
-        {typeof window !== "undefined" &&
-          createPortal(
+          {staticLayout}
+          {createPortal(
             <DragOverlay>
               <t.Out />
             </DragOverlay>,
             document.body
           )}
-      </DndContext>
+        </DndContext>
+      ) : (
+        staticLayout
+      )}
     </KanbanContext.Provider>
   );
 };

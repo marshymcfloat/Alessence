@@ -1,10 +1,24 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CreateTaskDTO } from '@repo/types/nest';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import type { AuthenticatedUser } from 'src/auth/decorator/get-user.decorator';
 import { TaskService } from './task.service';
-import { CreateNewTaskReturnType, GetAllTasksReturnType } from '@repo/types';
+import {
+  CreateNewTaskReturnType,
+  GetAllTasksReturnType,
+  UpdateTaskStatusReturnType,
+} from '@repo/types';
+import { TaskStatusEnum } from '@repo/db';
 @Controller('task')
 export class TaskController {
   constructor(private readonly taskService: TaskService) {}
@@ -28,5 +42,17 @@ export class TaskController {
     const newTask = await this.taskService.create(createTaskDto);
 
     return { newTask, userId: user.userId };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Patch(':id')
+  async updateTaskStatus(
+    @Param('id') id: number,
+    @Query('status') status: TaskStatusEnum,
+    @GetUser() user: AuthenticatedUser,
+  ): Promise<UpdateTaskStatusReturnType> {
+    const updatedTask = await this.taskService.updateTaskStatus(+id, status);
+
+    return { updatedTask, userId: user.userId };
   }
 }
