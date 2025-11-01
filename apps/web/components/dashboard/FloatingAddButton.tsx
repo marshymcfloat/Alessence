@@ -1,6 +1,6 @@
 "use client";
 
-import { Dialog } from "@/components/ui/dialog"; // We only need Dialog now, not DialogTrigger
+import { Dialog } from "@/components/ui/dialog";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { Plus } from "lucide-react";
@@ -36,7 +36,6 @@ const menuItemVariants = {
 
 const FloatingAddButton = () => {
   const [isExpanded, setIsExpanded] = useState(false);
-  // 1. Add dedicated state for each dialog's visibility.
   const [isAddSubjectDialogOpen, setIsAddSubjectDialogOpen] = useState(false);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
 
@@ -54,8 +53,6 @@ const FloatingAddButton = () => {
             setIsExpanded(true);
           }
         }}
-        // 2. Remove onMouseLeave to prevent accidental closing.
-        // The menu will now only close on an explicit action (clicking the 'X' or an item).
         className={buttonClasses}
         style={{
           borderRadius: isExpanded ? "1rem" : "9999px",

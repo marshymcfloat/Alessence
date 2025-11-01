@@ -3,6 +3,7 @@ import FloatingAddButton from "@/components/dashboard/FloatingAddButton";
 import EnrolledSubjectsDataContainer from "@/components/dashboard/EnrolledSubjectsDataContainer";
 import { Suspense } from "react";
 import KanbanSection from "@/components/dashboard/KanbanSection";
+import KanbanDataContainer from "@/components/dashboard/KanbanDataContainer";
 
 const page = () => {
   return (
@@ -17,7 +18,10 @@ const page = () => {
           </Suspense>
         </CardContent>
       </Card>
-      <KanbanSection />
+      <Suspense fallback={<h1>Loading...</h1>}>
+        <KanbanDataContainer />
+      </Suspense>
+
       <FloatingAddButton />
     </div>
   );

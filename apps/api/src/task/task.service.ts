@@ -7,6 +7,12 @@ import { DbService } from 'src/db/db.service';
 export class TaskService {
   constructor(private readonly dbService: DbService) {}
 
+  async getAll(): Promise<Task[]> {
+    const allTasks = await this.dbService.task.findMany();
+
+    return allTasks;
+  }
+
   async create(createTaskDto: CreateTaskDTO): Promise<Task> {
     const { deadline, status, title, description, subject } = createTaskDto;
 
