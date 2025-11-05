@@ -1,28 +1,25 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// your page.tsx file
+
 import FloatingAddButton from "@/components/dashboard/FloatingAddButton";
-import EnrolledSubjectsDataContainer from "@/components/dashboard/EnrolledSubjectsDataContainer";
 import { Suspense } from "react";
-import KanbanDataContainer from "@/components/dashboard/KanbanDataContainer";
+import KanbanDataContainer from "@/components/dashboard/kanban/KanbanDataContainer";
+import FloatingCardWrapper from "@/components/dashboard/FloatingCardWrapper";
+import EnrolledSubjectDataContainer from "@/components/dashboard/EnrolledSubjectDataContainer";
 
 const page = () => {
   return (
-    <div>
-      <Card className="w-[400px]">
-        <CardHeader>
-          <CardTitle>Progress Tracker</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Suspense fallback={<h1>Loading...</h1>}>
-            <EnrolledSubjectsDataContainer />
-          </Suspense>
-        </CardContent>
-      </Card>
-      <Suspense fallback={<h1>Loading...</h1>}>
-        <KanbanDataContainer />
-      </Suspense>
+    <>
+      <FloatingCardWrapper title="Enrolled Subjects">
+        <EnrolledSubjectDataContainer />
+      </FloatingCardWrapper>
 
+      <div className="">
+        <Suspense fallback={<h1 className="text-center">Loading tasks...</h1>}>
+          <KanbanDataContainer />
+        </Suspense>
+      </div>
       <FloatingAddButton />
-    </div>
+    </>
   );
 };
 

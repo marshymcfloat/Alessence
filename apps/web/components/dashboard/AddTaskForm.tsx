@@ -1,3 +1,5 @@
+"use client";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createTaskSchema, CreateTaskTypes } from "@repo/types";
 import React from "react";
@@ -20,33 +22,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "../ui/select";
 import { SelectValue } from "@radix-ui/react-select";
 import SubjectSelectInput from "./SubjectSelectInput";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createTaskAction } from "@/lib/actions/taskActionts";
+import {
+  createTaskAction,
+  updateTaskAction,
+  updateTaskStatus,
+} from "@/lib/actions/taskActionts";
 import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { queryClient } from "../providers/TanstackProvider";
+import { Task } from "@repo/db";
 
-const AddTaskForm = ({ onClose }: { onClose: () => void }) => {
+const AddTaskForm = ({
+  onClose,
+  initialData,
+}: {
+  onClose: () => void;
+  initialData?: Task | null;
+}) => {
   const queryClient = useQueryClient();
+  const isEditMode = !!initialData;
 
-  const form = useForm({
+  const form = useForm<CreateTaskTypes>({
     resolver: zodResolver(createTaskSchema),
     mode: "onChange",
     defaultValues: {
-      title: "",
-      description: "",
-      deadline: new Date(),
-      status: "PLANNED",
-      subject: undefined,
+      title: initialData?.title ?? "",
+      description: initialData?.description ?? "",
+      deadline: initialData?.deadline
+        ? new Date(initialData.deadline)
+        : new Date(),
+      status: initialData?.status ?? "PLANNED",
+      subject: initialData?.subjectId ?? undefined,
     },
   });
 
-  const { mutate, isPending } = useMutation({
+  const { mutate: createMutate, isPending: isCreating } = useMutation({
     mutationFn: createTaskAction,
     onSuccess: (data) => {
       if (!data.success) {
         toast.error(data.error || "Failed to create the task.");
         return;
       }
-
       toast.success(data.message || "Task created successfully!");
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       form.reset();
@@ -58,13 +75,43 @@ const AddTaskForm = ({ onClose }: { onClose: () => void }) => {
       );
     },
   });
-  const disabled = !form.formState.isValid || !form.formState.dirtyFields;
+
+  const { mutate: updateMutate, isPending: isUpdating } = useMutation({
+    mutationFn: (values: CreateTaskTypes) => {
+      if (!initialData?.id) {
+        throw new Error("Task ID is missing for update.");
+      }
+      return updateTaskAction(initialData.id, values);
+    },
+    onSuccess: (data) => {
+      if (!data.success) {
+        toast.error(data.error || "Failed to update the task.");
+        return;
+      }
+      toast.success(data.message || "Task updated successfully!");
+      queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      onClose();
+    },
+    onError: (error) => {
+      toast.error(
+        error.message || "An unexpected error occurred. Please try again."
+      );
+    },
+  });
+
+  const isPending = isCreating || isUpdating;
+  const disabled =
+    !form.formState.isValid || !form.formState.isDirty || isPending;
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   function handleSubmission(values: CreateTaskTypes) {
-    mutate(values);
+    if (isEditMode) {
+      updateMutate(values);
+    } else {
+      createMutate(values);
+    }
   }
 
   return (

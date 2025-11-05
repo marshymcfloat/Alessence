@@ -3,15 +3,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Task } from "@repo/db";
 import AddTaskForm from "./AddTaskForm";
 
-const AddTaskDialog = ({ onClose }: { onClose: () => void }) => {
+interface AddTaskDialogProps {
+  onClose: () => void;
+  initialData?: Task | null;
+}
+
+const AddTaskDialog = ({ onClose, initialData }: AddTaskDialogProps) => {
+  const isEditMode = !!initialData;
   return (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Add Task</DialogTitle>
+        <DialogTitle>{isEditMode ? "Edit Task" : "Add Task"}</DialogTitle>
       </DialogHeader>
-      <AddTaskForm onClose={onClose} />
+      <AddTaskForm onClose={onClose} initialData={initialData} />
     </DialogContent>
   );
 };
