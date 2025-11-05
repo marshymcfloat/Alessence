@@ -1,12 +1,33 @@
 import React from "react";
 import UserButton from "./UserButton";
+import { Home, PlusCircle } from "lucide-react";
 
 const Navbar = () => {
   return (
-    <div className="bg-gray-500/20 absolute gap-4 bg-clip-padding backdrop-filter lg:top-4 bottom-4 flex items-center justify-center  -translate-x-1/2 right-1/2 left-1/2 backdrop-blur-[2px] bg-opacity-10 backdrop-saturate-100 backdrop-contrast-100 w-[300px] lg:w-[400px] h-11 lg:h-[60px] rounded-full">
-      <span className="font-medium">Home</span>
+    <nav
+      className="
+        fixed left-1/2 top-4 z-50 -translate-x-1/2 
+        flex items-center gap-2 rounded-full border border-white/20 
+        bg-white/10 p-2 shadow-lg
+        backdrop-blur-md
+      "
+    >
+      <a
+        href="#"
+        className="
+          flex items-center gap-x-2 rounded-full bg-white/50 px-4 
+          py-2 text-sm font-semibold text-gray-800 transition-colors
+          hover:bg-white/70
+        "
+      >
+        <Home className="size-4" />
+        <span>Home</span>
+      </a>
+
+      <div className="mx-2 h-6 w-px bg-white/30"></div>
+
       <UserButton />
-    </div>
+    </nav>
   );
 };
 

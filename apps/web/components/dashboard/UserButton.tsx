@@ -14,6 +14,7 @@ import { logoutAction } from "@/lib/actions/authActions";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { redirect, useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 const UserButton = () => {
   const router = useRouter();
@@ -37,29 +38,35 @@ const UserButton = () => {
   }
 
   return (
-    <div className="size-10 rounded-full bg-slate-400 hover:bg-slate-400/70 cursor-pointer p-0.5">
-      <DropdownMenu>
-        <DropdownMenuTrigger className="outline-0!">
-          <Image
-            src={"/vercel.svg"}
-            width={50}
-            height={50}
-            alt="user logo"
-            className="object-contain"
-          />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <User /> Profile
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleLogginOut}>
-            <LogOut /> Logout
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger className="cursor-pointer rounded-full outline-none transition-opacity hover:opacity-90">
+        {/* ✨ Replaced the generic Image with a proper Avatar component */}
+        <Avatar className="size-9 border-2 border-white/50">
+          {/* This will show if you have a user image URL */}
+          <AvatarImage src="https://github.com/shadcn.png" alt="@user" />
+          {/* This is a fallback with the user's initials */}
+          <AvatarFallback className="bg-blue-500 font-bold text-white">
+            JD
+          </AvatarFallback>
+        </Avatar>
+      </DropdownMenuTrigger>
+      {/* ✨ Added w-56 for a slightly wider, more modern dropdown */}
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel>My Account</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="cursor-pointer">
+          <User className="mr-2 size-4" />
+          <span>Profile</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={handleLogginOut}
+          className="cursor-pointer text-red-500 focus:bg-red-50 focus:text-red-600"
+        >
+          <LogOut className="mr-2 size-4" />
+          <span>Logout</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

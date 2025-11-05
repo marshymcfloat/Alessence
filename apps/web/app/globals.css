@@ -87,6 +87,9 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  --chart-green: 142.1 76.2% 36.3%;
+  --chart-orange: 24.6 95% 53.1%;
+  --chart-slate: 215.2 21% 45.1%;
 }
 
 .dark {
@@ -121,6 +124,9 @@
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+  --chart-green: 142.1 70.6% 45.3%;
+  --chart-orange: 20.5 90.2% 48.2%;
+  --chart-slate: 215.3 19.5% 53.7%;
 }
 
 @layer base {

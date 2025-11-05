@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import TanstackProvider from "@/components/providers/TanstackProvider";
 import { Toaster } from "@/components/ui/sonner";
+import ReduxProvider from "@/components/providers/ReduxProvider";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -27,10 +28,12 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <main className="min-h-screen w-full bg-white relative">
-          <TanstackProvider>
-            {children}
-            <Toaster />
-          </TanstackProvider>
+          <ReduxProvider>
+            <TanstackProvider>
+              {children}
+              <Toaster />
+            </TanstackProvider>
+          </ReduxProvider>
         </main>
       </body>
     </html>
