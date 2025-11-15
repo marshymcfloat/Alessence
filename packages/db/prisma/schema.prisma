@@ -109,7 +109,6 @@ model Question {
   updatedAt DateTime @updatedAt
 }
 
-// Represents a single "take" or session of an exam by the user
 model ExamAttempt {
   id Int @id @default(autoincrement())
 
