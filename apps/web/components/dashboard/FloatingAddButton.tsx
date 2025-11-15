@@ -7,7 +7,7 @@ import { Plus } from "lucide-react";
 import { useState } from "react";
 import AddSubjectDialog from "./AddSubjectDialog";
 import AddTaskDialog from "./AddTaskDialog";
-import { useSelector, useDispatch } from "react-redux";
+import AddExamDialog from "./AddExamDialog";
 
 const menuVariants = {
   open: {
@@ -39,6 +39,7 @@ const FloatingAddButton = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAddSubjectDialogOpen, setIsAddSubjectDialogOpen] = useState(false);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
+  const [isAddExamDialogOpen, setIsAddExamDialogOpen] = useState(false);
 
   const buttonClasses = clsx(
     "fixed bottom-4 right-4 flex items-center justify-center cursor-pointer",
@@ -61,7 +62,7 @@ const FloatingAddButton = () => {
         initial={{ width: "3.5rem", height: "3.5rem" }}
         animate={{
           width: isExpanded ? "15rem" : "3.5rem",
-          height: isExpanded ? "8rem" : "3.5rem",
+          height: isExpanded ? "10rem" : "3.5rem",
         }}
         transition={{
           type: "spring",
@@ -112,6 +113,17 @@ const FloatingAddButton = () => {
               >
                 Add task
               </motion.span>
+
+              <motion.span
+                className="cursor-pointer hover:bg-neutral-700 p-1 rounded-md px-3 w-full text-left"
+                variants={menuItemVariants}
+                onClick={() => {
+                  setIsAddExamDialogOpen(true);
+                  setIsExpanded(false);
+                }}
+              >
+                Add Exam
+              </motion.span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -126,6 +138,10 @@ const FloatingAddButton = () => {
 
       <Dialog open={isAddTaskDialogOpen} onOpenChange={setIsAddTaskDialogOpen}>
         <AddTaskDialog onClose={() => setIsAddTaskDialogOpen(false)} />
+      </Dialog>
+
+      <Dialog open={isAddExamDialogOpen} onOpenChange={setIsAddExamDialogOpen}>
+        <AddExamDialog onClose={() => setIsAddExamDialogOpen(false)} />
       </Dialog>
     </>
   );

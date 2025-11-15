@@ -32,10 +32,11 @@ export async function authLoginAction(values: AuthLoginTypes) {
 
     const expiresDate = new Date(token.expires);
 
+    // Set cookie immediately for faster redirect
     cookieHeader.set("access_token", token.value, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "lax", // Changed from "strict" to "lax" for better compatibility
       expires: expiresDate,
       path: "/",
     });

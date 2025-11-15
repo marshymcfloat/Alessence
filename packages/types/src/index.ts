@@ -1,9 +1,9 @@
-import { Subject, Task } from "@repo/db";
+import { File, Subject, Task } from "@repo/db";
 
 export * from "./next schemas/authSchemas";
 export * from "./next schemas/subjectSchema";
 export * from "./next schemas/taskSchema";
-
+export * from "./next schemas/examSchemas";
 export type SafeUser = {
   id: String;
   email: String;
@@ -13,7 +13,7 @@ export type SafeUser = {
 };
 
 export type GetAllSubjectReturnType = {
-  subjects: Subject[];
+  subjects: SubjectWithTaskProgress[];
   userId: String;
 };
 
@@ -41,5 +41,19 @@ export type GetAllTasksReturnType = {
 
 export type UpdateTaskStatusReturnType = {
   updatedTask: Task;
+  userId: String;
+};
+
+export type SubjectWithTaskProgress = Subject & {
+  taskCounts: {
+    total: number;
+    done: number;
+    onProgress: number;
+    planned: number;
+  };
+};
+
+export type getAllFilesReturnType = {
+  files: File[];
   userId: String;
 };

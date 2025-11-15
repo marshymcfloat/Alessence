@@ -46,6 +46,17 @@ export class TaskController {
 
   @UseGuards(AuthGuard('jwt'))
   @Patch(':id')
+  async updateTask(
+    @Param('id') id: number,
+    @Body() updateTaskDto: CreateTaskDTO,
+    @GetUser() user: AuthenticatedUser,
+  ): Promise<UpdateTaskStatusReturnType> {
+    const updatedTask = await this.taskService.updateTask(+id, updateTaskDto);
+
+    return { updatedTask, userId: user.userId };
+  }
+  @UseGuards(AuthGuard('jwt'))
+  @Patch(':id/status')
   async updateTaskStatus(
     @Param('id') id: number,
     @Query('status') status: TaskStatusEnum,

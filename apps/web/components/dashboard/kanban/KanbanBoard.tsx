@@ -15,6 +15,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import { Task } from "@repo/db";
 import { Column } from "./KanbanColumn";
 import { TaskCard } from "./TaskCard";
+import { TaskLegend } from "./TaskLegend";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ActionReturnType,
@@ -221,14 +222,17 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
-        {columns.map((status) => (
-          <Column
-            key={status}
-            status={status}
-            tasks={allTasks.filter((task) => task.status === status)}
-          />
-        ))}
+      <div className="space-y-4">
+        <TaskLegend tasks={allTasks} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+          {columns.map((status) => (
+            <Column
+              key={status}
+              status={status}
+              tasks={allTasks.filter((task) => task.status === status)}
+            />
+          ))}
+        </div>
       </div>
       <DragOverlay>
         {activeTask ? <TaskCard task={activeTask} isOverlay /> : null}

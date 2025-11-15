@@ -40,17 +40,13 @@ const UserButton = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="cursor-pointer rounded-full outline-none transition-opacity hover:opacity-90">
-        {/* ✨ Replaced the generic Image with a proper Avatar component */}
         <Avatar className="size-9 border-2 border-white/50">
-          {/* This will show if you have a user image URL */}
           <AvatarImage src="https://github.com/shadcn.png" alt="@user" />
-          {/* This is a fallback with the user's initials */}
           <AvatarFallback className="bg-blue-500 font-bold text-white">
             JD
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
-      {/* ✨ Added w-56 for a slightly wider, more modern dropdown */}
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>My Account</DropdownMenuLabel>
         <DropdownMenuSeparator />

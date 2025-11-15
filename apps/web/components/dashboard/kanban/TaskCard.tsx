@@ -1,4 +1,4 @@
-"use user client";
+"use client";
 
 import { useState } from "react";
 import {
@@ -18,7 +18,13 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Task } from "@repo/db";
 import { Edit, Eye, Trash } from "lucide-react";
-import AddTaskDialog from "../AddTaskDialog"; // Assuming this component exists
+import AddTaskDialog from "../AddTaskDialog";
+import {
+  getSubjectLeftBorder,
+  getSubjectBackground,
+  getDeadlineUrgency,
+  getDeadlineBorderColor,
+} from "@/lib/utils/taskColors";
 
 interface TaskCardProps {
   task: Task;
@@ -38,7 +44,7 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
   } = useSortable({
     id: task.id,
     data: {
-      type: "Task", // ❗️ Identify this as a Task draggable
+      type: "Task",
       task,
     },
   });
@@ -57,6 +63,25 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
       }
     : {};
 
+  // Get colors based on subject and deadline
+  const subjectId = (task as any).subject?.id || task.subjectId;
+  const subjectLeftBorder = getSubjectLeftBorder(subjectId);
+  const subjectBg = getSubjectBackground(subjectId);
+  const deadlineUrgency = getDeadlineUrgency(new Date(task.deadline));
+  const deadlineBorder = getDeadlineBorderColor(deadlineUrgency);
+
+  // Combine colors: left border (4px) for subject, top border (2px) for deadline urgency
+  // Extract just the color from deadlineBorder (remove border-2 if present)
+  const deadlineColorClass = deadlineBorder.includes("border-red-500")
+    ? "border-t-red-500"
+    : deadlineBorder.includes("border-orange-500")
+      ? "border-t-orange-500"
+      : deadlineBorder.includes("border-yellow-500")
+        ? "border-t-yellow-500"
+        : "border-t-gray-300";
+
+  const borderClasses = `${subjectLeftBorder} border-l-4 ${deadlineColorClass} border-t-2 border-r border-b border-r-gray-200 border-b-gray-200`;
+
   return (
     <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
       <DialogHeader className="hidden">
@@ -69,17 +94,38 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
             style={{ ...style, ...overlayStyle }}
             {...attributes}
             {...listeners}
-            className="bg-white p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 cursor-grab"
+            className={`${subjectBg} ${borderClasses} p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 cursor-grab`}
           >
-            <h3 className="font-semibold text-gray-800">{task.title}</h3>
-            {task.description && (
-              <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                {task.description}
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-gray-800">{task.title}</h3>
+                {task.description && (
+                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                    {task.description}
+                  </p>
+                )}
+                {(task as any).subject && (
+                  <p className="text-xs text-gray-500 mt-2 font-medium">
+                    {(task as any).subject.title}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center justify-between mt-3">
+              <p className="text-xs text-gray-400">
+                Due: {new Date(task.deadline).toLocaleDateString()}
               </p>
-            )}
-            <p className="text-xs text-gray-400 mt-3">
-              Due: {new Date(task.deadline).toLocaleDateString()}
-            </p>
+              {deadlineUrgency === "overdue" && (
+                <span className="text-xs font-semibold text-red-600">
+                  Overdue
+                </span>
+              )}
+              {deadlineUrgency === "urgent" && (
+                <span className="text-xs font-semibold text-orange-600">
+                  Urgent
+                </span>
+              )}
+            </div>
           </div>
         </ContextMenuTrigger>
 

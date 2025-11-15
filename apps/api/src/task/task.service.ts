@@ -12,7 +12,19 @@ export class TaskService {
   constructor(private readonly dbService: DbService) {}
 
   async getAll(): Promise<Task[]> {
-    const allTasks = await this.dbService.task.findMany();
+    const allTasks = await this.dbService.task.findMany({
+      include: {
+        subject: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        deadline: 'asc',
+      },
+    });
 
     return allTasks;
   }
@@ -36,7 +48,7 @@ export class TaskService {
     return newTask;
   }
 
-  async updateTaskStatus(id: number, status: TaskStatusEnum) {
+  async updateTaskStatus(id: number, status: TaskStatusEnum): Promise<Task> {
     try {
       const updatedTask = await this.dbService.task.update({
         where: { id },
@@ -55,6 +67,31 @@ export class TaskService {
       );
       throw new BadRequestException(
         'There is an en error occured while attempting to update task status',
+      );
+    }
+  }
+
+  async updateTask(id: number, updateTaskDto: CreateTaskDTO): Promise<Task> {
+    const { deadline, status, title, description, subject } = updateTaskDto;
+
+    if (!updateTaskDto) {
+      throw new BadRequestException();
+    }
+
+    try {
+      const updatedTask = await this.dbService.task.update({
+        where: { id },
+        data: { deadline, status, title, description, subjectId: subject },
+      });
+
+      return updatedTask;
+    } catch (error) {
+      console.error(
+        'There is an error while attempting to update task status',
+        error,
+      );
+      throw new Error(
+        'There is an error while attempting to update task status',
       );
     }
   }

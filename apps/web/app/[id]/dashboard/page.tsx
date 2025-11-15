@@ -1,5 +1,3 @@
-// your page.tsx file
-
 import FloatingAddButton from "@/components/dashboard/FloatingAddButton";
 import { Suspense } from "react";
 import KanbanDataContainer from "@/components/dashboard/kanban/KanbanDataContainer";
@@ -18,6 +16,7 @@ const page = () => {
           <KanbanDataContainer />
         </Suspense>
       </div>
+
       <FloatingAddButton />
     </>
   );

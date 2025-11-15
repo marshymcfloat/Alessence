@@ -35,14 +35,12 @@ const AuthLoginForm = () => {
     mutationFn: authLoginAction,
     onSuccess: (data) => {
       if (!data.success) {
-        toast(data.error || "Login failed. Please try again.");
+        toast.error(data.error || "Login failed. Please try again.");
         return;
       }
 
-      toast(data.message || "Login successful!");
-
+      toast.success(data.message || "Login successful!");
       router.push(`/${data.data?.user.id}/dashboard`);
-
       router.refresh();
     },
     onError: (error) => {
