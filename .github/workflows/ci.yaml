@@ -25,6 +25,10 @@ jobs:
         run: pnpm install
 
       - name: Build
-        run: pnpm run build
+        run: |
+          echo "Checking for DATABASE_URL..."
+          echo "Is the secret present? ==> ${{ secrets.DATABASE_URL != '' }}"
+          echo "Build command is next."
+          pnpm run build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
