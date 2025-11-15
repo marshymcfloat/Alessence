@@ -6,7 +6,7 @@
       "dependsOn": ["^build", "^db:generate"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "env": ["DATABASE_URL"]
+      "env": ["DATABASE_URL", "FETCH_BASE_URL", "JWT_SECRET"]
     },
     "lint": {
       "dependsOn": ["^lint"]
