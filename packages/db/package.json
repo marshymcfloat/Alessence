@@ -2,8 +2,8 @@
   "name": "@repo/db",
   "private": true,
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc -w",
+    "build": "prisma generate && tsc",
+    "dev": "concurrently \"prisma generate --watch\" \"tsc -w\"",
     "lint": "eslint . --no-warnings 0"
   },
   "exports": {
@@ -29,6 +29,7 @@
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "concurrently": "^9.2.1",
     "prisma": "^6.18.0"
   }
 }
