@@ -2,18 +2,20 @@
   "name": "@repo/types",
   "private": true,
   "version": "0.0.1",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "buld": "tsc",
+    "build": "tsc",
     "dev": "tsc -w",
     "lint": "eslint . --max-warnings 0"
   },
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./nest": {
-      "types": "./src/nest.ts",
+      "types": "./dist/nest.d.ts",
       "default": "./dist/nest.js"
     }
   },
