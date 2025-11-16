@@ -8,6 +8,12 @@ jobs:
   build:
     name: Build and Test
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      FETCH_BASE_URL: ${{ secrets.FETCH_BASE_URL || 'http://localhost:3001' }}
+      ORIGIN_URL: ${{ secrets.ORIGIN_URL || 'http://localhost:3000' }}
 
     steps:
       - name: Check out code
@@ -32,9 +38,3 @@ jobs:
           echo "GEMINI_API_KEY present: ${{ secrets.GEMINI_API_KEY != '' }}"
           echo "Build command is next."
           pnpm run build
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          FETCH_BASE_URL: ${{ secrets.FETCH_BASE_URL || 'http://localhost:3001' }}
-          ORIGIN_URL: ${{ secrets.ORIGIN_URL || 'http://localhost:3000' }}
