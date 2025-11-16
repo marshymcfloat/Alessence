@@ -26,8 +26,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        <main className="min-h-screen w-full bg-white relative">
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} bg-linear-to-br from-pink-50 via-purple-50 to-blue-50`}
+      >
+        <main className="min-h-screen w-full relative">
           <ReduxProvider>
             <TanstackProvider>
               {children}
