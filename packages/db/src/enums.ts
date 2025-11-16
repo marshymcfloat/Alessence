@@ -1,1 +1,8 @@
-export { SemesterEnum } from "@prisma/client";
+export {
+  SemesterEnum,
+  TaskStatusEnum,
+  AcceptedFileType,
+  ExamStatusEnum,
+  QuestionTypeEnum,
+  AttemptStatusEnum,
+} from "@prisma/client";

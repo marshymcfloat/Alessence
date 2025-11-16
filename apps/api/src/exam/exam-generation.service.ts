@@ -6,7 +6,7 @@ import { DbService } from 'src/db/db.service';
 import { GeminiService, GeneratedQuestion } from 'src/gemini/gemini.service';
 import { ExamStatusEnum } from '@repo/db';
 // We still import Prisma, as it's the namespace for InputJsonValue
-import type { Exam, File, Prisma } from '@repo/db';
+import type { Exam, File, Prisma, Question } from '@repo/db';
 
 @Injectable()
 export class ExamGenerationService {

@@ -115,13 +115,25 @@ pnpm run build
 1. Connect repository
 2. Set root directory to `apps/api`
 3. Configure:
-   - **Build Command**: `cd ../.. && pnpm install && pnpm run build --filter=api`
-   - **Start Command**: `cd apps/api && pnpm start:prod`
-4. Add all backend environment variables
-5. Run database migrations:
+   - **Build Command**: `pnpm install && pnpm build` (the prebuild script will handle dependencies)
+   - **Start Command**: `pnpm start:prod`
+4. Add all backend environment variables:
+   - `DATABASE_URL`
+   - `JWT_SECRET`
+   - `GEMINI_API_KEY`
+   - `ORIGIN_URL` (your frontend URL)
+   - `PORT` (optional, defaults to 3001)
+5. Run database migrations (if not auto-run):
    ```bash
    pnpm --filter @repo/db db:deploy
    ```
+
+**Note for Render:** The `prebuild` script in `apps/api/package.json` will automatically:
+- Generate Prisma Client (`@repo/db`)
+- Build `@repo/db` package
+- Build `@repo/types` package  
+- Build `@repo/utils` package (if exists)
+- Then build the NestJS API
 
 ### Option 2: Docker (Full Stack)
 

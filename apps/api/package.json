@@ -6,6 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prebuild": "cd ../.. && pnpm --filter @repo/db db:generate && pnpm --filter @repo/db build && pnpm --filter @repo/types build && (pnpm --filter @repo/utils build || echo 'Skipping @repo/utils build')",
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",

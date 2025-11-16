@@ -8,7 +8,7 @@ import { ExamStatusEnum, QuestionTypeEnum } from '@repo/db';
 import { AuthenticatedUser } from 'src/auth/decorator/get-user.decorator';
 import { CreateExamDto } from '@repo/types/nest';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
-import type { Exam, File, Prisma } from '@repo/db';
+import type { Exam, File, Prisma, Question } from '@repo/db';
 type MulterFile = Express.Multer.File;
 
 @Injectable()
@@ -283,7 +283,9 @@ export class ExamService {
       where: { id: { in: questionIds } },
     });
 
-    const questionMap = new Map(questions.map((q) => [q.id, q]));
+    const questionMap = new Map<number, Question>(
+      questions.map((q) => [q.id, q]),
+    );
 
     // Evaluate all answers in parallel
     const evaluations = await Promise.all(

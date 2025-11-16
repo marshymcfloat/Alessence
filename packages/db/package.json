@@ -9,13 +9,15 @@
     "db:migrate": "prisma migrate dev --skip-generate",
     "db:deploy": "prisma migrate deploy"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
     "./server": {
-      "types": "./src/server.ts",
+      "types": "./dist/server.d.ts",
       "default": "./dist/server.js"
     }
   },
