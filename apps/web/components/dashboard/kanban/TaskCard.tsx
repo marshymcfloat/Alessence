@@ -140,11 +140,6 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
               <span>Edit</span>
             </ContextMenuItem>
           </DialogTrigger>
-
-          <ContextMenuItem className="text-red-500 focus:text-red-500">
-            <Trash className="mr-2 h-4 w-4" />
-            <span>Delete</span>
-          </ContextMenuItem>
         </ContextMenuContent>
       </ContextMenu>
 

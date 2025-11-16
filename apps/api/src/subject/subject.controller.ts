@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { SubjectService } from './subject.service';
 import { CreateSubjectDTO } from '@repo/types/nest';
@@ -33,5 +41,18 @@ export class SubjectController {
     const subjects = await this.subjectService.getAll();
 
     return { subjects, userId: user.userId };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete(':id')
+  async delete(
+    @Param('id') id: string,
+    @GetUser() user: AuthenticatedUser,
+  ): Promise<{ message: string; userId: string }> {
+    await this.subjectService.delete(parseInt(id));
+    return {
+      message: 'Subject deleted successfully',
+      userId: String(user.userId),
+    };
   }
 }

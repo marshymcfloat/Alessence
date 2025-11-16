@@ -1,135 +1,269 @@
-# Turborepo starter
+# Alessence
 
-This Turborepo starter is maintained by the Turborepo core team.
+> Your accountancy study buddy
 
-## Using this example
+Alessence is a comprehensive study management platform designed specifically for accountancy students. It combines task management, AI-powered exam generation, and file organization to help you stay on top of your studies.
 
-Run the following command:
+## ✨ Features
 
-```sh
-npx create-turbo@latest
-```
+### 📋 Task Management
 
-## What's inside?
+- **Kanban Board**: Visual task management with drag-and-drop functionality
+- **Task Organization**: Organize tasks by subject with color-coded visual indicators
+- **Deadline Tracking**: Visual urgency indicators (overdue, urgent, upcoming)
+- **Task Status**: Track tasks through stages (Planned, In Progress, Done)
 
-This Turborepo includes the following packages/apps:
+### 🤖 AI-Powered Exam Generation
 
-### Apps and Packages
+- **Smart Exam Creation**: Generate exams from uploaded study materials using Google Gemini AI
+- **Multiple Question Types**: Support for multiple choice, identification, and true/false questions
+- **Exam Attempts**: Take exams multiple times and track your progress
+- **Performance Tracking**: View scores and review answers
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+### 📁 File Management
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+- **File Upload**: Upload PDF, DOCX, and text files
+- **Subject Organization**: Organize files by subject
+- **Content Extraction**: Automatic text extraction from uploaded documents
+- **Vector Embeddings**: AI-powered content understanding for exam generation
 
-### Utilities
+### 📚 Subject Management
 
-This Turborepo has some additional tools already setup for you:
+- **Subject Organization**: Create and manage subjects by semester
+- **Enrollment Tracking**: Track which subjects you're enrolled in
+- **Subject-based Organization**: Group tasks, files, and exams by subject
 
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
+### 🔐 Authentication
 
-### Build
+- **Secure Login**: JWT-based authentication
+- **User Accounts**: Personal study spaces for each user
 
-To build all apps and packages, run the following command:
+## 🏗️ Tech Stack
 
-```
-cd my-turborepo
+### Frontend
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
+- **Next.js 16** - React framework with App Router
+- **TypeScript** - Type-safe development
+- **Tailwind CSS** - Utility-first CSS framework
+- **Radix UI** - Accessible component primitives
+- **Redux Toolkit** - State management
+- **TanStack Query** - Data fetching and caching
+- **dnd-kit** - Drag and drop functionality
+- **Framer Motion** - Animations
+- **React Hook Form** - Form management
+- **Zod** - Schema validation
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
-```
+### Backend
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+- **NestJS** - Progressive Node.js framework
+- **TypeScript** - Type-safe development
+- **Prisma** - Next-generation ORM
+- **PostgreSQL** - Relational database
+- **Passport.js** - Authentication strategies
+- **JWT** - JSON Web Tokens
+- **Google Gemini AI** - AI-powered exam generation
+- **Vercel Blob** - File storage
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+### Infrastructure
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+- **Turborepo** - Monorepo build system
+- **pnpm** - Fast, disk space efficient package manager
+- **Prisma** - Database toolkit and ORM
 
-### Develop
-
-To develop all apps and packages, run the following command:
-
-```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## 📁 Project Structure
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+Alessence/
+├── apps/
+│   ├── api/          # NestJS backend API
+│   └── web/          # Next.js frontend application
+├── packages/
+│   ├── db/           # Prisma schema and database client
+│   ├── types/        # Shared TypeScript types
+│   ├── utils/        # Shared utility functions
+│   ├── eslint-config/    # ESLint configurations
+│   └── typescript-config/ # TypeScript configurations
+├── turbo.json        # Turborepo configuration
+└── pnpm-workspace.yaml # pnpm workspace configuration
 ```
 
-### Remote Caching
+## 🚀 Getting Started
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+### Prerequisites
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+- **Node.js** >= 18
+- **pnpm** 9.0.0
+- **PostgreSQL** database
+- **Google Gemini API Key** (for AI features)
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+### Installation
 
+1. **Clone the repository**
+
+   ```bash
+   git clone <your-repo-url>
+   cd Alessence
+   ```
+
+2. **Install dependencies**
+
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up environment variables**
+
+   Create a `.env` file in the root directory:
+
+   ```env
+   # Database Configuration
+   DATABASE_URL="postgresql://user:password@localhost:5432/alessence?schema=public"
+
+   # JWT Authentication (use a strong secret, min 32 characters)
+   JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+
+   # Backend API Configuration
+   PORT=3001
+   ORIGIN_URL="http://localhost:3000"
+
+   # Frontend Configuration
+   FETCH_BASE_URL="http://localhost:3001"
+
+   # Gemini AI API Key
+   GEMINI_API_KEY="your-gemini-api-key-here"
+   ```
+
+4. **Set up the database**
+
+   ```bash
+   # Generate Prisma Client
+   pnpm --filter @repo/db db:generate
+
+   # Run migrations
+   pnpm --filter @repo/db db:migrate
+   ```
+
+5. **Start the development servers**
+
+   ```bash
+   # Start both frontend and backend
+   pnpm dev
+
+   # Or start individually:
+   # Frontend only (port 3000)
+   pnpm --filter web dev
+
+   # Backend only (port 3001)
+   pnpm --filter api dev
+   ```
+
+6. **Open your browser**
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:3001
+
+## 📝 Available Scripts
+
+### Root Level
+
+- `pnpm dev` - Start all apps in development mode
+- `pnpm build` - Build all apps and packages
+- `pnpm lint` - Lint all apps and packages
+- `pnpm format` - Format code with Prettier
+- `pnpm check-types` - Type check all apps and packages
+- `pnpm clean` - Clean all build artifacts
+
+### Individual Apps
+
+- `pnpm --filter web dev` - Start Next.js frontend
+- `pnpm --filter api dev` - Start NestJS backend
+- `pnpm --filter @repo/db db:generate` - Generate Prisma Client
+- `pnpm --filter @repo/db db:migrate` - Run database migrations
+
+## 🔧 Development
+
+### Database Commands
+
+```bash
+# Generate Prisma Client (after schema changes)
+pnpm --filter @repo/db db:generate
+
+# Create a new migration
+pnpm --filter @repo/db db:migrate dev --name migration_name
+
+# Apply migrations (production)
+pnpm --filter @repo/db db:deploy
+
+# Open Prisma Studio (database GUI)
+pnpm --filter @repo/db db:studio
 ```
-cd my-turborepo
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+### Code Quality
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
+```bash
+# Lint all code
+pnpm lint
+
+# Format all code
+pnpm format
+
+# Type check all code
+pnpm check-types
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+## 🌐 API Endpoints
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+The backend API provides the following main endpoints:
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+- **Authentication**: `/auth/login`, `/auth/register`
+- **Subjects**: `/subject` (CRUD operations)
+- **Tasks**: `/task` (CRUD operations)
+- **Files**: `/file` (upload, list, delete)
+- **Exams**: `/exam` (create, list, generate)
+- **Health**: `/health` (health check)
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+## 🗄️ Database Schema
 
-## Useful Links
+The application uses PostgreSQL with Prisma ORM. Key models include:
 
-Learn more about the power of Turborepo:
+- **User** - User accounts and authentication
+- **Subject** - Academic subjects organized by semester
+- **Task** - Study tasks with deadlines and status
+- **File** - Uploaded study materials with embeddings
+- **Exam** - AI-generated exams
+- **Question** - Exam questions with multiple types
+- **ExamAttempt** - User exam attempts and scores
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+See `packages/db/prisma/schema.prisma` for the complete schema.
+
+## 🚢 Deployment
+
+For detailed deployment instructions, see [DEPLOYMENT.md](./DEPLOYMENT.md).
+
+Quick deployment options:
+
+- **Vercel** (Frontend) + **Railway/Render** (Backend)
+- **Docker** (Full stack)
+- **Manual server deployment**
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is private and unlicensed.
+
+## 🙏 Acknowledgments
+
+- Built with [Turborepo](https://turbo.build/)
+- UI components from [Radix UI](https://www.radix-ui.com/)
+- Icons from [Lucide](https://lucide.dev/)
+- AI powered by [Google Gemini](https://ai.google.dev/)
+
+---
+
+**Made with ❤️ for accountancy students**

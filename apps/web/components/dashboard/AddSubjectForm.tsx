@@ -115,7 +115,9 @@ const AddSubjectForm = ({ onClose }: { onClose: () => void }) => {
         />
 
         <div className="flex justify-end mt-12">
-          <Button className="w-fit">Create</Button>
+          <Button className="w-fit" disabled={isPending}>
+            {isPending ? "Creating..." : "Create"}
+          </Button>
         </div>
       </form>
     </Form>

@@ -71,4 +71,28 @@ export class SubjectService {
       );
     }
   }
+
+  async delete(id: number): Promise<void> {
+    try {
+      const subject = await this.dbService.subject.findUnique({
+        where: { id },
+      });
+
+      if (!subject) {
+        throw new BadRequestException('Subject not found');
+      }
+
+      await this.dbService.subject.delete({
+        where: { id },
+      });
+    } catch (error) {
+      console.error(
+        'There is unexpected error occured while attempting to delete subject',
+        error,
+      );
+      throw new BadRequestException(
+        'There is unexpected error occured while attempting to delete subject',
+      );
+    }
+  }
 }

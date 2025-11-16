@@ -98,3 +98,48 @@ export async function getEnrolledSubject(): Promise<
     };
   }
 }
+
+export async function deleteSubjectAction(
+  id: number
+): Promise<ActionReturnType<null>> {
+  try {
+    const cookie = await cookies();
+    const token = cookie.get("access_token");
+
+    if (!token?.name || !token.value) {
+      return {
+        success: false,
+        error: "Authentication failed. Please login again.",
+      };
+    }
+
+    const response = await fetch(`${process.env.FETCH_BASE_URL}/subject/${id}`, {
+      method: "DELETE",
+      headers: {
+        Cookie: `${token.name}=${token.value}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return {
+        success: false,
+        error: errorData.message || "Failed to delete subject.",
+      };
+    }
+
+    const data = await response.json();
+    revalidatePath(`/${data.userId}/dashboard`);
+
+    return {
+      success: true,
+      data: null,
+      message: "Subject deleted successfully.",
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "An unexpected error occurred.";
+    console.error("Delete Subject Action Error:", message);
+    return { success: false, error: message };
+  }
+}

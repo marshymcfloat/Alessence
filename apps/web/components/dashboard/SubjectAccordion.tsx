@@ -7,17 +7,46 @@ import {
 } from "@/components/ui/accordion";
 import { SubjectWithTaskProgress } from "@repo/types";
 import SubjectPieChart from "./SubjectPieChart";
-import { BookOpen, CheckCircle2, Clock, Circle } from "lucide-react";
+import { BookOpen, CheckCircle2, Clock, Circle, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { deleteSubjectAction } from "@/lib/actions/subjectActions";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const SubjectAccordion = ({
   subject,
 }: {
   subject: SubjectWithTaskProgress;
 }) => {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
   const { taskCounts } = subject;
   const total = taskCounts.total;
   const progressPercentage =
     total > 0 ? Math.round((taskCounts.done / total) * 100) : 0;
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (
+      !confirm(
+        `Are you sure you want to delete "${subject.title}"? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setIsDeleting(true);
+    const result = await deleteSubjectAction(subject.id);
+    setIsDeleting(false);
+
+    if (result.success) {
+      toast.success(result.message || "Subject deleted successfully");
+      router.refresh();
+    } else {
+      toast.error(result.error || "Failed to delete subject");
+    }
+  };
 
   return (
     <AccordionItem
@@ -105,6 +134,18 @@ const SubjectAccordion = ({
               No tasks or description yet
             </div>
           )}
+
+          <div className="pt-2 border-t border-gray-100 flex justify-end">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className=""
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          </div>
         </div>
       </AccordionContent>
     </AccordionItem>
