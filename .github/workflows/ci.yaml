@@ -26,9 +26,15 @@ jobs:
 
       - name: Build
         run: |
-          echo "Checking for DATABASE_URL..."
-          echo "Is the secret present? ==> ${{ secrets.DATABASE_URL != '' }}"
+          echo "Checking for required environment variables..."
+          echo "DATABASE_URL present: ${{ secrets.DATABASE_URL != '' }}"
+          echo "JWT_SECRET present: ${{ secrets.JWT_SECRET != '' }}"
+          echo "GEMINI_API_KEY present: ${{ secrets.GEMINI_API_KEY != '' }}"
           echo "Build command is next."
           pnpm run build
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FETCH_BASE_URL: ${{ secrets.FETCH_BASE_URL || 'http://localhost:3001' }}
+          ORIGIN_URL: ${{ secrets.ORIGIN_URL || 'http://localhost:3000' }}

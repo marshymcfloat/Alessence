@@ -4,6 +4,14 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { Request } from 'express';
 
+interface JwtPayload {
+  sub: string;
+  email: string;
+  name: string;
+  iat?: number;
+  exp?: number;
+}
+
 const cookieExtractor = (req: Request): string | null => {
   let token = null;
   if (req && req.cookies) {
@@ -25,7 +33,7 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload) {
     return { userId: payload.sub, email: payload.email, name: payload.name };
   }
 }

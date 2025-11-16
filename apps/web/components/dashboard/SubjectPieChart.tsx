@@ -18,7 +18,11 @@ const COLORS = {
 
 type TaskCounts = SubjectWithTaskProgress["taskCounts"];
 
-const CustomLegend = (props: any) => {
+interface CustomLegendProps {
+  taskCounts: TaskCounts;
+}
+
+const CustomLegend = (props: CustomLegendProps) => {
   const { taskCounts } = props;
   const total = taskCounts.total;
 

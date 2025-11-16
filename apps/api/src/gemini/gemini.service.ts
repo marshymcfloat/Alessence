@@ -298,4 +298,153 @@ export class GeminiService {
 
     return instructions.join('\n');
   }
+
+  /**
+   * Evaluates if a user's answer is correct using AI for semantic comparison.
+   * For single words or terminology, uses case-insensitive comparison.
+   * For longer answers, uses AI to evaluate semantic equivalence.
+   */
+  async evaluateAnswer(
+    userAnswer: string,
+    correctAnswer: string,
+    questionText: string,
+  ): Promise<boolean> {
+    // Normalize inputs
+    const normalizedUserAnswer = userAnswer.trim();
+    const normalizedCorrectAnswer = correctAnswer.trim();
+
+    if (!normalizedUserAnswer || !normalizedCorrectAnswer) {
+      return false;
+    }
+
+    // For single words or short terminology (1-2 words), use case-insensitive comparison
+    const userWords = normalizedUserAnswer.split(/\s+/).length;
+    const correctWords = normalizedCorrectAnswer.split(/\s+/).length;
+    const isShortAnswer = userWords <= 2 && correctWords <= 2;
+
+    if (isShortAnswer) {
+      return (
+        normalizedUserAnswer.toLowerCase() ===
+        normalizedCorrectAnswer.toLowerCase()
+      );
+    }
+
+    // For longer answers, use AI to evaluate semantic equivalence
+    try {
+      const prompt = `You are an expert accounting professor evaluating exam answers. Determine if the student's answer is semantically equivalent to the correct answer.
+
+QUESTION: ${questionText}
+
+CORRECT ANSWER: ${normalizedCorrectAnswer}
+
+STUDENT'S ANSWER: ${normalizedUserAnswer}
+
+Evaluate if the student's answer demonstrates the same understanding and correctness as the correct answer. Consider:
+- Semantic equivalence (same meaning, even if worded differently)
+- Key concepts and terminology
+- Accuracy of the information
+- Minor spelling or grammatical differences should not affect correctness
+
+Respond with ONLY a JSON object in this exact format:
+{
+  "isCorrect": true or false,
+  "reason": "Brief explanation of why the answer is correct or incorrect"
+}
+
+Do not include any text before or after the JSON object.`;
+
+      const result = (await this.genAI.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      })) as GeminiResult;
+
+      // Extract text from response (same logic as generateExamQuestions)
+      let responseText: string | undefined;
+
+      if (typeof result === 'string') {
+        responseText = result;
+      } else if (result && typeof result === 'object') {
+        if ('text' in result && typeof result.text === 'string') {
+          responseText = result.text;
+        } else if (
+          'response' in result &&
+          result.response &&
+          typeof result.response === 'object' &&
+          'text' in result.response
+        ) {
+          responseText = result.response.text as string;
+        } else if (
+          'candidates' in result &&
+          Array.isArray(result.candidates) &&
+          result.candidates.length > 0
+        ) {
+          const candidate = result.candidates[0];
+          if (
+            candidate &&
+            typeof candidate === 'object' &&
+            'content' in candidate
+          ) {
+            const content = candidate.content;
+            if (
+              content &&
+              'parts' in content &&
+              Array.isArray(content.parts) &&
+              content.parts.length > 0
+            ) {
+              const part = content.parts[0];
+              if (part && 'text' in part && typeof part.text === 'string') {
+                responseText = part.text;
+              }
+            }
+          }
+        }
+      }
+
+      if (!responseText) {
+        this.logger.warn(
+          'Failed to extract response from Gemini for answer evaluation. Falling back to case-insensitive comparison.',
+        );
+        return (
+          normalizedUserAnswer.toLowerCase() ===
+          normalizedCorrectAnswer.toLowerCase()
+        );
+      }
+
+      // Clean the response text
+      let cleanedText = responseText.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText
+          .replace(/^```json\s*/, '')
+          .replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      const parsedResponse = JSON.parse(cleanedText) as {
+        isCorrect: boolean;
+        reason?: string;
+      };
+
+      if (typeof parsedResponse.isCorrect !== 'boolean') {
+        this.logger.warn(
+          'Invalid response format from Gemini for answer evaluation. Falling back to case-insensitive comparison.',
+        );
+        return (
+          normalizedUserAnswer.toLowerCase() ===
+          normalizedCorrectAnswer.toLowerCase()
+        );
+      }
+
+      return parsedResponse.isCorrect;
+    } catch (error) {
+      this.logger.error(
+        `Error evaluating answer with AI: ${error instanceof Error ? error.message : String(error)}. Falling back to case-insensitive comparison.`,
+      );
+      // Fallback to case-insensitive comparison on error
+      return (
+        normalizedUserAnswer.toLowerCase() ===
+        normalizedCorrectAnswer.toLowerCase()
+      );
+    }
+  }
 }

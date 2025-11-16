@@ -3,8 +3,9 @@
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { useState } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "../ui/button";
+import { AnimatePresence, motion } from "framer-motion";
 
 const FloatingCardWrapper = ({
   children,
@@ -18,45 +19,76 @@ const FloatingCardWrapper = ({
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <Card
+    <motion.div
+      initial={{ x: isExpanded ? 0 : 0 }}
+      animate={{ x: isExpanded ? 0 : 0 }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
       className={cn(
-        "absolute top-4 z-10 left-4 transition-all duration-300 ease-in-out",
-
-        isExpanded
-          ? "w-[400px] bg-white/80 backdrop-blur-sm"
-          : "w-auto bg-transparent border-none shadow-none",
+        "fixed top-4 left-0 z-10 transition-all duration-300 ease-in-out",
         className
       )}
     >
-      <div className="relative">
-        <Button
-          onClick={() => setIsExpanded((prev) => !prev)}
-          className={cn(
-            "z-20 transition-all duration-300",
-
-            !isExpanded && "size-10 rounded-full bg-white shadow-lg",
-
-            isExpanded && "absolute top-2 right-1 size-6"
-          )}
-          variant={"ghost"}
-          size="icon"
-        >
-          <ChevronRight
-            size={16}
-            className={cn("transition-transform", isExpanded && "rotate-90")}
-          />
-        </Button>
-
-        {isExpanded && (
-          <div className="animate-in fade-in-0 duration-300">
-            <CardHeader>
-              <CardTitle className="pr-8">{title}</CardTitle>
-            </CardHeader>
-            <CardContent>{children}</CardContent>
-          </div>
+      <Card
+        className={cn(
+          "transition-all duration-300 ease-in-out shadow-xl border border-gray-200/50",
+          isExpanded
+            ? "w-[360px] bg-white/95 backdrop-blur-md"
+            : "w-12 bg-white/90 backdrop-blur-sm hover:bg-white/95"
         )}
-      </div>
-    </Card>
+      >
+        <div className="relative">
+          <Button
+            onClick={() => setIsExpanded((prev) => !prev)}
+            className={cn(
+              "absolute z-20 transition-all duration-300 shadow-md",
+              "size-8 rounded-full bg-white border-2 border-gray-200",
+              "hover:bg-gray-50 hover:scale-110",
+              isExpanded ? "-right-3 top-4" : "right-2 top-4"
+            )}
+            variant={"ghost"}
+            size="icon"
+          >
+            {isExpanded ? (
+              <ChevronLeft size={16} className="text-gray-600" />
+            ) : (
+              <ChevronLeft size={16} className="text-gray-600 rotate-180" />
+            )}
+          </Button>
+
+          <AnimatePresence mode="wait">
+            {isExpanded && (
+              <motion.div
+                key="expanded"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -0 }}
+                transition={{ duration: 0.2 }}
+                className="pr-4"
+              >
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold text-gray-800 pr-6">
+                    {title}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">{children}</CardContent>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {!isExpanded && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="h-full flex items-center justify-center py-4 cursor-pointer"
+              onClick={() => setIsExpanded(true)}
+            >
+              <div className="w-1 h-12 bg-gradient-to-b from-pink-400 to-purple-400 rounded-full hover:from-pink-500 hover:to-purple-500 transition-colors" />
+            </motion.div>
+          )}
+        </div>
+      </Card>
+    </motion.div>
   );
 };
 

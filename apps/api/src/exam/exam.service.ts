@@ -245,4 +245,67 @@ export class ExamService {
       }
     }
   }
+
+  /**
+   * Evaluates if a user's answer is correct for a specific question.
+   * Uses AI-powered evaluation for longer answers, case-insensitive for short answers.
+   */
+  async evaluateAnswer(
+    questionId: number,
+    userAnswer: string,
+  ): Promise<{ isCorrect: boolean }> {
+    const question = await this.dbService.question.findUnique({
+      where: { id: questionId },
+    });
+
+    if (!question) {
+      throw new Error(`Question with ID ${questionId} not found.`);
+    }
+
+    const isCorrect = await this.geminiService.evaluateAnswer(
+      userAnswer,
+      question.correctAnswer,
+      question.text,
+    );
+
+    return { isCorrect };
+  }
+
+  /**
+   * Evaluates multiple answers at once for better performance.
+   */
+  async evaluateAnswers(
+    answers: Array<{ questionId: number; userAnswer: string }>,
+  ): Promise<Array<{ questionId: number; isCorrect: boolean }>> {
+    // Fetch all questions at once
+    const questionIds = answers.map((a) => a.questionId);
+    const questions = await this.dbService.question.findMany({
+      where: { id: { in: questionIds } },
+    });
+
+    const questionMap = new Map(questions.map((q) => [q.id, q]));
+
+    // Evaluate all answers in parallel
+    const evaluations = await Promise.all(
+      answers.map(async ({ questionId, userAnswer }) => {
+        const question = questionMap.get(questionId);
+        if (!question) {
+          this.logger.warn(
+            `Question with ID ${questionId} not found. Marking as incorrect.`,
+          );
+          return { questionId, isCorrect: false };
+        }
+
+        const isCorrect = await this.geminiService.evaluateAnswer(
+          userAnswer,
+          question.correctAnswer,
+          question.text,
+        );
+
+        return { questionId, isCorrect };
+      }),
+    );
+
+    return evaluations;
+  }
 }

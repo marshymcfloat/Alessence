@@ -17,11 +17,19 @@ export type GetAllSubjectReturnType = {
   userId: String;
 };
 
-export type ActionReturnType<T = any> = {
+export type ActionReturnType<T = unknown> = {
   success: boolean;
   error?: String;
   message?: String;
   data?: T;
+};
+
+// Task with subject relation included
+export type TaskWithSubject = Task & {
+  subject: {
+    id: number;
+    title: string;
+  } | null;
 };
 
 export type CreateNewSubjectReturnType = {

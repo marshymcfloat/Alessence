@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   Patch,
@@ -65,5 +66,12 @@ export class TaskController {
     const updatedTask = await this.taskService.updateTaskStatus(+id, status);
 
     return { updatedTask, userId: user.userId };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Delete(':id')
+  async deleteTask(@Param('id') id: number): Promise<{ success: boolean }> {
+    await this.taskService.deleteTask(+id);
+    return { success: true };
   }
 }

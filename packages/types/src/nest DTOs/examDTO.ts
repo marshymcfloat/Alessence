@@ -28,3 +28,21 @@ export const createExamBackendSchema = z.object({
 });
 
 export class CreateExamDto extends createZodDto(createExamBackendSchema) {}
+
+export const evaluateAnswerSchema = z.object({
+  questionId: z.coerce.number().min(1),
+  userAnswer: z.string().min(1),
+});
+
+export class EvaluateAnswerDto extends createZodDto(evaluateAnswerSchema) {}
+
+export const evaluateAnswersSchema = z.object({
+  answers: z.array(
+    z.object({
+      questionId: z.coerce.number().min(1),
+      userAnswer: z.string().min(1),
+    })
+  ).min(1),
+});
+
+export class EvaluateAnswersDto extends createZodDto(evaluateAnswersSchema) {}

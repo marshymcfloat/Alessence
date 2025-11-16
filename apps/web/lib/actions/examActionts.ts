@@ -203,3 +203,53 @@ export async function deleteExam(id: number): Promise<ActionReturnType<null>> {
     return { success: false, error: message };
   }
 }
+
+export async function evaluateAnswers(
+  answers: Array<{ questionId: number; userAnswer: string }>
+): Promise<
+  ActionReturnType<Array<{ questionId: number; isCorrect: boolean }>>
+> {
+  try {
+    const cookie = await cookies();
+    const token = cookie.get("access_token");
+
+    if (!token?.name || !token.value) {
+      return {
+        success: false,
+        error: "Authentication failed. Please login again.",
+      };
+    }
+
+    const response = await fetch(
+      `${process.env.FETCH_BASE_URL}/exam/evaluate-answers`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Cookie: `${token.name}=${token.value}`,
+        },
+        body: JSON.stringify({ answers }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return {
+        success: false,
+        error: errorData.message || "Failed to evaluate answers.",
+      };
+    }
+
+    const data = await response.json();
+
+    return {
+      success: true,
+      data: data,
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "An unexpected error occurred.";
+    console.error("Evaluate Answers Action Error:", message);
+    return { success: false, error: message };
+  }
+}

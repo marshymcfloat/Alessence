@@ -3,27 +3,39 @@
 import { SubjectWithTaskProgress } from "@repo/types";
 import SubjectAccordion from "./SubjectAccordion";
 import { Accordion } from "@/components/ui/accordion";
+import { BookOpen } from "lucide-react";
 
 const EnrolledSubjectContent = ({
   data,
 }: {
   data: SubjectWithTaskProgress[] | undefined;
 }) => {
-  console.log(data);
   if (!data || data.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
-        <p>You are not enrolled in any subjects yet.</p>
+      <div className="text-center py-6">
+        <div className="flex flex-col items-center gap-2">
+          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2">
+            <BookOpen className="w-6 h-6 text-gray-400" />
+          </div>
+          <p className="text-sm text-gray-500 font-medium">
+            No subjects enrolled
+          </p>
+          <p className="text-xs text-gray-400">
+            Add a subject to get started
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <Accordion type="single" collapsible className="w-full space-y-2">
-      {data?.map((subject) => (
-        <SubjectAccordion key={subject.id} subject={subject} />
-      ))}
-    </Accordion>
+    <div className="max-h-[calc(100vh-12rem)] overflow-y-auto pr-1">
+      <Accordion type="single" collapsible className="w-full space-y-1.5">
+        {data?.map((subject) => (
+          <SubjectAccordion key={subject.id} subject={subject} />
+        ))}
+      </Accordion>
+    </div>
   );
 };
 

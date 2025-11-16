@@ -10,19 +10,22 @@ import {
   useSensor,
   useSensors,
   DragStartEvent,
+  DragOverEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Task } from "@repo/db";
 import { Column } from "./KanbanColumn";
 import { TaskCard } from "./TaskCard";
 import { TaskLegend } from "./TaskLegend";
+import { DeleteZone } from "./DeleteZone";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ActionReturnType,
   GetAllTasksReturnType,
   UpdateTaskStatusReturnType,
 } from "@repo/types";
-import { getAllTasks, updateTaskStatus } from "@/lib/actions/taskActionts";
+import { getAllTasks, updateTaskStatus, deleteTaskAction } from "@/lib/actions/taskActionts";
+import { toast } from "sonner";
 
 type TaskStatus = "PLANNED" | "ON_PROGRESS" | "DONE";
 
@@ -37,6 +40,7 @@ interface UpdateTaskVariables {
 
 export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [isOverDeleteZone, setIsOverDeleteZone] = useState(false);
   const queryClient = useQueryClient();
 
   const { data } = useQuery<ActionReturnType<GetAllTasksReturnType>>({
@@ -95,6 +99,23 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
     },
   });
 
+  const { mutate: deleteMutate } = useMutation({
+    mutationFn: async (taskId: number) => {
+      return deleteTaskAction(taskId);
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success("Task deleted successfully");
+        queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      } else {
+        toast.error(data.error || "Failed to delete task");
+      }
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete task");
+    },
+  });
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -112,8 +133,14 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
     }
   }
 
+  function handleDragOver(event: DragOverEvent) {
+    const { over } = event;
+    setIsOverDeleteZone(over?.id === "delete-zone");
+  }
+
   function handleDragEnd(event: DragEndEvent) {
     setActiveTask(null);
+    setIsOverDeleteZone(false);
     const { active, over } = event;
 
     if (!over) return;
@@ -123,6 +150,12 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
     const activeTask = allTasks.find((t) => String(t.id) === activeId);
 
     if (!activeTask) return;
+
+    // Check if dropped on delete zone
+    if (over.id === "delete-zone") {
+      deleteMutate(activeTask.id);
+      return;
+    }
 
     const isOverAColumn = over.data.current?.type === "Column";
     const isOverATask = over.data.current?.type === "Task";
@@ -220,11 +253,12 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="space-y-4">
+      <div className="space-y-4 max-h-[calc(100vh-8rem)] max-w-[calc(100vw-2rem)] overflow-hidden flex flex-col">
         <TaskLegend tasks={allTasks} />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 overflow-y-auto flex-1 min-h-0">
           {columns.map((status) => (
             <Column
               key={status}
@@ -234,6 +268,7 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
           ))}
         </div>
       </div>
+      <DeleteZone isOver={isOverDeleteZone} />
       <DragOverlay>
         {activeTask ? <TaskCard task={activeTask} isOverlay /> : null}
       </DragOverlay>

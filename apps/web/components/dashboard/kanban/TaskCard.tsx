@@ -17,6 +17,7 @@ import {
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Task } from "@repo/db";
+import { TaskWithSubject } from "@repo/types";
 import { Edit, Eye, Trash } from "lucide-react";
 import AddTaskDialog from "../AddTaskDialog";
 import {
@@ -27,7 +28,7 @@ import {
 } from "@/lib/utils/taskColors";
 
 interface TaskCardProps {
-  task: Task;
+  task: Task | TaskWithSubject;
   isOverlay?: boolean;
 }
 
@@ -64,7 +65,8 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
     : {};
 
   // Get colors based on subject and deadline
-  const subjectId = (task as any).subject?.id || task.subjectId;
+  const taskWithSubject = task as TaskWithSubject;
+  const subjectId = taskWithSubject.subject?.id || task.subjectId;
   const subjectLeftBorder = getSubjectLeftBorder(subjectId);
   const subjectBg = getSubjectBackground(subjectId);
   const deadlineUrgency = getDeadlineUrgency(new Date(task.deadline));
@@ -104,9 +106,9 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
                     {task.description}
                   </p>
                 )}
-                {(task as any).subject && (
+                {taskWithSubject.subject && (
                   <p className="text-xs text-gray-500 mt-2 font-medium">
-                    {(task as any).subject.title}
+                    {taskWithSubject.subject.title}
                   </p>
                 )}
               </div>

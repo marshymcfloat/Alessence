@@ -184,3 +184,43 @@ export async function updateTaskAction(
     return { success: false, error: "Failed to update task." };
   }
 }
+
+export async function deleteTaskAction(
+  id: number
+): Promise<ActionReturnType<null>> {
+  try {
+    const cookieHeader = await cookies();
+    const token = cookieHeader.get("access_token");
+
+    if (!token?.name || !token.value) {
+      return { success: false, error: "Please login first" };
+    }
+
+    const response = await fetch(`${process.env.FETCH_BASE_URL}/task/${id}`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        cookie: `${token.name}=${token.value}`,
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return {
+        success: false,
+        error: errorData.message || "Failed to delete task.",
+      };
+    }
+
+    revalidateTag("tasks", "max");
+    return {
+      success: true,
+      data: null,
+      message: "Task deleted successfully.",
+    };
+  } catch (error) {
+    console.error("Error deleting task:", error);
+    return { success: false, error: "Failed to delete task." };
+  }
+}

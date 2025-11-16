@@ -8,6 +8,7 @@ import { ExamModule } from './exam/exam.module';
 import { FileModule } from './file/file.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { GeminiModule } from './gemini/gemini.module';
+import { HealthModule } from './health/health.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { GeminiModule } from './gemini/gemini.module';
     ExamModule,
     FileModule,
     GeminiModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [],

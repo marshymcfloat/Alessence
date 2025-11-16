@@ -16,7 +16,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import type { AuthenticatedUser } from 'src/auth/decorator/get-user.decorator';
-import { CreateExamDto } from '@repo/types/nest';
+import { CreateExamDto, EvaluateAnswersDto } from '@repo/types/nest';
 
 @Controller('exam')
 export class ExamController {
@@ -51,5 +51,11 @@ export class ExamController {
   @UseGuards(AuthGuard('jwt'))
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.examService.remove(id);
+  }
+
+  @Post('evaluate-answers')
+  @UseGuards(AuthGuard('jwt'))
+  evaluateAnswers(@Body() dto: EvaluateAnswersDto) {
+    return this.examService.evaluateAnswers(dto.answers);
   }
 }

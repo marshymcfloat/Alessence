@@ -1,4 +1,8 @@
 import { z } from "zod";
+import { File as DBFile } from "@repo/db";
+
+// Union type for files: either a browser File or a database File
+export type ExamFileInput = File | DBFile;
 
 export const createNewExamSchema = z.object({
   describe: z
@@ -11,8 +15,8 @@ export const createNewExamSchema = z.object({
     .min(1, { message: "Must have at least 1 item" }),
 
   files: z
-    .array(z.any())
-    .refine((file) => file !== undefined && file !== null, {
+    .array(z.custom<ExamFileInput>())
+    .refine((files) => files.length > 0 && files.every((file) => file !== undefined && file !== null), {
       message: "Please select an existing file or upload a new one.",
     }),
   subjectId: z.coerce.number<number>({

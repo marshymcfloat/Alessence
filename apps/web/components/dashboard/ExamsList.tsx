@@ -5,6 +5,7 @@ import {
   getAllExams,
   deleteExam,
   getExamById,
+  evaluateAnswers,
 } from "@/lib/actions/examActionts";
 import { Exam, Question, ExamStatusEnum } from "@repo/db";
 import {
@@ -61,6 +62,10 @@ export default function ExamsList() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [submitted, setSubmitted] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [answerResults, setAnswerResults] = useState<Record<number, boolean>>(
+    {}
+  );
+  const [isEvaluating, setIsEvaluating] = useState(false);
 
   useEffect(() => {
     loadExams();
@@ -106,6 +111,8 @@ export default function ExamsList() {
       setSelectedExam(result.data.exam as ExamWithQuestions);
       setAnswers({});
       setSubmitted(false);
+      setAnswerResults({});
+      setIsEvaluating(false);
       setIsDialogOpen(true);
     } else {
       toast.error(result.error || "Failed to load exam questions");
@@ -137,23 +144,75 @@ export default function ExamsList() {
     calculateScore();
   };
 
-  const calculateScore = () => {
+  const calculateScore = async () => {
     if (!selectedExam) return;
 
-    let correct = 0;
-    selectedExam.questions.forEach((question) => {
-      const userAnswer = answers[question.id];
-      if (userAnswer && userAnswer.trim() === question.correctAnswer.trim()) {
-        correct++;
+    setIsEvaluating(true);
+
+    try {
+      // Prepare answers for evaluation
+      const answersToEvaluate = selectedExam.questions
+        .filter((question) => answers[question.id])
+        .map((question) => ({
+          questionId: question.id,
+          userAnswer: answers[question.id] || "",
+        }));
+
+      if (answersToEvaluate.length === 0) {
+        toast.error("Please answer at least one question before submitting.");
+        setIsEvaluating(false);
+        return;
       }
-    });
 
-    const total = selectedExam.questions.length;
-    const percentage = (correct / total) * 100;
+      // Call the API to evaluate answers
+      const result = await evaluateAnswers(answersToEvaluate);
 
-    toast.success(
-      `You scored ${correct}/${total} (${percentage.toFixed(1)}%)`,
-      { duration: 5000 }
+      if (!result.success || !result.data) {
+        toast.error(result.error || "Failed to evaluate answers.");
+        setIsEvaluating(false);
+        return;
+      }
+
+      // Store results
+      const resultsMap: Record<number, boolean> = {};
+      result.data.forEach((evaluation) => {
+        resultsMap[evaluation.questionId] = evaluation.isCorrect;
+      });
+      setAnswerResults(resultsMap);
+
+      // Calculate score
+      let correct = 0;
+      result.data.forEach((evaluation) => {
+        if (evaluation.isCorrect) {
+          correct++;
+        }
+      });
+
+      const total = selectedExam.questions.length;
+      const percentage = (correct / total) * 100;
+
+      toast.success(
+        `You scored ${correct}/${total} (${percentage.toFixed(1)}%)`,
+        { duration: 5000 }
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "An error occurred while evaluating answers."
+      );
+    } finally {
+      setIsEvaluating(false);
+    }
+  };
+
+  // Helper function for case-insensitive comparison (for display purposes)
+  const isAnswerCorrectSimple = (
+    userAnswer: string,
+    correctAnswer: string
+  ): boolean => {
+    return (
+      userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase()
     );
   };
 
@@ -271,7 +330,11 @@ export default function ExamsList() {
               const options = (question.options as string[]) || [];
               const userAnswer = answers[question.id];
               const isCorrect =
-                userAnswer?.trim() === question.correctAnswer.trim();
+                submitted && answerResults[question.id] !== undefined
+                  ? answerResults[question.id]
+                  : userAnswer
+                    ? isAnswerCorrectSimple(userAnswer, question.correctAnswer)
+                    : false;
               const showResult = submitted && userAnswer;
               const isIdentification = question.type === "IDENTIFICATION";
               const isTrueFalse = question.type === "TRUE_FALSE";
@@ -324,8 +387,10 @@ export default function ExamsList() {
                     <div className="space-y-2 ml-6">
                       {options.map((option, optIndex) => {
                         const isSelected = userAnswer === option;
-                        const isCorrectOption =
-                          option.trim() === question.correctAnswer.trim();
+                        const isCorrectOption = isAnswerCorrectSimple(
+                          option,
+                          question.correctAnswer
+                        );
 
                         return (
                           <label
@@ -385,7 +450,9 @@ export default function ExamsList() {
               <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Close
               </Button>
-              <Button onClick={handleSubmit}>Submit Answers</Button>
+              <Button onClick={handleSubmit} disabled={isEvaluating}>
+                {isEvaluating ? "Evaluating..." : "Submit Answers"}
+              </Button>
             </div>
           )}
 

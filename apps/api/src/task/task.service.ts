@@ -95,4 +95,20 @@ export class TaskService {
       );
     }
   }
+
+  async deleteTask(id: number): Promise<void> {
+    try {
+      await this.dbService.task.delete({
+        where: { id },
+      });
+    } catch (error) {
+      console.error(
+        'There is an error while attempting to delete task',
+        error,
+      );
+      throw new BadRequestException(
+        'There is an error while attempting to delete task',
+      );
+    }
+  }
 }
