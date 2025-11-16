@@ -24,7 +24,7 @@ const SignInDialog = () => {
               Alessence
             </DialogTitle>
             <DialogDescription className="text-center">
-              Goodluck, baby! galingan mo!
+              Goodluck!
             </DialogDescription>
           </DialogHeader>
 
