@@ -48,7 +48,6 @@ const SubjectAccordion = ({
       </AccordionTrigger>
       <AccordionContent className="pt-2 pb-4">
         <div className="space-y-4">
-          {/* Quick Stats */}
           {total > 0 && (
             <div className="grid grid-cols-3 gap-2 pt-2">
               <div className="flex items-center gap-2 p-2 rounded-md bg-green-50 border border-green-100">
@@ -81,7 +80,6 @@ const SubjectAccordion = ({
             </div>
           )}
 
-          {/* Description */}
           {subject.description && (
             <div className="pt-2 border-t border-gray-100">
               <h4 className="text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
@@ -93,7 +91,6 @@ const SubjectAccordion = ({
             </div>
           )}
 
-          {/* Chart */}
           {total > 0 && (
             <div className="pt-2 border-t border-gray-100">
               <h4 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">

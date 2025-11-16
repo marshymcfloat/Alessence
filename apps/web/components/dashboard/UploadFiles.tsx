@@ -1,4 +1,3 @@
-// components/UploadFiles.tsx
 "use client";
 
 import { getAllFiles } from "@/lib/actions/fileActionts";

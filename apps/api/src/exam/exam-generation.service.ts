@@ -1,11 +1,9 @@
-// src/exam/exam-generation.service.ts
-
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { DbService } from 'src/db/db.service';
 import { GeminiService, GeneratedQuestion } from 'src/gemini/gemini.service';
 import { ExamStatusEnum } from '@repo/db';
-// We still import Prisma, as it's the namespace for InputJsonValue
+
 import type { Exam, File, Prisma, Question } from '@repo/db';
 
 @Injectable()
@@ -22,7 +20,6 @@ export class ExamGenerationService {
     );
 
     try {
-      // 1. RETRIEVE: Fetch the full exam details, including the source files with their content.
       const exam = await this.dbService.exam.findUnique({
         where: { id: examPayload.id },
         include: { sourceFiles: true },
@@ -36,7 +33,6 @@ export class ExamGenerationService {
         .map((file) => file.contentText || '')
         .join('\n\n---\n\n');
 
-      // 2. AUGMENT & GENERATE: Call Gemini with the retrieved context.
       const generatedQuestions = await this.geminiService.generateExamQuestions(
         context,
         exam.description,

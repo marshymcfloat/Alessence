@@ -24,7 +24,11 @@ import {
   GetAllTasksReturnType,
   UpdateTaskStatusReturnType,
 } from "@repo/types";
-import { getAllTasks, updateTaskStatus, deleteTaskAction } from "@/lib/actions/taskActionts";
+import {
+  getAllTasks,
+  updateTaskStatus,
+  deleteTaskAction,
+} from "@/lib/actions/taskActionts";
 import { toast } from "sonner";
 
 type TaskStatus = "PLANNED" | "ON_PROGRESS" | "DONE";
@@ -151,7 +155,6 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
 
     if (!activeTask) return;
 
-    // Check if dropped on delete zone
     if (over.id === "delete-zone") {
       deleteMutate(activeTask.id);
       return;

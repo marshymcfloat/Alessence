@@ -15,7 +15,6 @@ interface ColumnProps {
   tasks: Task[];
 }
 
-// Helper for more readable titles
 const columnTitles: Record<TaskStatus, string> = {
   PLANNED: "Planned",
   ON_PROGRESS: "In Progress",
@@ -26,7 +25,7 @@ export function Column({ status, tasks }: ColumnProps) {
   const { setNodeRef } = useDroppable({
     id: status,
     data: {
-      type: "Column", // ❗️ Identify this as a Column droppable area
+      type: "Column",
       column: status,
     },
   });

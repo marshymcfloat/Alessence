@@ -64,7 +64,6 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
       }
     : {};
 
-  // Get colors based on subject and deadline
   const taskWithSubject = task as TaskWithSubject;
   const subjectId = taskWithSubject.subject?.id || task.subjectId;
   const subjectLeftBorder = getSubjectLeftBorder(subjectId);
@@ -72,8 +71,6 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
   const deadlineUrgency = getDeadlineUrgency(new Date(task.deadline));
   const deadlineBorder = getDeadlineBorderColor(deadlineUrgency);
 
-  // Combine colors: left border (4px) for subject, top border (2px) for deadline urgency
-  // Extract just the color from deadlineBorder (remove border-2 if present)
   const deadlineColorClass = deadlineBorder.includes("border-red-500")
     ? "border-t-red-500"
     : deadlineBorder.includes("border-orange-500")

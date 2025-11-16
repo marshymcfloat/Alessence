@@ -150,7 +150,6 @@ export default function ExamsList() {
     setIsEvaluating(true);
 
     try {
-      // Prepare answers for evaluation
       const answersToEvaluate = selectedExam.questions
         .filter((question) => answers[question.id])
         .map((question) => ({
@@ -164,7 +163,6 @@ export default function ExamsList() {
         return;
       }
 
-      // Call the API to evaluate answers
       const result = await evaluateAnswers(answersToEvaluate);
 
       if (!result.success || !result.data) {
@@ -173,14 +171,12 @@ export default function ExamsList() {
         return;
       }
 
-      // Store results
       const resultsMap: Record<number, boolean> = {};
       result.data.forEach((evaluation) => {
         resultsMap[evaluation.questionId] = evaluation.isCorrect;
       });
       setAnswerResults(resultsMap);
 
-      // Calculate score
       let correct = 0;
       result.data.forEach((evaluation) => {
         if (evaluation.isCorrect) {
@@ -206,7 +202,6 @@ export default function ExamsList() {
     }
   };
 
-  // Helper function for case-insensitive comparison (for display purposes)
   const isAnswerCorrectSimple = (
     userAnswer: string,
     correctAnswer: string

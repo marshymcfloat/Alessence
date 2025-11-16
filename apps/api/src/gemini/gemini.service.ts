@@ -1,19 +1,14 @@
-// src/gemini/gemini.service.ts
-
 import { Injectable, Logger } from '@nestjs/common';
 import { GoogleGenAI } from '@google/genai';
 import { Question, QuestionTypeEnum } from '@repo/db';
 
-// 1. Define interfaces for the JSON structure you expect from the AI
 interface RawQuestionJson {
   text: string;
-  type: string; // Kept as string because it comes from JSON
+  type: string;
   options?: string[];
   correctAnswer: string;
 }
 
-// 2. Define interfaces for the Gemini API response structure
-// This mimics the structure your logic is traversing (candidates -> content -> parts)
 interface GeminiPart {
   text?: string;
 }
@@ -27,10 +22,9 @@ interface GeminiCandidate {
 }
 
 interface GeminiResponseWrapper {
-  text?: string; // For result.text
+  text?: string;
 }
 
-// A Union type to cover all the shapes your logic checks for
 type GeminiResult =
   | string
   | (GeminiResponseWrapper & {
@@ -49,7 +43,6 @@ export class GeminiService {
   private readonly genAI: GoogleGenAI;
 
   constructor() {
-    // Instantiated the new class name
     this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
   }
 
@@ -59,9 +52,6 @@ export class GeminiService {
     itemCount: number,
     questionTypes: QuestionTypeEnum[],
   ): Promise<GeneratedQuestion[]> {
-    // The model is no longer retrieved separately.
-
-    // Build question type distribution
     const typeCounts = this.distributeQuestionTypes(itemCount, questionTypes);
     const typeInstructions = this.buildQuestionTypeInstructions(
       typeCounts,
@@ -130,34 +120,26 @@ export class GeminiService {
     `;
 
     try {
-      // Cast the result to our defined Union type so TypeScript knows what properties might exist
       const result = (await this.genAI.models.generateContent({
         model: 'gemini-2.5-flash-lite',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
-      // Extract text from the response - handle different possible response structures
       let responseText: string | undefined;
 
-      // Try different possible response structures
       if (typeof result === 'string') {
         responseText = result;
       } else if (result && typeof result === 'object') {
-        // Try result.text
         if ('text' in result && typeof result.text === 'string') {
           responseText = result.text;
-        }
-        // Try result.response.text
-        else if (
+        } else if (
           'response' in result &&
           result.response &&
           typeof result.response === 'object' &&
           'text' in result.response
         ) {
           responseText = result.response.text as string;
-        }
-        // Try result.candidates[0].content.parts[0].text (standard Gemini API structure)
-        else if (
+        } else if (
           'candidates' in result &&
           Array.isArray(result.candidates) &&
           result.candidates.length > 0
@@ -168,7 +150,6 @@ export class GeminiService {
             typeof candidate === 'object' &&
             'content' in candidate
           ) {
-            // No 'any' needed here because we defined the interface GeminiCandidate
             const content = candidate.content;
             if (
               content &&
@@ -195,7 +176,6 @@ export class GeminiService {
         );
       }
 
-      // Clean the response text - remove markdown code blocks if present
       let cleanedText = responseText.trim();
       if (cleanedText.startsWith('```json')) {
         cleanedText = cleanedText
@@ -205,14 +185,12 @@ export class GeminiService {
         cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
 
-      // Cast the parsed JSON to our expected array structure
       const parsedResponse = JSON.parse(cleanedText) as RawQuestionJson[];
 
       if (!Array.isArray(parsedResponse)) {
         throw new Error('Gemini response is not a JSON array.');
       }
 
-      // 'q' is now strongly typed as RawQuestionJson, so we don't need ': any'
       return parsedResponse.map((q) => {
         let questionType: QuestionTypeEnum = QuestionTypeEnum.MULTIPLE_CHOICE;
         if (q.type === 'TRUE_FALSE' || q.type === QuestionTypeEnum.TRUE_FALSE) {
@@ -236,12 +214,10 @@ export class GeminiService {
       );
 
       if (typeof error === 'object' && error !== null && 'response' in error) {
-        // Explicit type assertion for the error object structure
         const apiError = error as { response?: { text: string } };
         this.logger.error('Original response text:', apiError.response?.text);
       }
 
-      // Re-throw with more context if it's not already an Error
       if (error instanceof Error) {
         throw error;
       }
@@ -309,7 +285,6 @@ export class GeminiService {
     correctAnswer: string,
     questionText: string,
   ): Promise<boolean> {
-    // Normalize inputs
     const normalizedUserAnswer = userAnswer.trim();
     const normalizedCorrectAnswer = correctAnswer.trim();
 
@@ -317,7 +292,6 @@ export class GeminiService {
       return false;
     }
 
-    // For single words or short terminology (1-2 words), use case-insensitive comparison
     const userWords = normalizedUserAnswer.split(/\s+/).length;
     const correctWords = normalizedCorrectAnswer.split(/\s+/).length;
     const isShortAnswer = userWords <= 2 && correctWords <= 2;
@@ -329,7 +303,6 @@ export class GeminiService {
       );
     }
 
-    // For longer answers, use AI to evaluate semantic equivalence
     try {
       const prompt = `You are an expert accounting professor evaluating exam answers. Determine if the student's answer is semantically equivalent to the correct answer.
 
@@ -358,7 +331,6 @@ Do not include any text before or after the JSON object.`;
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
-      // Extract text from response (same logic as generateExamQuestions)
       let responseText: string | undefined;
 
       if (typeof result === 'string') {
@@ -410,7 +382,6 @@ Do not include any text before or after the JSON object.`;
         );
       }
 
-      // Clean the response text
       let cleanedText = responseText.trim();
       if (cleanedText.startsWith('```json')) {
         cleanedText = cleanedText
@@ -440,7 +411,7 @@ Do not include any text before or after the JSON object.`;
       this.logger.error(
         `Error evaluating answer with AI: ${error instanceof Error ? error.message : String(error)}. Falling back to case-insensitive comparison.`,
       );
-      // Fallback to case-insensitive comparison on error
+
       return (
         normalizedUserAnswer.toLowerCase() ===
         normalizedCorrectAnswer.toLowerCase()

@@ -8,9 +8,8 @@ export class HealthController {
   @Get()
   async check() {
     try {
-      // Check database connection
       await this.dbService.$queryRaw`SELECT 1`;
-      
+
       return {
         status: 'ok',
         timestamp: new Date().toISOString(),
@@ -26,4 +25,3 @@ export class HealthController {
     }
   }
 }
-

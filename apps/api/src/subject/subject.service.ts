@@ -12,7 +12,7 @@ export class SubjectService {
   async getAll(): Promise<SubjectWithTaskProgress[]> {
     const subjectsWithTasks = await this.dbService.subject.findMany({
       where: { isEnrolled: true },
-      // Include the status of all related tasks
+
       include: {
         tasks: {
           select: {
@@ -22,7 +22,6 @@ export class SubjectService {
       },
     });
 
-    // Process the data to add counts
     const subjectsWithProgress = subjectsWithTasks.map((subject) => {
       const { tasks, ...restOfSubject } = subject;
 

@@ -57,8 +57,8 @@ export default function ExamForm({ onSuccess }: ExamFormProps) {
     onSuccess: (data) => {
       if (data.success) {
         toast.success(data.message || "Exam created successfully!");
-        queryClient.invalidateQueries({ queryKey: ["exams"] }); // Invalidate exams list if you have one
-        onSuccess?.(); // Close the sheet
+        queryClient.invalidateQueries({ queryKey: ["exams"] });
+        onSuccess?.();
         form.reset();
       } else {
         toast.error(data.error || "Something went wrong.");
@@ -177,7 +177,10 @@ export default function ExamForm({ onSuccess }: ExamFormProps) {
                           <FormControl>
                             <Checkbox
                               checked={field.value?.includes(
-                                item as "MULTIPLE_CHOICE" | "TRUE_FALSE" | "IDENTIFICATION"
+                                item as
+                                  | "MULTIPLE_CHOICE"
+                                  | "TRUE_FALSE"
+                                  | "IDENTIFICATION"
                               )}
                               onCheckedChange={(checked) => {
                                 return checked

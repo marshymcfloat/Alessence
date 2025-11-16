@@ -1,5 +1,3 @@
-// src/exam/exam.service.ts
-
 import { Injectable, Logger } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { FileService } from 'src/file/file.service';
@@ -122,7 +120,6 @@ export class ExamService {
     this.logger.log(`Handling 'exam.created' event for Exam [ID: ${exam.id}]`);
 
     try {
-      // Step 1: Fetch the exam with its source files to get their content
       const examWithFiles = (await this.dbService.exam.findUniqueOrThrow({
         where: { id: exam.id },
         include: { sourceFiles: true },
@@ -146,7 +143,6 @@ export class ExamService {
         examWithFiles.questionTypes,
       );
 
-      // Validate that questions were generated
       if (!generatedQuestions || generatedQuestions.length === 0) {
         throw new Error(
           `No questions were generated for Exam [ID: ${exam.id}]. Expected ${exam.requestedItems} questions.`,
@@ -157,7 +153,6 @@ export class ExamService {
         `Generated ${generatedQuestions.length} questions for Exam [ID: ${exam.id}]. Saving to database...`,
       );
 
-      // Validate each question before saving
       const validQuestions = generatedQuestions.filter((q) => {
         if (!q.text || !q.text.trim()) {
           this.logger.warn(
@@ -165,7 +160,7 @@ export class ExamService {
           );
           return false;
         }
-        // IDENTIFICATION questions don't need options
+
         if (q.type !== QuestionTypeEnum.IDENTIFICATION) {
           if (
             !q.options ||
@@ -214,7 +209,6 @@ export class ExamService {
           })),
         });
 
-        // Step 5: Update the exam status to READY
         await tx.exam.update({
           where: { id: exam.id },
           data: { status: ExamStatusEnum.READY },
@@ -277,7 +271,6 @@ export class ExamService {
   async evaluateAnswers(
     answers: Array<{ questionId: number; userAnswer: string }>,
   ): Promise<Array<{ questionId: number; isCorrect: boolean }>> {
-    // Fetch all questions at once
     const questionIds = answers.map((a) => a.questionId);
     const questions = await this.dbService.question.findMany({
       where: { id: { in: questionIds } },
@@ -287,7 +280,6 @@ export class ExamService {
       questions.map((q) => [q.id, q]),
     );
 
-    // Evaluate all answers in parallel
     const evaluations = await Promise.all(
       answers.map(async ({ questionId, userAnswer }) => {
         const question = questionMap.get(questionId);
