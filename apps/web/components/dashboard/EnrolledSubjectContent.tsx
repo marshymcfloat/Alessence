@@ -14,13 +14,13 @@ const EnrolledSubjectContent = ({
     return (
       <div className="text-center py-6">
         <div className="flex flex-col items-center gap-2">
-          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mb-2">
-            <BookOpen className="w-6 h-6 text-gray-400" />
+          <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-2">
+            <BookOpen className="w-6 h-6 text-gray-400 dark:text-gray-500" />
           </div>
-          <p className="text-sm text-gray-500 font-medium">
+          <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
             No subjects enrolled
           </p>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             Add a subject to get started
           </p>
         </div>

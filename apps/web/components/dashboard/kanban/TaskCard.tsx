@@ -79,7 +79,7 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
         ? "border-t-yellow-500"
         : "border-t-gray-300";
 
-  const borderClasses = `${subjectLeftBorder} border-l-4 ${deadlineColorClass} border-t-2 border-r border-b border-r-gray-200 border-b-gray-200`;
+  const borderClasses = `${subjectLeftBorder} border-l-4 ${deadlineColorClass} border-t-2 border-r border-b border-r-gray-200 dark:border-r-gray-700 border-b-gray-200 dark:border-b-gray-700`;
 
   return (
     <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
@@ -93,34 +93,36 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
             style={{ ...style, ...overlayStyle }}
             {...attributes}
             {...listeners}
-            className={`${subjectBg} ${borderClasses} p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200 cursor-grab`}
+            className={`${subjectBg} ${borderClasses} p-4  rounded-xl shadow-md dark:shadow-slate-900/50 hover:shadow-lg dark:hover:shadow-slate-900/70 transition-shadow duration-200 cursor-grab`}
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-gray-800">{task.title}</h3>
+                <h3 className="font-semibold text-gray-800 dark:text-black">
+                  {task.title}
+                </h3>
                 {task.description && (
-                  <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
                     {task.description}
                   </p>
                 )}
                 {taskWithSubject.subject && (
-                  <p className="text-xs text-gray-500 mt-2 font-medium">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 font-medium">
                     {taskWithSubject.subject.title}
                   </p>
                 )}
               </div>
             </div>
             <div className="flex items-center justify-between mt-3">
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-400 dark:text-gray-500">
                 Due: {new Date(task.deadline).toLocaleDateString()}
               </p>
               {deadlineUrgency === "overdue" && (
-                <span className="text-xs font-semibold text-red-600">
+                <span className="text-xs font-semibold text-red-600 dark:text-red-400">
                   Overdue
                 </span>
               )}
               {deadlineUrgency === "urgent" && (
-                <span className="text-xs font-semibold text-orange-600">
+                <span className="text-xs font-semibold text-orange-600 dark:text-orange-400">
                   Urgent
                 </span>
               )}

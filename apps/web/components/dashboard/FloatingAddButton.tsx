@@ -43,7 +43,8 @@ const FloatingAddButton = () => {
 
   const buttonClasses = clsx(
     "fixed bottom-4 right-4 flex items-center justify-center cursor-pointer",
-    "bg-neutral-900 text-white shadow-xl overflow-hidden z-50"
+    "bg-neutral-900 dark:bg-slate-700 text-white shadow-xl dark:shadow-slate-900/50 overflow-hidden z-50",
+    "border-2 border-transparent dark:border-slate-600"
   );
 
   return (
@@ -93,7 +94,7 @@ const FloatingAddButton = () => {
               exit="closed"
             >
               <motion.span
-                className="cursor-pointer hover:bg-neutral-700 p-1 rounded-md px-3 w-full text-left"
+                className="cursor-pointer hover:bg-neutral-700 dark:hover:bg-slate-600 p-1 rounded-md px-3 w-full text-left"
                 variants={menuItemVariants}
                 onClick={() => {
                   setIsAddSubjectDialogOpen(true);
@@ -104,18 +105,18 @@ const FloatingAddButton = () => {
               </motion.span>
 
               <motion.span
-                className="cursor-pointer hover:bg-neutral-700 p-1 rounded-md px-3 w-full text-left"
+                className="cursor-pointer hover:bg-neutral-700 dark:hover:bg-slate-600 p-1 rounded-md px-3 w-full text-left"
                 variants={menuItemVariants}
                 onClick={() => {
                   setIsAddTaskDialogOpen(true);
                   setIsExpanded(false);
                 }}
               >
-                Add task
+                Add Task
               </motion.span>
 
               <motion.span
-                className="cursor-pointer hover:bg-neutral-700 p-1 rounded-md px-3 w-full text-left"
+                className="cursor-pointer hover:bg-neutral-700 dark:hover:bg-slate-600 p-1 rounded-md px-3 w-full text-left"
                 variants={menuItemVariants}
                 onClick={() => {
                   setIsAddExamDialogOpen(true);
