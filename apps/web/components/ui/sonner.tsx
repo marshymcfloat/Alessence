@@ -17,12 +17,6 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
-      toastOptions={{
-        // Enable click-to-dismiss on all toasts
-        onClick: (toast) => {
-          toast.dismiss();
-        },
-      }}
       icons={{
         success: <CircleCheckIcon className="size-4" />,
         info: <InfoIcon className="size-4" />,
