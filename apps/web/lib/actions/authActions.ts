@@ -5,17 +5,24 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export async function authLoginAction(values: AuthLoginTypes) {
+  const cookieHeader = await cookies();
+  
+  // Add timeout to prevent hanging requests
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+  
   try {
-    const cookieHeader = await cookies();
     const response = await fetch(`${process.env.FETCH_BASE_URL}/auth/login`, {
       method: "POST",
       headers: {
-        "Content-Type": "Application/json",
+        "Content-Type": "application/json",
       },
       credentials: "include",
       body: JSON.stringify(values),
+      signal: controller.signal,
     });
 
+    clearTimeout(timeoutId);
     const data = await response.json();
 
     if (!response.ok) {
@@ -47,7 +54,20 @@ export async function authLoginAction(values: AuthLoginTypes) {
       message: data.message || "Login successfully",
     };
   } catch (error) {
+    // Always clear timeout on error
+    clearTimeout(timeoutId);
     console.error("There is an unexpected error occured", error);
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.name === 'AbortError') {
+        return { success: false, error: "Request timed out. Please try again." };
+      }
+      if (error.message.includes('fetch') || error.message.includes('ECONNREFUSED')) {
+        return { success: false, error: "Unable to connect to server. Please check your connection." };
+      }
+    }
+    
     return { success: false, error: "There is an unexpected error occured" };
   }
 }

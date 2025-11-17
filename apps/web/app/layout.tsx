@@ -4,6 +4,8 @@ import "./globals.css";
 import TanstackProvider from "@/components/providers/TanstackProvider";
 import { Toaster } from "@/components/ui/sonner";
 import ReduxProvider from "@/components/providers/ReduxProvider";
+import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -25,18 +27,26 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} bg-linear-to-br from-pink-50 via-purple-50 to-blue-50`}
+        className={`${geistSans.variable} ${geistMono.variable} bg-linear-to-br from-pink-50 via-purple-50 to-blue-50 dark:from-pink-950 dark:via-purple-950 dark:to-blue-950`}
       >
-        <main className="min-h-screen w-full relative">
-          <ReduxProvider>
-            <TanstackProvider>
-              {children}
-              <Toaster />
-            </TanstackProvider>
-          </ReduxProvider>
-        </main>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <main className="min-h-screen w-full relative">
+            <ReduxProvider>
+              <TanstackProvider>
+                {children}
+                <ThemeSwitcher />
+                <Toaster />
+              </TanstackProvider>
+            </ReduxProvider>
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );
