@@ -266,8 +266,8 @@ export default function ExamsList() {
   }
 
   return (
-    <div className="rounded-md mx-auto border border-black w-full flex-1 p-4">
-      <ItemGroup className="space-y-2">
+    <div className="rounded-md mx-auto border border-black w-full flex-1 p-4 overflow-y-auto">
+      <ItemGroup className="space-y-2 ">
         {exams.map((exam) => (
           <Item
             key={exam.id}
@@ -311,7 +311,7 @@ export default function ExamsList() {
       </ItemGroup>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-6xl! max-h-[90vh]! overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{selectedExam?.description}</DialogTitle>
             <DialogDescription>
@@ -320,7 +320,7 @@ export default function ExamsList() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
             {selectedExam?.questions.map((question, index) => {
               const options = (question.options as string[]) || [];
               const userAnswer = answers[question.id];
@@ -337,26 +337,30 @@ export default function ExamsList() {
               return (
                 <div
                   key={question.id}
-                  className={`p-4 rounded-lg border ${
+                  className={`p-5 rounded-lg border transition-all ${
                     showResult
                       ? isCorrect
-                        ? "border-green-500 bg-green-50"
-                        : "border-red-500 bg-red-50"
-                      : "border-border"
+                        ? "border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/20"
+                        : "border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/20"
+                      : "border-border dark:border-gray-700 bg-white dark:bg-slate-800/50"
                   }`}
                 >
-                  <div className="flex items-start gap-2 mb-3">
-                    <span className="font-semibold text-sm">{index + 1}.</span>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{question.text}</p>
-                      <span className="text-xs text-muted-foreground mt-1 inline-block">
-                        ({question.type.replace("_", " ").toLowerCase()})
+                  <div className="flex items-start gap-3 mb-4">
+                    <span className="font-bold text-base text-primary shrink-0 min-w-8">
+                      {index + 1}.
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100 leading-relaxed">
+                        {question.text}
+                      </p>
+                      <span className="text-xs text-muted-foreground mt-2 inline-block px-2 py-0.5 rounded-full bg-muted/50">
+                        {question.type.replace("_", " ").toLowerCase()}
                       </span>
                     </div>
                   </div>
 
                   {isIdentification ? (
-                    <div className="ml-6">
+                    <div className="ml-9">
                       <input
                         type="text"
                         value={userAnswer || ""}
@@ -365,7 +369,7 @@ export default function ExamsList() {
                         }
                         disabled={submitted}
                         placeholder="Type your answer here..."
-                        className="w-full p-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full p-3 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-primary dark:bg-slate-900 dark:border-gray-600"
                       />
                       {submitted && (
                         <div className="mt-3 text-xs">
@@ -378,8 +382,64 @@ export default function ExamsList() {
                         </div>
                       )}
                     </div>
+                  ) : isTrueFalse ? (
+                    <div className="ml-9 flex gap-3">
+                      {options.map((option, optIndex) => {
+                        const isSelected = userAnswer === option;
+                        const isCorrectOption = isAnswerCorrectSimple(
+                          option,
+                          question.correctAnswer
+                        );
+
+                        return (
+                          <label
+                            key={optIndex}
+                            className={`flex items-center gap-2 px-4 py-2 rounded-md cursor-pointer transition-colors font-medium ${
+                              submitted
+                                ? isCorrectOption
+                                  ? "bg-green-100 dark:bg-green-900/30 border-2 border-green-500 dark:border-green-400 text-green-700 dark:text-green-300"
+                                  : isSelected && !isCorrect
+                                    ? "bg-red-100 dark:bg-red-900/30 border-2 border-red-500 dark:border-red-400 text-red-700 dark:text-red-300"
+                                    : "bg-gray-50 dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+                                : isSelected
+                                  ? "bg-primary text-primary-foreground border-2 border-primary"
+                                  : "bg-gray-100 dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name={`question-${question.id}`}
+                              value={option}
+                              checked={isSelected}
+                              onChange={(e) =>
+                                handleAnswerChange(question.id, e.target.value)
+                              }
+                              disabled={submitted}
+                              className="cursor-pointer"
+                            />
+                            <span className="text-sm">{option}</span>
+                            {submitted && isCorrectOption && (
+                              <CheckCircle2 className="size-4" />
+                            )}
+                            {submitted && isSelected && !isCorrect && (
+                              <XCircle className="size-4" />
+                            )}
+                          </label>
+                        );
+                      })}
+                      {submitted && (
+                        <div className="mt-3 text-xs w-full">
+                          <p className="text-muted-foreground">
+                            Correct answer:{" "}
+                            <span className="font-semibold">
+                              {question.correctAnswer}
+                            </span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   ) : (
-                    <div className="space-y-2 ml-6">
+                    <div className="space-y-2.5 ml-9">
                       {options.map((option, optIndex) => {
                         const isSelected = userAnswer === option;
                         const isCorrectOption = isAnswerCorrectSimple(
@@ -393,10 +453,10 @@ export default function ExamsList() {
                             className={`flex items-center gap-2 p-2 rounded cursor-pointer transition-colors ${
                               submitted
                                 ? isCorrectOption
-                                  ? "bg-green-100 border-green-300"
+                                  ? "bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700"
                                   : isSelected && !isCorrect
-                                    ? "bg-red-100 border-red-300"
-                                    : "bg-gray-50"
+                                    ? "bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700"
+                                    : "bg-gray-50 dark:bg-gray-800"
                                 : isSelected
                                   ? "bg-accent border-primary"
                                   : "hover:bg-accent/50 border-transparent"
@@ -415,10 +475,10 @@ export default function ExamsList() {
                             />
                             <span className="text-sm flex-1">{option}</span>
                             {submitted && isCorrectOption && (
-                              <CheckCircle2 className="size-4 text-green-600" />
+                              <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
                             )}
                             {submitted && isSelected && !isCorrect && (
-                              <XCircle className="size-4 text-red-600" />
+                              <XCircle className="size-4 text-red-600 dark:text-red-400" />
                             )}
                           </label>
                         );
