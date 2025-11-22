@@ -34,10 +34,11 @@ model Subject {
   sem         SemesterEnum @default(FIRST)
   isEnrolled  Boolean?     @default(true)
 
-  // A subject can contain many tasks, files, and exams
+  // A subject can contain many tasks, files, exams, and summaries
   tasks Task[]
   files File[]
   exams Exam[] // Relation to the new Exam model
+  summaries Summary[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -56,6 +57,7 @@ model File {
   subjectId Int?
   subject   Subject? @relation(fields: [subjectId], references: [id])
   exams     Exam[]
+  summaries Summary[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -195,4 +197,40 @@ enum QuestionTypeEnum {
 enum AttemptStatusEnum {
   IN_PROGRESS
   COMPLETED
+}
+
+// --- SUMMARY-RELATED MODELS ---
+
+model Summary {
+  id Int @id @default(autoincrement())
+
+  title       String
+  description String // The instructions/focus from the form
+  content     String? @db.Text // The generated summary content
+  status      SummaryStatusEnum @default(GENERATING)
+  template    SummaryTemplateEnum @default(COMPREHENSIVE)
+
+  // A summary belongs to a subject for organization (optional)
+  subjectId Int?
+  subject   Subject? @relation(fields: [subjectId], references: [id])
+
+  // A summary is generated from one or more source files (many-to-many)
+  sourceFiles File[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum SummaryStatusEnum {
+  GENERATING
+  READY
+  FAILED
+}
+
+enum SummaryTemplateEnum {
+  COMPREHENSIVE
+  KEY_POINTS
+  CHAPTER_SUMMARY
+  CONCEPT_MAP
+  CUSTOM
 }

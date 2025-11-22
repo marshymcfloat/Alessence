@@ -5,4 +5,6 @@ export {
   ExamStatusEnum,
   QuestionTypeEnum,
   AttemptStatusEnum,
+  SummaryStatusEnum,
+  SummaryTemplateEnum,
 } from "@prisma/client";

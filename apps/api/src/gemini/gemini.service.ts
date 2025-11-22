@@ -275,11 +275,6 @@ export class GeminiService {
     return instructions.join('\n');
   }
 
-  /**
-   * Evaluates if a user's answer is correct using AI for semantic comparison.
-   * For single words or terminology, uses case-insensitive comparison.
-   * For longer answers, uses AI to evaluate semantic equivalence.
-   */
   async evaluateAnswer(
     userAnswer: string,
     correctAnswer: string,
@@ -416,6 +411,163 @@ Do not include any text before or after the JSON object.`;
         normalizedUserAnswer.toLowerCase() ===
         normalizedCorrectAnswer.toLowerCase()
       );
+    }
+  }
+
+  async generateSummary(
+    sourceText: string,
+    description: string,
+    template: string = 'COMPREHENSIVE',
+  ): Promise<string> {
+    const templateInstructions = this.getSummaryTemplateInstructions(template);
+
+    const prompt = `
+      You are an expert accounting professor creating a comprehensive summary for accountancy students. Your task is to generate a well-structured summary based on the provided document and the user's specific requirements.
+
+      USER'S REQUIREMENTS:
+      "${description}"
+
+      SOURCE DOCUMENT:
+      ---
+      ${sourceText}
+      ---
+
+      SUMMARY FORMAT/TEMPLATE:
+      ${templateInstructions}
+
+      CRITICAL REQUIREMENTS FOR ACCOUNTANCY STUDENTS:
+      1. Focus on accounting principles, standards, and practical applications
+      2. Highlight key formulas, calculations, and methodologies
+      3. Include important definitions and terminology
+      4. Organize information in a logical, easy-to-follow structure
+      5. Emphasize concepts that are commonly tested in accounting exams
+      6. Use clear, concise language suitable for students
+      7. Include examples where relevant to illustrate concepts
+      8. Make connections between related accounting topics
+      9. Highlight any regulatory frameworks or standards mentioned (PAS, PFRS, etc.)
+
+      RESPONSE FORMAT:
+      Your response should be a well-formatted summary following the template instructions above. Do not include any markdown code blocks or JSON formatting - just provide the summary text directly.
+
+      IMPORTANT: The summary should be comprehensive yet focused, helping accountancy students understand and retain the key information from the document.
+    `;
+
+    try {
+      const result = (await this.genAI.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      })) as GeminiResult;
+
+      let responseText: string | undefined;
+
+      if (typeof result === 'string') {
+        responseText = result;
+      } else if (result && typeof result === 'object') {
+        if ('text' in result && typeof result.text === 'string') {
+          responseText = result.text;
+        } else if (
+          'response' in result &&
+          result.response &&
+          typeof result.response === 'object' &&
+          'text' in result.response
+        ) {
+          responseText = result.response.text as string;
+        } else if (
+          'candidates' in result &&
+          Array.isArray(result.candidates) &&
+          result.candidates.length > 0
+        ) {
+          const candidate = result.candidates[0];
+          if (
+            candidate &&
+            typeof candidate === 'object' &&
+            'content' in candidate
+          ) {
+            const content = candidate.content;
+            if (
+              content &&
+              'parts' in content &&
+              Array.isArray(content.parts) &&
+              content.parts.length > 0
+            ) {
+              const part = content.parts[0];
+              if (part && 'text' in part && typeof part.text === 'string') {
+                responseText = part.text;
+              }
+            }
+          }
+        }
+      }
+
+      if (!responseText) {
+        this.logger.error(
+          'Received an empty or unexpected response from Gemini for summary generation.',
+        );
+        throw new Error(
+          'Received an empty or unexpected response from Gemini.',
+        );
+      }
+
+      return responseText.trim();
+    } catch (error) {
+      this.logger.error(
+        `Error generating summary: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      if (error instanceof Error) {
+        throw error;
+      }
+
+      throw new Error(
+        `Failed to generate summary from Gemini: ${String(error)}`,
+      );
+    }
+  }
+
+  private getSummaryTemplateInstructions(template: string): string {
+    switch (template) {
+      case 'KEY_POINTS':
+        return `
+          Format: Bullet-point list of key concepts, formulas, and important information.
+          - Use clear, concise bullet points
+          - Group related concepts together
+          - Highlight formulas and calculations prominently
+          - Include definitions for key terms
+        `;
+      case 'CHAPTER_SUMMARY':
+        return `
+          Format: Structured chapter-style summary with sections and subsections.
+          - Use clear headings and subheadings
+          - Organize by topics/themes
+          - Include introduction, main content sections, and key takeaways
+          - Use numbered or bulleted lists for clarity
+        `;
+      case 'CONCEPT_MAP':
+        return `
+          Format: Hierarchical or interconnected concept map style.
+          - Show relationships between concepts
+          - Use indentation or visual hierarchy
+          - Connect related ideas
+          - Show how concepts build upon each other
+        `;
+      case 'CUSTOM':
+        return `
+          Format: Custom format based on the document structure and user requirements.
+          - Adapt to the document's natural organization
+          - Follow the user's specific instructions in the description
+          - Maintain logical flow and coherence
+        `;
+      case 'COMPREHENSIVE':
+      default:
+        return `
+          Format: Comprehensive, detailed summary with full explanations.
+          - Include all major concepts and details
+          - Provide context and explanations
+          - Use clear section headings
+          - Include examples and practical applications
+          - Maintain thorough coverage of the source material
+        `;
     }
   }
 }

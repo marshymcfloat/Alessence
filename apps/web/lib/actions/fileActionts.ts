@@ -31,8 +31,6 @@ export async function getAllFiles(): Promise<
       };
     }
 
-    console.log(data);
-
     return { success: true, data };
   } catch (err) {
     console.error(

@@ -4,6 +4,7 @@ export * from "./next schemas/authSchemas";
 export * from "./next schemas/subjectSchema";
 export * from "./next schemas/taskSchema";
 export * from "./next schemas/examSchemas";
+export * from "./next schemas/summarySchemas";
 export type SafeUser = {
   id: String;
   email: String;

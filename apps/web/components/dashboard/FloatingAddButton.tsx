@@ -8,6 +8,7 @@ import { useState } from "react";
 import AddSubjectDialog from "./AddSubjectDialog";
 import AddTaskDialog from "./AddTaskDialog";
 import AddExamDialog from "./AddExamDialog";
+import AddSummaryDialog from "./AddSummaryDialog";
 
 const menuVariants = {
   open: {
@@ -40,6 +41,7 @@ const FloatingAddButton = () => {
   const [isAddSubjectDialogOpen, setIsAddSubjectDialogOpen] = useState(false);
   const [isAddTaskDialogOpen, setIsAddTaskDialogOpen] = useState(false);
   const [isAddExamDialogOpen, setIsAddExamDialogOpen] = useState(false);
+  const [isAddSummaryDialogOpen, setIsAddSummaryDialogOpen] = useState(false);
 
   const buttonClasses = clsx(
     "fixed bottom-4 right-4 flex items-center justify-center cursor-pointer",
@@ -63,7 +65,7 @@ const FloatingAddButton = () => {
         initial={{ width: "3.5rem", height: "3.5rem" }}
         animate={{
           width: isExpanded ? "15rem" : "3.5rem",
-          height: isExpanded ? "10rem" : "3.5rem",
+          height: isExpanded ? "12rem" : "3.5rem",
         }}
         transition={{
           type: "spring",
@@ -125,6 +127,17 @@ const FloatingAddButton = () => {
               >
                 Add Exam
               </motion.span>
+
+              <motion.span
+                className="cursor-pointer hover:bg-neutral-700 dark:hover:bg-slate-600 p-1 rounded-md px-3 w-full text-left"
+                variants={menuItemVariants}
+                onClick={() => {
+                  setIsAddSummaryDialogOpen(true);
+                  setIsExpanded(false);
+                }}
+              >
+                Add Summary
+              </motion.span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -143,6 +156,13 @@ const FloatingAddButton = () => {
 
       <Dialog open={isAddExamDialogOpen} onOpenChange={setIsAddExamDialogOpen}>
         <AddExamDialog onClose={() => setIsAddExamDialogOpen(false)} />
+      </Dialog>
+
+      <Dialog
+        open={isAddSummaryDialogOpen}
+        onOpenChange={setIsAddSummaryDialogOpen}
+      >
+        <AddSummaryDialog onClose={() => setIsAddSummaryDialogOpen(false)} />
       </Dialog>
     </>
   );
