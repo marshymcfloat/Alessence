@@ -21,7 +21,7 @@ export function ThemeSwitcher() {
   const isDark = theme === "dark";
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex items-center gap-2 rounded-lg border bg-background/80 backdrop-blur-sm p-2 shadow-lg">
+    <div className="fixed  top-20 right-4!  w-fit h-fit  z-50 flex items-center gap-2 rounded-lg border bg-background/80 backdrop-blur-sm p-2 shadow-lg">
       <Sun className="h-4 w-4 text-foreground/70" />
       <Switch
         checked={isDark}
@@ -34,4 +34,3 @@ export function ThemeSwitcher() {
     </div>
   );
 }
-

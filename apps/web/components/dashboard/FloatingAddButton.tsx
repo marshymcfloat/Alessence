@@ -12,10 +12,10 @@ import AddSummaryDialog from "./AddSummaryDialog";
 
 const menuVariants = {
   open: {
-    transition: { staggerChildren: 0.07, delayChildren: 0.2 },
+    transition: { staggerChildren: 0.03, delayChildren: 0.05 },
   },
   closed: {
-    transition: { staggerChildren: 0.05, staggerDirection: -1 },
+    transition: { staggerChildren: 0.02, staggerDirection: -1 },
   },
 };
 
@@ -24,14 +24,16 @@ const menuItemVariants = {
     y: 0,
     opacity: 1,
     transition: {
-      y: { stiffness: 1000, velocity: -100 },
+      y: { stiffness: 1000, velocity: -100, duration: 0.15 },
+      opacity: { duration: 0.15 },
     },
   },
   closed: {
     y: 50,
     opacity: 0,
     transition: {
-      y: { stiffness: 1000 },
+      y: { stiffness: 1000, duration: 0.15 },
+      opacity: { duration: 0.15 },
     },
   },
 };
@@ -44,9 +46,12 @@ const FloatingAddButton = () => {
   const [isAddSummaryDialogOpen, setIsAddSummaryDialogOpen] = useState(false);
 
   const buttonClasses = clsx(
-    "fixed bottom-4 right-4 flex items-center justify-center cursor-pointer",
-    "bg-neutral-900 dark:bg-slate-700 text-white shadow-xl dark:shadow-slate-900/50 overflow-hidden z-50",
-    "border-2 border-transparent dark:border-slate-600"
+    "fixed bottom-6 right-6 flex items-center justify-center cursor-pointer",
+    "bg-slate-800 dark:bg-slate-700",
+    "text-white shadow-2xl hover:shadow-3xl overflow-hidden z-50",
+    "border-2 border-slate-700/50 dark:border-slate-600/50",
+    "hover:bg-slate-700 dark:hover:bg-slate-600",
+    "transition-all duration-200"
   );
 
   return (
@@ -68,15 +73,13 @@ const FloatingAddButton = () => {
           height: isExpanded ? "12rem" : "3.5rem",
         }}
         transition={{
-          type: "spring",
-          stiffness: 260,
-          damping: 20,
+          duration: 0.15,
         }}
       >
         <motion.div
           className={`absolute ${isExpanded && "top-2 right-2"}`}
           animate={{ rotate: isExpanded ? 45 : 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: 0.2 }}
           onClick={(e) => {
             e.stopPropagation();
             setIsExpanded(!isExpanded);
@@ -96,7 +99,7 @@ const FloatingAddButton = () => {
               exit="closed"
             >
               <motion.span
-                className="cursor-pointer hover:bg-neutral-700 dark:hover:bg-slate-600 p-1 rounded-md px-3 w-full text-left"
+                className="cursor-pointer hover:bg-slate-700/50 dark:hover:bg-slate-600/50 p-1 rounded-md px-3 w-full text-left transition-colors duration-150"
                 variants={menuItemVariants}
                 onClick={() => {
                   setIsAddSubjectDialogOpen(true);
@@ -107,7 +110,7 @@ const FloatingAddButton = () => {
               </motion.span>
 
               <motion.span
-                className="cursor-pointer hover:bg-neutral-700 dark:hover:bg-slate-600 p-1 rounded-md px-3 w-full text-left"
+                className="cursor-pointer hover:bg-slate-700/50 dark:hover:bg-slate-600/50 p-1 rounded-md px-3 w-full text-left transition-colors duration-150"
                 variants={menuItemVariants}
                 onClick={() => {
                   setIsAddTaskDialogOpen(true);
@@ -118,7 +121,7 @@ const FloatingAddButton = () => {
               </motion.span>
 
               <motion.span
-                className="cursor-pointer hover:bg-neutral-700 dark:hover:bg-slate-600 p-1 rounded-md px-3 w-full text-left"
+                className="cursor-pointer hover:bg-slate-700/50 dark:hover:bg-slate-600/50 p-1 rounded-md px-3 w-full text-left transition-colors duration-150"
                 variants={menuItemVariants}
                 onClick={() => {
                   setIsAddExamDialogOpen(true);
@@ -129,7 +132,7 @@ const FloatingAddButton = () => {
               </motion.span>
 
               <motion.span
-                className="cursor-pointer hover:bg-neutral-700 dark:hover:bg-slate-600 p-1 rounded-md px-3 w-full text-left"
+                className="cursor-pointer hover:bg-slate-700/50 dark:hover:bg-slate-600/50 p-1 rounded-md px-3 w-full text-left transition-colors duration-150"
                 variants={menuItemVariants}
                 onClick={() => {
                   setIsAddSummaryDialogOpen(true);

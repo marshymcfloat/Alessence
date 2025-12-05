@@ -712,14 +712,14 @@ export default function SummariesList() {
 
   if (summaries.length === 0) {
     return (
-      <div className="rounded-md mx-auto border border-black w-full flex-1 p-8">
+      <div className="rounded-lg mx-auto border border-gray-200 dark:border-gray-800 w-full flex-1 !p-12 bg-white dark:bg-slate-900/50">
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <FileText />
+              <FileText className="!w-12 !h-12 text-gray-400 dark:text-gray-500" />
             </EmptyMedia>
-            <EmptyTitle>No summaries yet</EmptyTitle>
-            <EmptyDescription>
+            <EmptyTitle className="!text-lg">No summaries yet</EmptyTitle>
+            <EmptyDescription className="!text-sm">
               Create your first summary to get started with document summaries.
             </EmptyDescription>
           </EmptyHeader>
@@ -729,72 +729,101 @@ export default function SummariesList() {
   }
 
   return (
-    <div className="rounded-md mx-auto border border-black w-full flex-1 p-4 overflow-y-auto">
-      <ItemGroup className="space-y-2">
+    <div className="rounded-lg mx-auto border border-gray-200 dark:border-gray-800 w-full !p-6 bg-white dark:bg-slate-900/50">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {summaries.map((summary) => (
           <Item
             key={summary.id}
             variant="outline"
-            className={`cursor-pointer transition-colors hover:bg-accent ${
+            className={`!cursor-pointer !transition-all !duration-200 !rounded-lg !p-4 !border-2 ${
               summary.status === SummaryStatusEnum.READY
-                ? "hover:border-primary"
-                : "opacity-60"
-            }`}
+                ? "!hover:border-primary !hover:shadow-md !border-gray-200 dark:!border-gray-700"
+                : "!opacity-60 !border-gray-200 dark:!border-gray-700"
+            } !bg-white dark:!bg-slate-800/50`}
             onClick={() => handleSummaryClick(summary)}
           >
-            <ItemHeader>
-              <ItemContent>
-                <ItemTitle className="flex items-center gap-2">
-                  {summary.title || summary.description}
+            <ItemHeader className="!space-y-3">
+              <ItemContent className="!space-y-2">
+                <ItemTitle className="!flex !items-start !justify-between !gap-3 !text-base !font-semibold">
+                  <span className="flex-1 line-clamp-2">
+                    {summary.title || summary.description}
+                  </span>
                   {getStatusBadge(summary.status)}
                 </ItemTitle>
-                <ItemDescription>
-                  {summary.subject
-                    ? `Subject: ${summary.subject.title} • `
-                    : ""}
-                  {summary.sourceFiles && summary.sourceFiles.length > 0
-                    ? `Source${summary.sourceFiles.length > 1 ? "s" : ""}: ${summary.sourceFiles.map((f) => f.name).join(", ")}`
-                    : "No source files"}
+                <ItemDescription className="text-sm! text-gray-600! dark:text-gray-400!">
+                  {summary.subject && (
+                    <>
+                      <span className="font-medium">
+                        {summary.subject.title}
+                      </span>
+                      {summary.sourceFiles &&
+                        summary.sourceFiles.length > 0 && (
+                          <span className="mx-2">•</span>
+                        )}
+                    </>
+                  )}
+                  {summary.sourceFiles && summary.sourceFiles.length > 0 ? (
+                    <span>
+                      {summary.sourceFiles.length} source
+                      {summary.sourceFiles.length > 1 ? "s" : ""}
+                    </span>
+                  ) : (
+                    !summary.subject && <span>No source files</span>
+                  )}
                 </ItemDescription>
               </ItemContent>
               <ItemActions>
                 <Button
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon"
                   onClick={(e) => handleDelete(summary.id, e)}
                   disabled={deletingId === summary.id}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="h-8! w-8! text-destructive! hover:text-destructive! hover:bg-destructive/10!"
                 >
                   {deletingId === summary.id ? (
-                    <LoaderCircle className="size-4 animate-spin" />
+                    <LoaderCircle className="size-4! animate-spin!" />
                   ) : (
-                    <Trash2 className="size-4" />
+                    <Trash2 className="size-4!" />
                   )}
                 </Button>
               </ItemActions>
             </ItemHeader>
           </Item>
         ))}
-      </ItemGroup>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-[8.5in]! w-[90vw]! max-h-[95vh]! overflow-y-auto p-8 md:p-12">
-          <DialogHeader className="mb-6">
-            <DialogTitle className="text-2xl md:text-3xl mb-2">
+        <DialogContent className="max-w-[8.5in]! w-[90vw]! max-h-[95vh]! overflow-y-auto! p-8! md:p-12!">
+          <DialogHeader className="mb-6!">
+            <DialogTitle className="text-2xl! md:text-3xl! mb-2! font-bold!">
               {selectedSummary?.title || selectedSummary?.description}
             </DialogTitle>
-            <DialogDescription className="text-sm md:text-base">
-              {selectedSummary?.subject
-                ? `Subject: ${selectedSummary.subject.title} • `
-                : ""}
+            <DialogDescription className="text-sm! md:text-base! mt-2!">
+              {selectedSummary?.subject && (
+                <>
+                  Subject:{" "}
+                  <span className="font-medium">
+                    {selectedSummary.subject.title}
+                  </span>
+                  {selectedSummary?.sourceFiles &&
+                    selectedSummary.sourceFiles.length > 0 && (
+                      <span className="mx-2">•</span>
+                    )}
+                </>
+              )}
               {selectedSummary?.sourceFiles &&
-              selectedSummary.sourceFiles.length > 0
-                ? `Source${selectedSummary.sourceFiles.length > 1 ? "s" : ""}: ${selectedSummary.sourceFiles.map((f) => f.name).join(", ")}`
-                : ""}
+                selectedSummary.sourceFiles.length > 0 && (
+                  <>
+                    <span className="font-medium">
+                      {selectedSummary.sourceFiles.length} source
+                      {selectedSummary.sourceFiles.length > 1 ? "s" : ""}
+                    </span>
+                  </>
+                )}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="mt-6" ref={contentRef}>
+          <div className="mt-6!" ref={contentRef}>
             <div
               className="prose prose-slate dark:prose-invert max-w-none 
               prose-headings:font-semibold prose-headings:text-gray-900 dark:prose-headings:text-gray-100 
@@ -817,7 +846,6 @@ export default function SummariesList() {
             </div>
           </div>
 
-          {/* Hidden element for PDF generation with light mode styling */}
           <div
             className="fixed -left-[9999px] -top-[9999px] opacity-0 pointer-events-none"
             ref={pdfContentRef}
@@ -962,16 +990,17 @@ export default function SummariesList() {
             </div>
           </div>
 
-          <div className="flex justify-between items-center mt-6">
+          <div className="flex justify-between items-center !mt-8 !pt-6 !border-t">
             <Button
               variant="outline"
               onClick={handleDownloadPDF}
               disabled={isGeneratingPdf || !selectedSummary?.content}
+              className="!h-11 !px-6"
             >
               {isGeneratingPdf ? (
                 <>
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  Generating PDF...
+                  Generating Document...
                 </>
               ) : (
                 <>
@@ -980,7 +1009,12 @@ export default function SummariesList() {
                 </>
               )}
             </Button>
-            <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
+            <Button
+              onClick={() => setIsDialogOpen(false)}
+              className="!h-11 !px-6 !font-semibold"
+            >
+              Close
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

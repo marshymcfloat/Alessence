@@ -54,8 +54,17 @@ export class AuthService {
   async validateUser(authLoginDTO: AuthLoginDTO): Promise<SafeUser> {
     const { email, password } = authLoginDTO;
 
+    // Only select fields we need for validation
     const userExists = await this.dbService.user.findUnique({
       where: { email },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        hashedPassword: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     if (!userExists) {

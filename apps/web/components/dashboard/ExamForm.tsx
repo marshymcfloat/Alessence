@@ -76,160 +76,206 @@ export default function ExamForm({ onSuccess }: ExamFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="subjectId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Subject</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(Number(value))}
-                value={field.value ? String(field.value) : ""}
-                disabled={isLoadingSubjects}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        isLoadingSubjects ? "Loading..." : "Select a subject"
-                      }
-                    />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {subjects.map((subject: Subject) => (
-                    <SelectItem key={subject.id} value={String(subject.id)}>
-                      {subject.title}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="files"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>File Reviewer(s)</FormLabel>
-              <FormControl>
-                <UploadFiles value={field.value} onChange={field.onChange} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="items"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Exam Items</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(Number(value))}
-                value={String(field.value)}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select exam items" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="25">25</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="questionTypes"
-          render={() => (
-            <FormItem>
-              <div className="mb-4">
-                <FormLabel className="text-base">Question Types</FormLabel>
-                <FormDescription>
-                  Select one or more question types for this exam
-                </FormDescription>
-              </div>
-              {["MULTIPLE_CHOICE", "TRUE_FALSE", "IDENTIFICATION"].map(
-                (item) => (
-                  <FormField
-                    key={item}
-                    control={form.control}
-                    name="questionTypes"
-                    render={({ field }) => {
-                      return (
-                        <FormItem
-                          key={item}
-                          className="flex flex-row items-start space-x-3 space-y-0"
-                        >
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value?.includes(
-                                item as
-                                  | "MULTIPLE_CHOICE"
-                                  | "TRUE_FALSE"
-                                  | "IDENTIFICATION"
-                              )}
-                              onCheckedChange={(checked) => {
-                                return checked
-                                  ? field.onChange([...field.value, item])
-                                  : field.onChange(
-                                      field.value?.filter(
-                                        (value) => value !== item
-                                      )
-                                    );
-                              }}
-                            />
-                          </FormControl>
-                          <FormLabel className="font-normal capitalize">
-                            {item.replace("_", " ").toLowerCase()}
-                          </FormLabel>
-                        </FormItem>
-                      );
-                    }}
-                  />
-                )
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className="space-y-6 lg:space-y-8"
+      >
+        {/* Two Column Layout on Large Screens */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+          {/* Left Column */}
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="subjectId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">
+                    Subject
+                  </FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    value={field.value ? String(field.value) : ""}
+                    disabled={isLoadingSubjects}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="!h-11">
+                        <SelectValue
+                          placeholder={
+                            isLoadingSubjects
+                              ? "Loading..."
+                              : "Select a subject"
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {subjects.map((subject: Subject) => (
+                        <SelectItem key={subject.id} value={String(subject.id)}>
+                          {subject.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
               )}
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            />
 
-        <FormField
-          control={form.control}
-          name="describe"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Instructions or Description</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="e.g., This exam will cover chapters 1-5..."
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="items"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">
+                    Number of Items
+                  </FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    value={String(field.value)}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="!h-11">
+                        <SelectValue placeholder="Select exam items" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="5">5 items</SelectItem>
+                      <SelectItem value="10">10 items</SelectItem>
+                      <SelectItem value="25">25 items</SelectItem>
+                      <SelectItem value="50">50 items</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <Button type="submit" className="w-full" disabled={mutation.isPending}>
-          {mutation.isPending && (
-            <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-          )}
-          {mutation.isPending ? "Generating..." : "Create Exam"}
-        </Button>
+            <FormField
+              control={form.control}
+              name="questionTypes"
+              render={() => (
+                <FormItem>
+                  <div className="mb-4">
+                    <FormLabel className="text-sm font-semibold">
+                      Question Types
+                    </FormLabel>
+                    <FormDescription className="text-xs">
+                      Select one or more question types
+                    </FormDescription>
+                  </div>
+                  <div className="space-y-3">
+                    {["MULTIPLE_CHOICE", "TRUE_FALSE", "IDENTIFICATION"].map(
+                      (item) => (
+                        <FormField
+                          key={item}
+                          control={form.control}
+                          name="questionTypes"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={item}
+                                className="flex flex-row items-center space-x-3 space-y-0 rounded-lg border p-3 hover:bg-accent/50 transition-colors"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(
+                                      item as
+                                        | "MULTIPLE_CHOICE"
+                                        | "TRUE_FALSE"
+                                        | "IDENTIFICATION"
+                                    )}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...field.value, item])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== item
+                                            )
+                                          );
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal capitalize cursor-pointer flex-1">
+                                  {item.replace("_", " ").toLowerCase()}
+                                </FormLabel>
+                              </FormItem>
+                            );
+                          }}
+                        />
+                      )
+                    )}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="files"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">
+                    File Reviewer(s)
+                  </FormLabel>
+                  <FormDescription className="text-xs mb-3">
+                    Upload files to use as reference material for the exam
+                  </FormDescription>
+                  <FormControl>
+                    <div className="!min-h-[200px]">
+                      <UploadFiles
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="describe"
+              render={({ field }) => (
+                <FormItem className="lg:col-span-2">
+                  <FormLabel className="text-sm font-semibold">
+                    Instructions or Description
+                  </FormLabel>
+                  <FormDescription className="text-xs mb-2">
+                    Provide specific instructions or describe what the exam
+                    should cover
+                  </FormDescription>
+                  <FormControl>
+                    <Textarea
+                      placeholder="e.g., This exam will cover chapters 1-5 focusing on basic concepts and principles..."
+                      {...field}
+                      className="!min-h-[120px] resize-none"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Submit Button - Full Width */}
+        <div className="pt-4 border-t">
+          <Button
+            type="submit"
+            className="w-full !h-11 text-base font-semibold"
+            disabled={mutation.isPending}
+          >
+            {mutation.isPending && (
+              <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
+            )}
+            {mutation.isPending ? "Generating Exam..." : "Create Exam"}
+          </Button>
+        </div>
       </form>
     </Form>
   );

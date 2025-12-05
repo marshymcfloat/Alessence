@@ -22,18 +22,22 @@ export default function AddSummarySheet() {
           <Button>Add Summary</Button>
         </div>
       </SheetTrigger>
-      <SheetContent className="w-full overflow-y-auto p-4 sm:max-w-lg">
-        <SheetHeader>
-          <SheetTitle>Create a New Summary</SheetTitle>
-          <SheetDescription>
-            Upload a document and describe what you want the summary to focus on.
-            The AI will generate a comprehensive summary tailored for accountancy students.
+      <SheetContent className="w-full overflow-y-auto p-6! sm:max-w-2xl! lg:max-w-4xl!">
+        <SheetHeader className="mb-6!">
+          <SheetTitle className="text-2xl! font-bold">
+            Create a New Summary
+          </SheetTitle>
+          <SheetDescription className="text-sm! mt-2!">
+            Upload a document and describe what you want the summary to focus
+            on. The AI will generate a comprehensive summary tailored for
+            accountancy students.
           </SheetDescription>
         </SheetHeader>
 
-        <SummaryForm onSuccess={() => setIsOpen(false)} />
+        <div className="pr-2!">
+          <SummaryForm onSuccess={() => setIsOpen(false)} />
+        </div>
       </SheetContent>
     </Sheet>
   );
 }
-

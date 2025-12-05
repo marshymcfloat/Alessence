@@ -249,14 +249,14 @@ export default function ExamsList() {
 
   if (exams.length === 0) {
     return (
-      <div className="rounded-md mx-auto border border-black w-full flex-1 p-8">
+      <div className="rounded-lg mx-auto border border-gray-200 dark:border-gray-800 w-full flex-1 !p-12 bg-white dark:bg-slate-900/50">
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <FileText />
+              <FileText className="!w-12 !h-12 text-gray-400 dark:text-gray-500" />
             </EmptyMedia>
-            <EmptyTitle>No exams yet</EmptyTitle>
-            <EmptyDescription>
+            <EmptyTitle className="!text-lg">No exams yet</EmptyTitle>
+            <EmptyDescription className="!text-sm">
               Create your first exam to get started with practice tests.
             </EmptyDescription>
           </EmptyHeader>
@@ -266,61 +266,71 @@ export default function ExamsList() {
   }
 
   return (
-    <div className="rounded-md mx-auto border border-black w-full flex-1 p-4 overflow-y-auto">
-      <ItemGroup className="space-y-2 ">
+    <div className="rounded-lg mx-auto border border-gray-200 dark:border-gray-800 w-full !p-6 bg-white dark:bg-slate-900/50">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {exams.map((exam) => (
           <Item
             key={exam.id}
             variant="outline"
-            className={`cursor-pointer transition-colors hover:bg-accent ${
+            className={`!cursor-pointer !transition-all !duration-200 !rounded-lg !p-4 !border-2 ${
               exam.status === ExamStatusEnum.READY
-                ? "hover:border-primary"
-                : "opacity-60"
-            }`}
+                ? "!hover:border-primary !hover:shadow-md !border-gray-200 dark:!border-gray-700"
+                : "!opacity-60 !border-gray-200 dark:!border-gray-700"
+            } !bg-white dark:!bg-slate-800/50`}
             onClick={() => handleExamClick(exam)}
           >
-            <ItemHeader>
-              <ItemContent>
-                <ItemTitle className="flex items-center gap-2">
-                  {exam.description}
+            <ItemHeader className="!space-y-3">
+              <ItemContent className="!space-y-2">
+                <ItemTitle className="!flex !items-start !justify-between !gap-3 !text-base !font-semibold">
+                  <span className="flex-1 line-clamp-2">
+                    {exam.description}
+                  </span>
                   {getStatusBadge(exam.status)}
                 </ItemTitle>
-                <ItemDescription>
-                  Subject: {exam.subject.title} • {exam._count.questions}{" "}
-                  questions
+                <ItemDescription className="!text-sm !text-gray-600 dark:!text-gray-400">
+                  <span className="font-medium">{exam.subject.title}</span>
+                  <span className="mx-2">•</span>
+                  <span>{exam._count.questions} questions</span>
                 </ItemDescription>
               </ItemContent>
               <ItemActions>
                 <Button
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon"
                   onClick={(e) => handleDelete(exam.id, e)}
                   disabled={deletingId === exam.id}
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                  className="!h-8 !w-8 !text-destructive hover:!text-destructive hover:!bg-destructive/10"
                 >
                   {deletingId === exam.id ? (
-                    <LoaderCircle className="size-4 animate-spin" />
+                    <LoaderCircle className="!size-4 animate-spin" />
                   ) : (
-                    <Trash2 className="size-4" />
+                    <Trash2 className="!size-4" />
                   )}
                 </Button>
               </ItemActions>
             </ItemHeader>
           </Item>
         ))}
-      </ItemGroup>
+      </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-6xl! max-h-[90vh]! overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{selectedExam?.description}</DialogTitle>
-            <DialogDescription>
-              Subject: {selectedExam?.subject.title} •{" "}
-              {selectedExam?.questions.length} questions
+        <DialogContent className="!max-w-6xl !max-h-[90vh] !overflow-y-auto !p-6">
+          <DialogHeader className="!mb-6">
+            <DialogTitle className="!text-2xl !font-bold">
+              {selectedExam?.description}
+            </DialogTitle>
+            <DialogDescription className="!text-sm !mt-2">
+              Subject:{" "}
+              <span className="font-medium">{selectedExam?.subject.title}</span>{" "}
+              •{" "}
+              <span className="font-medium">
+                {selectedExam?.questions.length}
+              </span>{" "}
+              questions
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 !mt-6">
             {selectedExam?.questions.map((question, index) => {
               const options = (question.options as string[]) || [];
               const userAnswer = answers[question.id];
@@ -337,12 +347,12 @@ export default function ExamsList() {
               return (
                 <div
                   key={question.id}
-                  className={`p-5 rounded-lg border transition-all ${
+                  className={`!p-5 !rounded-xl !border-2 !transition-all ${
                     showResult
                       ? isCorrect
-                        ? "border-green-500 dark:border-green-400 bg-green-50 dark:bg-green-900/20"
-                        : "border-red-500 dark:border-red-400 bg-red-50 dark:bg-red-900/20"
-                      : "border-border dark:border-gray-700 bg-white dark:bg-slate-800/50"
+                        ? "!border-green-500 dark:!border-green-400 !bg-green-50 dark:!bg-green-900/20"
+                        : "!border-red-500 dark:!border-red-400 !bg-red-50 dark:!bg-red-900/20"
+                      : "!border-gray-200 dark:!border-gray-700 !bg-white dark:!bg-slate-800/50 !hover:border-primary/50"
                   }`}
                 >
                   <div className="flex items-start gap-3 mb-4">
@@ -501,19 +511,39 @@ export default function ExamsList() {
           </div>
 
           {!submitted && (
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <div className="flex justify-end gap-3 !mt-8 !pt-6 !border-t">
+              <Button
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+                className="!h-11 !px-6"
+              >
                 Close
               </Button>
-              <Button onClick={handleSubmit} disabled={isEvaluating}>
-                {isEvaluating ? "Evaluating..." : "Submit Answers"}
+              <Button
+                onClick={handleSubmit}
+                disabled={isEvaluating}
+                className="!h-11 !px-6 !font-semibold"
+              >
+                {isEvaluating ? (
+                  <>
+                    <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                    Evaluating...
+                  </>
+                ) : (
+                  "Submit Answers"
+                )}
               </Button>
             </div>
           )}
 
           {submitted && (
-            <div className="flex justify-end mt-6">
-              <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
+            <div className="flex justify-end !mt-8 !pt-6 !border-t">
+              <Button
+                onClick={() => setIsDialogOpen(false)}
+                className="!h-11 !px-6 !font-semibold"
+              >
+                Close
+              </Button>
             </div>
           )}
         </DialogContent>

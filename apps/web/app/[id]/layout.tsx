@@ -3,10 +3,12 @@ import React from "react";
 
 const AuthenticatedLayout = ({ children }: { children: React.ReactNode }) => {
   return (
-    <main className="min-h-screen bg-linear-to-b from-pink-50 via-pink-100 to-white dark:from-pink-950 dark:via-purple-950 dark:to-slate-900 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950">
       <Navbar />
-      {children}
-    </main>
+      <main className="pt-16">
+        {children}
+      </main>
+    </div>
   );
 };
 

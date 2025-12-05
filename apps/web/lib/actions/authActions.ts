@@ -4,37 +4,118 @@ import { AuthLoginTypes } from "@repo/types";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+// Helper function to make fetch request with timeout and retry
+async function fetchWithTimeoutAndRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries = 2,
+  timeout = 8000
+): Promise<Response> {
+  let lastError: Error | null = null;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    try {
+      // Add connection timeout using a race condition
+      const fetchPromise = fetch(url, {
+        ...options,
+        signal: controller.signal,
+      });
+
+      const response = await Promise.race([
+        fetchPromise,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Connection timeout")), timeout)
+        ),
+      ]);
+
+      clearTimeout(timeoutId);
+
+      // If response is ok or a client/server error (4xx/5xx), return it
+      // Don't retry on 4xx errors (client errors)
+      if (response.status >= 400 && response.status < 500) {
+        return response;
+      }
+
+      // Retry on network errors or 5xx errors
+      if (!response.ok && response.status >= 500 && attempt < maxRetries) {
+        lastError = new Error(`Server error: ${response.status}`);
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1))); // Exponential backoff
+        continue;
+      }
+
+      return response;
+    } catch (error) {
+      clearTimeout(timeoutId);
+
+      if (error instanceof Error) {
+        // Don't retry on abort errors (timeout) or if it's the last attempt
+        if (error.name === "AbortError" || attempt === maxRetries) {
+          lastError = error;
+          break;
+        }
+
+        // Retry on network errors
+        if (
+          error.message.includes("fetch") ||
+          error.message.includes("ECONNREFUSED") ||
+          error.message.includes("Connection timeout")
+        ) {
+          lastError = error;
+          await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1))); // Exponential backoff
+          continue;
+        }
+      }
+
+      lastError = error instanceof Error ? error : new Error("Unknown error");
+      break;
+    }
+  }
+
+  throw lastError || new Error("Request failed after retries");
+}
+
 export async function authLoginAction(values: AuthLoginTypes) {
   const cookieHeader = await cookies();
-  
-  // Add timeout to prevent hanging requests
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-  
-  try {
-    const response = await fetch(`${process.env.FETCH_BASE_URL}/auth/login`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      credentials: "include",
-      body: JSON.stringify(values),
-      signal: controller.signal,
-    });
 
-    clearTimeout(timeoutId);
+  // Validate FETCH_BASE_URL is set
+  if (!process.env.FETCH_BASE_URL) {
+    console.error("FETCH_BASE_URL is not configured");
+    return {
+      success: false,
+      error: "Server configuration error. Please contact support.",
+    };
+  }
+
+  try {
+    const response = await fetchWithTimeoutAndRetry(
+      `${process.env.FETCH_BASE_URL}/auth/login`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(values),
+      },
+      2, // maxRetries
+      8000 // timeout in ms (8 seconds)
+    );
+
     const data = await response.json();
 
     if (!response.ok) {
       return {
         success: false,
-        error: data.message || "There is error occured while fetching",
+        error: data.message || "Login failed. Please check your credentials.",
       };
     }
 
     const { token, user } = data;
     if (!token || !user) {
-      return { success: false, error: "No token found" };
+      return { success: false, error: "Invalid response from server" };
     }
 
     const expiresDate = new Date(token.expires);
@@ -43,7 +124,7 @@ export async function authLoginAction(values: AuthLoginTypes) {
     cookieHeader.set("access_token", token.value, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax", // Changed from "strict" to "lax" for better compatibility
+      sameSite: "lax",
       expires: expiresDate,
       path: "/",
     });
@@ -54,21 +135,32 @@ export async function authLoginAction(values: AuthLoginTypes) {
       message: data.message || "Login successfully",
     };
   } catch (error) {
-    // Always clear timeout on error
-    clearTimeout(timeoutId);
-    console.error("There is an unexpected error occured", error);
-    
+    console.error("Login error:", error);
+
     // Provide more specific error messages
     if (error instanceof Error) {
-      if (error.name === 'AbortError') {
-        return { success: false, error: "Request timed out. Please try again." };
+      if (error.name === "AbortError" || error.message.includes("timeout")) {
+        return {
+          success: false,
+          error: "Request timed out. The server may be slow. Please try again.",
+        };
       }
-      if (error.message.includes('fetch') || error.message.includes('ECONNREFUSED')) {
-        return { success: false, error: "Unable to connect to server. Please check your connection." };
+      if (
+        error.message.includes("fetch") ||
+        error.message.includes("ECONNREFUSED") ||
+        error.message.includes("Connection timeout")
+      ) {
+        return {
+          success: false,
+          error: "Unable to connect to server. Please check your connection and ensure the server is running.",
+        };
       }
     }
-    
-    return { success: false, error: "There is an unexpected error occured" };
+
+    return {
+      success: false,
+      error: "An unexpected error occurred. Please try again.",
+    };
   }
 }
 

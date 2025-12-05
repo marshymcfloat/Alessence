@@ -1,24 +1,40 @@
 import FloatingAddButton from "@/components/dashboard/FloatingAddButton";
+import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
+import DashboardContent from "@/components/dashboard/DashboardContent";
+import DashboardMainContent from "@/components/dashboard/DashboardMainContent";
+import { SidebarProvider } from "@/components/dashboard/SidebarContext";
 import { Suspense } from "react";
-import KanbanDataContainer from "@/components/dashboard/kanban/KanbanDataContainer";
-import FloatingCardWrapper from "@/components/dashboard/FloatingCardWrapper";
-import EnrolledSubjectDataContainer from "@/components/dashboard/EnrolledSubjectDataContainer";
+import { getEnrolledSubject } from "@/lib/actions/subjectActions";
+import { getAllTasks } from "@/lib/actions/taskActionts";
+import EnrolledSubjectContent from "@/components/dashboard/EnrolledSubjectContent";
+import { KanbanBoard } from "@/components/dashboard/kanban/KanbanBoard";
 
-const page = () => {
+const page = async () => {
+  // Fetch data at the page level (Server Component)
+  const [enrolledSubjectsResult, tasksResult] = await Promise.all([
+    getEnrolledSubject(),
+    getAllTasks(),
+  ]);
+
+  const subjects = enrolledSubjectsResult.data?.subjects;
+  const tasks =
+    tasksResult.success && tasksResult.data ? tasksResult.data.allTasks : [];
+
   return (
-    <>
-      <FloatingCardWrapper title="Enrolled Subjects">
-        <EnrolledSubjectDataContainer />
-      </FloatingCardWrapper>
+    <SidebarProvider>
+      <div className="flex h-[calc(100vh-4rem)] relative">
+        {/* Sidebar */}
+        <DashboardSidebar subjects={subjects} />
 
-      <div className="">
-        <Suspense fallback={<h1 className="text-center">Loading tasks...</h1>}>
-          <KanbanDataContainer />
-        </Suspense>
+        {/* Main Content Area */}
+        <DashboardMainContent>
+          <DashboardContent initialTasks={tasks} />
+        </DashboardMainContent>
+
+        {/* Floating Action Button */}
+        <FloatingAddButton />
       </div>
-
-      <FloatingAddButton />
-    </>
+    </SidebarProvider>
   );
 };
 

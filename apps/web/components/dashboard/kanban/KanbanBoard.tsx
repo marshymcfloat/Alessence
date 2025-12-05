@@ -259,9 +259,9 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div className="space-y-4 max-h-[calc(100vh-8rem)] max-w-[calc(100vw-2rem)] overflow-hidden flex flex-col">
+      <div className="space-y-6 h-full overflow-hidden flex flex-col">
         <TaskLegend tasks={allTasks} />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-4 overflow-y-auto flex-1 min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-y-auto flex-1 min-h-0 pb-4">
           {columns.map((status) => (
             <Column
               key={status}

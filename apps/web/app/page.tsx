@@ -1,173 +1,150 @@
+"use client";
+
 import SignInDialog from "@/components/landing/SignInDialog";
 import Image from "next/image";
-import {
-  BookOpen,
-  CheckSquare,
-  FileText,
-  Sparkles,
-  Target,
-  TrendingUp,
-} from "lucide-react";
+import { motion } from "framer-motion";
 
 const Page = () => {
-  const features = [
-    {
-      icon: CheckSquare,
-      title: "Task Management",
-      description:
-        "Organize your studies with a visual Kanban board. Track tasks by subject with color-coded indicators and never miss a deadline.",
-      color: "from-blue-500 to-cyan-500",
-    },
-    {
-      icon: Sparkles,
-      title: "AI-Powered Exams",
-      description:
-        "Generate personalized exams from your study materials using Google Gemini AI. Practice with multiple question types and track your progress.",
-      color: "from-purple-500 to-pink-500",
-    },
-    {
-      icon: FileText,
-      title: "File Organization",
-      description:
-        "Upload and organize PDFs, DOCX, and text files by subject. Automatic content extraction makes your materials searchable.",
-      color: "from-green-500 to-emerald-500",
-    },
-    {
-      icon: BookOpen,
-      title: "Subject Management",
-      description:
-        "Create and manage subjects by semester. Keep everything organized with subject-based grouping for tasks, files, and exams.",
-      color: "from-orange-500 to-red-500",
-    },
-  ];
-
   return (
-    <main className="relative min-h-screen">
+    <main className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-        <div className="absolute -left-20 -top-20 h-96 w-96 rounded-full bg-pink-200/30 dark:bg-pink-900/20 blur-3xl" />
-        <div className="absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-purple-200/30 dark:bg-purple-900/20 blur-3xl" />
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full bg-blue-200/20 dark:bg-blue-900/15 blur-3xl" />
+        <motion.div
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[500px] w-[500px] rounded-full bg-linear-to-br from-pink-200/20 via-purple-200/20 to-blue-200/20 dark:from-pink-900/10 dark:via-purple-900/10 dark:to-blue-900/10 blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
       </div>
 
-      <section className="relative flex min-h-[90vh] flex-col items-center justify-center px-4 py-20">
-        <div className="relative z-10 flex max-w-6xl flex-col items-center gap-8 text-center">
-          <div className="relative animate-fade-in-up">
-            <div className="absolute inset-0 rounded-full bg-linear-to-r from-pink-400 to-purple-400 dark:from-pink-600 dark:to-purple-600 blur-2xl opacity-50 dark:opacity-30" />
-            <Image
-              src="/logo.png"
-              width={200}
-              height={200}
-              alt="Alessence Logo"
-              priority
-              className="relative drop-shadow-2xl"
-              unoptimized={false}
-            />
-          </div>
+      <section className="relative flex flex-col items-center justify-center px-4 py-12 w-full max-w-2xl mx-auto">
+        <motion.div
+          className="flex flex-col items-center gap-8 text-center"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            visible: {
+              transition: {
+                staggerChildren: 0.2,
+                delayChildren: 0.1,
+              },
+            },
+          }}
+        >
+          <motion.div
+            className="relative"
+            variants={{
+              hidden: { scale: 0.8, opacity: 0 },
+              visible: {
+                scale: 1,
+                opacity: 1,
+                transition: {
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 15,
+                  duration: 0.6,
+                },
+              },
+            }}
+          >
+            <motion.div
+              animate={{
+                y: [0, -10, 0],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            >
+              <Image
+                src="/logo.png"
+                width={120}
+                height={120}
+                alt="Alessence Logo"
+                priority
+                className="relative drop-shadow-lg"
+                unoptimized={false}
+              />
+            </motion.div>
+          </motion.div>
 
-          <div className="space-y-4 animate-fade-in-up [animation-delay:100ms] ">
-            <h1 className="text-5xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-6xl md:text-7xl">
+          <motion.div
+            className="space-y-3"
+            variants={{
+              hidden: { y: 20, opacity: 0 },
+              visible: {
+                y: 0,
+                opacity: 1,
+                transition: {
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 12,
+                  duration: 0.5,
+                },
+              },
+            }}
+          >
+            <h1 className="text-4xl font-bold tracking-tight text-slate-900 dark:text-slate-100 sm:text-5xl">
               <span className="bg-linear-to-r from-pink-600 via-purple-600 to-blue-600 dark:from-pink-400 dark:via-purple-400 dark:to-blue-400 bg-clip-text text-transparent">
                 Alessence
               </span>
             </h1>
-            <p className="text-2xl font-light text-slate-700 dark:text-slate-300 sm:text-3xl">
-              Your accountancy study buddy
-            </p>
-          </div>
+            <motion.p
+              className="text-lg text-slate-600 dark:text-slate-400 sm:text-xl"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4, duration: 0.5 }}
+            >
+              Your personal study space
+            </motion.p>
+          </motion.div>
 
-          {/* Description */}
-          <p className="max-w-2xl text-lg text-slate-600 dark:text-slate-400 sm:text-xl animate-fade-in-up [animation-delay:200ms]">
-            Streamline your accountancy studies with AI-powered exam generation,
-            visual task management, and intelligent file organization.
-            Everything you need to excel, all in one place.
-          </p>
+          <motion.p
+            className="max-w-md text-base text-slate-600 dark:text-slate-400"
+            variants={{
+              hidden: { y: 20, opacity: 0 },
+              visible: {
+                y: 0,
+                opacity: 1,
+                transition: {
+                  delay: 0.3,
+                  duration: 0.5,
+                },
+              },
+            }}
+          >
+            Manage your tasks, organize your files, and generate AI-powered
+            exams for your accountancy studies.
+          </motion.p>
 
-          {/* CTA Button */}
-          <div className="animate-fade-in-up [animation-delay:300ms]">
+          <motion.div
+            className="pt-4"
+            variants={{
+              hidden: { y: 20, opacity: 0, scale: 0.9 },
+              visible: {
+                y: 0,
+                opacity: 1,
+                scale: 1,
+                transition: {
+                  type: "spring",
+                  stiffness: 150,
+                  damping: 12,
+                  delay: 0.5,
+                },
+              },
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
             <SignInDialog />
-          </div>
-
-          {/* Stats or Trust Indicators */}
-          <div className="mt-12 flex flex-wrap items-center justify-center gap-8 text-sm text-slate-600 dark:text-slate-400 animate-fade-in-up [animation-delay:400ms]">
-            <div className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-pink-500 dark:text-pink-400" />
-              <span className="font-medium">Task Management</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-purple-500 dark:text-purple-400" />
-              <span className="font-medium">AI-Powered</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-blue-500 dark:text-blue-400" />
-              <span className="font-medium">Track Progress</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative px-4 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-16 text-center">
-            <h2 className="mb-4 text-3xl font-bold text-slate-900 dark:text-slate-100 sm:text-4xl">
-              Everything you need to succeed
-            </h2>
-            <p className="mx-auto max-w-2xl text-lg text-slate-600 dark:text-slate-400">
-              Powerful features designed specifically for accountancy students
-              to help you stay organized and excel in your studies.
-            </p>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div
-                  key={feature.title}
-                  className="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-800 p-6 shadow-lg dark:shadow-slate-900/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
-                  style={{
-                    animationDelay: `${500 + index * 100}ms`,
-                  }}
-                >
-                  <div
-                    className={`absolute inset-0 bg-linear-to-br ${feature.color} opacity-0 dark:opacity-10 transition-opacity duration-300 group-hover:opacity-5 dark:group-hover:opacity-15`}
-                  />
-
-                  <div
-                    className={`mb-4 inline-flex rounded-xl bg-linear-to-br ${feature.color} p-3 text-white shadow-lg`}
-                  >
-                    <Icon className="h-6 w-6" />
-                  </div>
-
-                  <h3 className="mb-2 text-xl font-semibold text-slate-900 dark:text-slate-100">
-                    {feature.title}
-                  </h3>
-                  <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                    {feature.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      <section className="relative px-4 py-20">
-        <div className="mx-auto max-w-4xl">
-          <div className="relative overflow-hidden rounded-3xl bg-linear-to-r from-pink-500 via-purple-500 to-blue-500 p-12 text-center text-white shadow-2xl">
-            <div className="relative z-10">
-              <h2 className="mb-4 text-3xl font-bold sm:text-4xl">
-                Ready to transform your study routine?
-              </h2>
-              <p className="mb-8 text-lg text-pink-50">
-                Join Alessence today and take control of your accountancy
-                studies.
-              </p>
-              <SignInDialog />
-            </div>
-            <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-            <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
     </main>
   );
