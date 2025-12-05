@@ -2,13 +2,9 @@
 
 import { motion } from "framer-motion";
 import { KanbanBoard } from "./kanban/KanbanBoard";
-import { Task } from "@repo/types";
+import { Task } from "@repo/db";
 
-const DashboardContent = ({ 
-  initialTasks 
-}: { 
-  initialTasks: Task[] 
-}) => {
+const DashboardContent = ({ initialTasks }: { initialTasks: Task[] }) => {
   return (
     <div className="h-full p-8 overflow-y-auto custom-scrollbar">
       <style jsx global>{`
@@ -34,7 +30,7 @@ const DashboardContent = ({
           transition={{ duration: 0.3 }}
           className="mb-8"
         >
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
+          <h1 className="text-4xl font-bold bg-linear-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
             Task Board
           </h1>
           <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -50,4 +46,3 @@ const DashboardContent = ({
 };
 
 export default DashboardContent;
-
