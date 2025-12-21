@@ -1,15 +1,12 @@
 import FloatingAddButton from "@/components/dashboard/FloatingAddButton";
-import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import DashboardContent from "@/components/dashboard/DashboardContent";
-import DashboardMainContent from "@/components/dashboard/DashboardMainContent";
-import { SidebarProvider } from "@/components/dashboard/SidebarContext";
-import { Suspense } from "react";
 import { getEnrolledSubject } from "@/lib/actions/subjectActions";
 import { getAllTasks } from "@/lib/actions/taskActionts";
-import EnrolledSubjectContent from "@/components/dashboard/EnrolledSubjectContent";
-import { KanbanBoard } from "@/components/dashboard/kanban/KanbanBoard";
 
-const page = async () => {
+const page = async ({ params }: { params: Promise<{ id: string }> }) => {
+  // Await params in Next.js 16
+  const { id } = await params;
+
   // Fetch data at the page level (Server Component)
   const [enrolledSubjectsResult, tasksResult] = await Promise.all([
     getEnrolledSubject(),
@@ -21,20 +18,15 @@ const page = async () => {
     tasksResult.success && tasksResult.data ? tasksResult.data.allTasks : [];
 
   return (
-    <SidebarProvider>
-      <div className="flex h-[calc(100vh-4rem)] relative">
-        {/* Sidebar */}
-        <DashboardSidebar subjects={subjects} />
-
-        {/* Main Content Area */}
-        <DashboardMainContent>
-          <DashboardContent initialTasks={tasks} />
-        </DashboardMainContent>
-
-        {/* Floating Action Button */}
-        <FloatingAddButton />
+    <div className="flex h-[calc(100vh-4rem)] relative">
+      {/* Main Content Area - Full Width */}
+      <div className="flex-1 overflow-hidden">
+        <DashboardContent initialTasks={tasks} userId={id} subjects={subjects} />
       </div>
-    </SidebarProvider>
+
+      {/* Floating Action Button */}
+      <FloatingAddButton />
+    </div>
   );
 };
 

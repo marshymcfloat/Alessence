@@ -46,6 +46,8 @@ export class ExamService {
         status: ExamStatusEnum.GENERATING,
         subjectId: +dto.subjectId,
         questionTypes: dto.questionTypes as QuestionTypeEnum[],
+        isPracticeMode: dto.isPracticeMode || false,
+        timeLimit: dto.timeLimit ? +dto.timeLimit : null,
         sourceFiles: {
           connect: allSourceFileIds.map((id) => ({ id: +id })),
         },

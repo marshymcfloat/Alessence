@@ -27,7 +27,7 @@ import { createExam } from "@/lib/actions/examActionts";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryClient } from "../providers/TanstackProvider";
-import { Subject } from "@repo/db";
+import type { Subject } from "@repo/db";
 import { LoaderCircle } from "lucide-react";
 import { getEnrolledSubject } from "@/lib/actions/subjectActions";
 
@@ -36,7 +36,7 @@ type ExamFormProps = {
 };
 
 export default function ExamForm({ onSuccess }: ExamFormProps) {
-  const form = useForm<CreateNewExamTypes>({
+  const form = useForm({
     resolver: zodResolver(createNewExamSchema),
     defaultValues: {
       files: [],
@@ -44,6 +44,8 @@ export default function ExamForm({ onSuccess }: ExamFormProps) {
       describe: "",
       subjectId: undefined,
       questionTypes: ["MULTIPLE_CHOICE"],
+      isPracticeMode: false,
+      timeLimit: undefined,
     },
   });
 
@@ -145,6 +147,47 @@ export default function ExamForm({ onSuccess }: ExamFormProps) {
                       <SelectItem value="50">50 items</SelectItem>
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="timeLimit"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-sm font-semibold">
+                    Time Limit (minutes)
+                  </FormLabel>
+                  <FormDescription className="text-xs">
+                    Optional. Set a time limit for the exam. Leave empty for no
+                    limit.
+                  </FormDescription>
+                  <FormControl>
+                    <div className="flex gap-2">
+                      <Select
+                        onValueChange={(value) =>
+                          field.onChange(value === "none" ? null : Number(value))
+                        }
+                        value={field.value ? String(field.value) : "none"}
+                      >
+                        <SelectTrigger className="!h-11 flex-1">
+                          <SelectValue placeholder="No time limit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No time limit</SelectItem>
+                          <SelectItem value="5">5 minutes</SelectItem>
+                          <SelectItem value="10">10 minutes</SelectItem>
+                          <SelectItem value="15">15 minutes</SelectItem>
+                          <SelectItem value="30">30 minutes</SelectItem>
+                          <SelectItem value="60">60 minutes</SelectItem>
+                          <SelectItem value="90">90 minutes</SelectItem>
+                          <SelectItem value="120">120 minutes</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -262,6 +305,31 @@ export default function ExamForm({ onSuccess }: ExamFormProps) {
             />
           </div>
         </div>
+
+        {/* Practice Mode Toggle */}
+        <FormField
+          control={form.control}
+          name="isPracticeMode"
+          render={({ field }) => (
+            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <div className="space-y-1 leading-none">
+                <FormLabel className="text-sm font-semibold cursor-pointer">
+                  Practice Mode
+                </FormLabel>
+                <FormDescription className="text-xs">
+                  Enable unlimited attempts for this exam. Perfect for practice
+                  and learning without worrying about attempt limits.
+                </FormDescription>
+              </div>
+            </FormItem>
+          )}
+        />
 
         {/* Submit Button - Full Width */}
         <div className="pt-4 border-t">

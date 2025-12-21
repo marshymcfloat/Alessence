@@ -3,7 +3,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Task } from "@repo/db";
+import type { Task } from "@repo/db";
 import AddTaskForm from "./AddTaskForm";
 
 interface AddTaskDialogProps {

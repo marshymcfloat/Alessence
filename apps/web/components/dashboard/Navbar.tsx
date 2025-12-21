@@ -2,6 +2,7 @@
 
 import React from "react";
 import UserButton from "./UserButton";
+import { GlobalSearchBar } from "./GlobalSearchBar";
 import { Home } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
@@ -20,7 +21,7 @@ const Navbar = () => {
         shadow-sm
       "
     >
-      <div className="h-full max-w-[1920px] mx-auto px-6 flex items-center justify-between">
+      <div className="h-full max-w-[1920px] mx-auto px-6 flex items-center justify-between gap-4">
         {/* Left Section */}
         <div className="flex items-center gap-6">
           <Link
@@ -41,6 +42,9 @@ const Navbar = () => {
             </span>
           </Link>
         </div>
+
+        {/* Center Section - Search */}
+        <GlobalSearchBar />
 
         {/* Right Section */}
         <div className="flex items-center gap-4">

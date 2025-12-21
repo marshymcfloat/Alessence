@@ -228,6 +228,146 @@ export class GeminiService {
     }
   }
 
+  async generateFlashcards(
+    context: string,
+    cardCount: number,
+  ): Promise<Array<{ front: string; back: string }>> {
+    const prompt = `
+      You are an expert study assistant creating flashcards for effective memorization and learning. Your task is to generate ${cardCount} flashcards based ONLY on the provided context.
+
+      SOURCE MATERIAL:
+      ---
+      ${context}
+      ---
+
+      CRITICAL REQUIREMENTS FOR FLASHCARDS:
+      1. All flashcards must be derived directly from the provided SOURCE MATERIAL. Do not use any external knowledge.
+      2. Generate exactly ${cardCount} flashcards.
+      3. Flashcards should focus on:
+         - Key definitions and concepts
+         - Important facts and figures
+         - Formulas and equations
+         - Terminology and vocabulary
+         - Key principles and rules
+      4. Each flashcard should be:
+         - Simple and focused (one concept per card)
+         - Clear and concise
+         - Suitable for spaced repetition learning
+         - Easy to memorize
+      5. Front side (question) should be:
+         - A clear question or prompt
+         - Brief and direct
+         - Examples: "What is X?", "Define Y", "What does Z mean?"
+      6. Back side (answer) should be:
+         - A clear, concise answer
+         - Direct and factual
+         - Complete enough to understand the concept
+
+      RESPONSE FORMAT:
+      Your response MUST be a valid JSON array of objects. Do not include any text before or after the JSON array. Each object must have the following structure:
+
+      {
+        "front": "The question or prompt for the front of the card",
+        "back": "The answer or explanation for the back of the card"
+      }
+
+      IMPORTANT: Ensure flashcards are clear, concise, and suitable for effective memorization through spaced repetition.
+    `;
+
+    try {
+      const result = (await this.genAI.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      })) as GeminiResult;
+
+      let responseText: string | undefined;
+
+      if (typeof result === 'string') {
+        responseText = result;
+      } else if (result && typeof result === 'object') {
+        if ('text' in result && typeof result.text === 'string') {
+          responseText = result.text;
+        } else if (
+          'response' in result &&
+          result.response &&
+          typeof result.response === 'object' &&
+          'text' in result.response
+        ) {
+          responseText = result.response.text as string;
+        } else if (
+          'candidates' in result &&
+          Array.isArray(result.candidates) &&
+          result.candidates.length > 0
+        ) {
+          const candidate = result.candidates[0];
+          if (
+            candidate &&
+            typeof candidate === 'object' &&
+            'content' in candidate
+          ) {
+            const content = candidate.content;
+            if (
+              content &&
+              'parts' in content &&
+              Array.isArray(content.parts) &&
+              content.parts.length > 0
+            ) {
+              const part = content.parts[0];
+              if (part && 'text' in part && typeof part.text === 'string') {
+                responseText = part.text;
+              }
+            }
+          }
+        }
+      }
+
+      if (!responseText) {
+        this.logger.error(
+          'Received an empty or unexpected response from Gemini for flashcard generation.',
+        );
+        throw new Error(
+          'Received an empty or unexpected response from Gemini.',
+        );
+      }
+
+      let cleanedText = responseText.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      const parsed = JSON.parse(cleanedText) as Array<{ front: string; back: string }>;
+
+      if (!Array.isArray(parsed)) {
+        throw new Error('Response is not an array of flashcards.');
+      }
+
+      if (parsed.length === 0) {
+        throw new Error('No flashcards were generated.');
+      }
+
+      // Validate structure
+      for (const card of parsed) {
+        if (!card.front || !card.back) {
+          throw new Error('Invalid flashcard structure: missing front or back.');
+        }
+      }
+
+      return parsed;
+    } catch (error) {
+      this.logger.error('Error generating flashcards:', error);
+
+      if (error instanceof Error) {
+        throw error;
+      }
+
+      throw new Error(
+        `Failed to generate or parse flashcards from Gemini: ${String(error)}`,
+      );
+    }
+  }
+
   private distributeQuestionTypes(
     totalCount: number,
     types: QuestionTypeEnum[],

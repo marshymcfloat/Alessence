@@ -7,7 +7,8 @@ import {
   getExamById,
   evaluateAnswers,
 } from "@/lib/actions/examActionts";
-import { Exam, Question, ExamStatusEnum } from "@repo/db";
+import type { Exam, Question } from "@repo/db";
+import { ExamStatusEnum } from "@repo/db/client-types";
 import {
   Item,
   ItemGroup,
@@ -32,7 +33,11 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  History,
+  Repeat,
 } from "lucide-react";
+import { ExamHistoryView } from "./ExamHistoryView";
+import { ExamTimer } from "./ExamTimer";
 import { toast } from "sonner";
 import {
   Empty,
@@ -66,6 +71,8 @@ export default function ExamsList() {
     {}
   );
   const [isEvaluating, setIsEvaluating] = useState(false);
+  const [viewingHistory, setViewingHistory] = useState<number | null>(null);
+  const [examStartTime, setExamStartTime] = useState<Date | null>(null);
 
   useEffect(() => {
     loadExams();
@@ -113,10 +120,16 @@ export default function ExamsList() {
       setSubmitted(false);
       setAnswerResults({});
       setIsEvaluating(false);
+      setExamStartTime(new Date()); // Record exam start time
       setIsDialogOpen(true);
     } else {
       toast.error(result.error || "Failed to load exam questions");
     }
+  };
+
+  const handleTimeUp = () => {
+    toast.warning("Time's up! Submitting your exam automatically...");
+    calculateScore();
   };
 
   const handleAnswerChange = (questionId: number, answer: string) => {
@@ -285,7 +298,15 @@ export default function ExamsList() {
                   <span className="flex-1 line-clamp-2">
                     {exam.description}
                   </span>
-                  {getStatusBadge(exam.status)}
+                  <div className="flex items-center gap-2">
+                    {exam.isPracticeMode && (
+                      <span className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/20">
+                        <Repeat className="size-3" />
+                        Practice
+                      </span>
+                    )}
+                    {getStatusBadge(exam.status)}
+                  </div>
                 </ItemTitle>
                 <ItemDescription className="!text-sm !text-gray-600 dark:!text-gray-400">
                   <span className="font-medium">{exam.subject.title}</span>
@@ -327,8 +348,31 @@ export default function ExamsList() {
                 {selectedExam?.questions.length}
               </span>{" "}
               questions
+              {selectedExam?.timeLimit && (
+                <>
+                  {" "}
+                  •{" "}
+                  <span className="font-medium">
+                    {selectedExam.timeLimit} minute
+                    {selectedExam.timeLimit !== 1 ? "s" : ""} time limit
+                  </span>
+                </>
+              )}
             </DialogDescription>
           </DialogHeader>
+
+          {/* Timer */}
+          {selectedExam?.timeLimit &&
+            examStartTime &&
+            !submitted && (
+              <div className="!mb-6">
+                <ExamTimer
+                  timeLimitMinutes={selectedExam.timeLimit}
+                  onTimeUp={handleTimeUp}
+                  startedAt={examStartTime}
+                />
+              </div>
+            )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 !mt-6">
             {selectedExam?.questions.map((question, index) => {
@@ -545,6 +589,20 @@ export default function ExamsList() {
                 Close
               </Button>
             </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* History Dialog */}
+      <Dialog open={viewingHistory !== null} onOpenChange={(open) => !open && setViewingHistory(null)}>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+          {viewingHistory && (
+            <ExamHistoryView
+              examId={viewingHistory}
+              examDescription={
+                exams.find((e) => e.id === viewingHistory)?.description || ""
+              }
+            />
           )}
         </DialogContent>
       </Dialog>

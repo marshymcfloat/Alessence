@@ -31,7 +31,7 @@ import { toast } from "sonner";
 import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { queryClient } from "../providers/TanstackProvider";
-import { Task } from "@repo/db";
+import type { Task } from "@repo/db";
 
 const AddTaskForm = ({
   onClose,

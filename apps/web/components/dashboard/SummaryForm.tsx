@@ -27,7 +27,7 @@ import { createSummary } from "@/lib/actions/summaryActions";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryClient } from "../providers/TanstackProvider";
-import { Subject } from "@repo/db";
+import type { Subject } from "@repo/db";
 import { LoaderCircle } from "lucide-react";
 import { getEnrolledSubject } from "@/lib/actions/subjectActions";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { Task } from "@repo/db";
+import type { Task } from "@repo/db";
 import { TaskWithSubject } from "@repo/types";
 
 interface TaskLegendProps {
@@ -115,10 +115,6 @@ export function TaskLegend({ tasks }: TaskLegendProps) {
       a.title.localeCompare(b.title)
     );
   }, [tasks]);
-
-  if (subjects.length === 0) {
-    return null;
-  }
 
   return (
     <div className="mb-3 flex flex-wrap items-center gap-3 text-xs">

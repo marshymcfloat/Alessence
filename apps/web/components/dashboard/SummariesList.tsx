@@ -6,7 +6,8 @@ import {
   deleteSummary,
   getSummaryById,
 } from "@/lib/actions/summaryActions";
-import { Summary, SummaryStatusEnum } from "@repo/db";
+import type { Summary } from "@repo/db";
+import { SummaryStatusEnum } from "@repo/db/client-types";
 import ReactMarkdown from "react-markdown";
 import {
   Document,

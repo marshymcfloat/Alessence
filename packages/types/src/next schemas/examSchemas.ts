@@ -25,6 +25,14 @@ export const createNewExamSchema = z.object({
   questionTypes: z
     .array(z.enum(["MULTIPLE_CHOICE", "TRUE_FALSE", "IDENTIFICATION"]))
     .min(1, { message: "At least one question type must be selected" }),
+  isPracticeMode: z.boolean().default(false),
+  timeLimit: z
+    .number()
+    .min(1)
+    .max(600)
+    .nullable()
+    .optional()
+    .or(z.null().optional()),
 });
 
 export type CreateNewExamTypes = z.infer<typeof createNewExamSchema>;

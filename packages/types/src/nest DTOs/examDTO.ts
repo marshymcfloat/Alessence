@@ -25,6 +25,9 @@ export const createExamBackendSchema = z.object({
       z.array(z.coerce.number())
     )
     .optional(),
+
+  isPracticeMode: z.boolean().optional().default(false),
+  timeLimit: z.coerce.number().min(1).max(600).optional().nullable(),
 });
 
 export class CreateExamDto extends createZodDto(createExamBackendSchema) {}

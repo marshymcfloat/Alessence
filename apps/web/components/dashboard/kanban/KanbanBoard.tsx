@@ -13,7 +13,7 @@ import {
   DragOverEvent,
 } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
-import { Task } from "@repo/db";
+import type { Task } from "@repo/db";
 import { Column } from "./KanbanColumn";
 import { TaskCard } from "./TaskCard";
 import { TaskLegend } from "./TaskLegend";

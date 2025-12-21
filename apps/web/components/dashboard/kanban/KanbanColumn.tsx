@@ -5,7 +5,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Task } from "@repo/db";
+import type { Task } from "@repo/db";
 import { TaskCard } from "./TaskCard";
 
 type TaskStatus = "PLANNED" | "ON_PROGRESS" | "DONE";

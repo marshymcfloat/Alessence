@@ -7,4 +7,7 @@ export {
   AttemptStatusEnum,
   SummaryStatusEnum,
   SummaryTemplateEnum,
+  SessionTypeEnum,
+  SessionStatusEnum,
+  GoalPeriodEnum,
 } from "@prisma/client";

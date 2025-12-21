@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Task } from "@repo/db";
+import type { Task } from "@repo/db";
 import { TaskWithSubject } from "@repo/types";
 import { Edit, Eye, Trash } from "lucide-react";
 import AddTaskDialog from "../AddTaskDialog";

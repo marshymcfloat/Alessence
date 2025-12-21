@@ -19,6 +19,10 @@
     "./server": {
       "types": "./dist/server.d.ts",
       "default": "./dist/server.js"
+    },
+    "./client-types": {
+      "types": "./dist/client-types.d.ts",
+      "default": "./dist/client-types.js"
     }
   },
   "dependencies": {

@@ -5,6 +5,10 @@ export * from "./next schemas/subjectSchema";
 export * from "./next schemas/taskSchema";
 export * from "./next schemas/examSchemas";
 export * from "./next schemas/summarySchemas";
+export * from "./next schemas/studySessionSchema";
+export * from "./next schemas/noteSchema";
+export * from "./next schemas/goalSchemas";
+export * from "./next schemas/flashcardSchemas";
 export type SafeUser = {
   id: String;
   email: String;

@@ -14,7 +14,7 @@ import {
 import { Cloud, LoaderCircle, XCircle } from "lucide-react";
 import { Input } from "../ui/input";
 import { useRef } from "react";
-import { File as DBFile } from "@repo/db";
+import type { File as DBFile } from "@repo/db";
 import { Separator } from "../ui/separator";
 
 type UploadFilesProps = {
