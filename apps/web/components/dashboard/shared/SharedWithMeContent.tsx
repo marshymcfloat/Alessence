@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -197,6 +197,7 @@ export default function SharedWithMeContent() {
                       <p className="font-medium">{item.file.name}</p>
                       <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                         <Avatar className="size-5">
+                          <AvatarImage src={item.owner.profilePicture || undefined} alt={item.owner.name} />
                           <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-[10px] text-white">
                             {getInitials(item.owner.name)}
                           </AvatarFallback>
@@ -249,6 +250,7 @@ export default function SharedWithMeContent() {
                         </p>
                         <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
                           <Avatar className="size-5">
+                            <AvatarImage src={item.owner.profilePicture || undefined} alt={item.owner.name} />
                             <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-[10px] text-white">
                               {getInitials(item.owner.name)}
                             </AvatarFallback>
@@ -291,6 +293,7 @@ export default function SharedWithMeContent() {
                       </p>
                       <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
                         <Avatar className="size-5">
+                          <AvatarImage src={item.owner.profilePicture || undefined} alt={item.owner.name} />
                           <AvatarFallback className="bg-gradient-to-br from-purple-500 to-pink-600 text-[10px] text-white">
                             {getInitials(item.owner.name)}
                           </AvatarFallback>

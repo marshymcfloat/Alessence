@@ -7,6 +7,7 @@ export interface UserSearchResult {
   id: string;
   name: string;
   email: string;
+  profilePicture: string | null;
   friendshipStatus:
     | "none"
     | "pending_sent"
@@ -24,11 +25,13 @@ export interface FriendRequest {
     id: string;
     name: string;
     email: string;
+    profilePicture: string | null;
   };
   addressee: {
     id: string;
     name: string;
     email: string;
+    profilePicture: string | null;
   };
 }
 
@@ -36,6 +39,7 @@ export interface Friend {
   id: string;
   name: string;
   email: string;
+  profilePicture: string | null;
   friendshipId: number;
   friendsSince: string;
 }

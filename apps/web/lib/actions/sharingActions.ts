@@ -7,7 +7,7 @@ export interface SharedFileItem {
   id: number;
   permission: string;
   createdAt: string;
-  owner: { id: string; name: string; email: string };
+  owner: { id: string; name: string; email: string; profilePicture: string | null };
   file: { id: number; name: string; type: string; fileUrl: string };
 }
 
@@ -15,7 +15,7 @@ export interface SharedNoteItem {
   id: number;
   permission: string;
   createdAt: string;
-  owner: { id: string; name: string; email: string };
+  owner: { id: string; name: string; email: string; profilePicture: string | null };
   note: { id: number; title: string; content: string; isMarkdown: boolean };
 }
 
@@ -23,7 +23,7 @@ export interface SharedDeckItem {
   id: number;
   permission: string;
   createdAt: string;
-  owner: { id: string; name: string; email: string };
+  owner: { id: string; name: string; email: string; profilePicture: string | null };
   deck: { id: number; title: string; description: string | null; _count: { cards: number } };
 }
 

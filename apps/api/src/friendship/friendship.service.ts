@@ -11,6 +11,7 @@ export interface UserSearchResult {
   id: string;
   name: string;
   email: string;
+  profilePicture: string | null;
   friendshipStatus: 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'blocked';
   friendshipId?: number;
 }
@@ -23,11 +24,13 @@ export interface FriendRequest {
     id: string;
     name: string;
     email: string;
+    profilePicture: string | null;
   };
   addressee: {
     id: string;
     name: string;
     email: string;
+    profilePicture: string | null;
   };
 }
 
@@ -35,6 +38,7 @@ export interface Friend {
   id: string;
   name: string;
   email: string;
+  profilePicture: string | null;
   friendshipId: number;
   friendsSince: Date;
 }
@@ -70,6 +74,7 @@ export class FriendshipService {
         id: true,
         name: true,
         email: true,
+        profilePicture: true,
       },
       take: limit,
     });
@@ -110,6 +115,7 @@ export class FriendshipService {
         id: user.id,
         name: user.name,
         email: user.email,
+        profilePicture: user.profilePicture,
         friendshipStatus,
         friendshipId,
       };
@@ -166,8 +172,8 @@ export class FriendshipService {
         status: FriendshipStatusEnum.PENDING,
       },
       include: {
-        requester: { select: { id: true, name: true, email: true } },
-        addressee: { select: { id: true, name: true, email: true } },
+        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
+        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
       },
     });
 
@@ -184,8 +190,8 @@ export class FriendshipService {
     const friendship = await this.dbService.friendship.findUnique({
       where: { id: friendshipId },
       include: {
-        requester: { select: { id: true, name: true, email: true } },
-        addressee: { select: { id: true, name: true, email: true } },
+        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
+        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
       },
     });
 
@@ -206,8 +212,8 @@ export class FriendshipService {
       where: { id: friendshipId },
       data: { status: FriendshipStatusEnum.ACCEPTED },
       include: {
-        requester: { select: { id: true, name: true, email: true } },
-        addressee: { select: { id: true, name: true, email: true } },
+        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
+        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
       },
     });
 
@@ -274,6 +280,7 @@ export class FriendshipService {
 
   /**
    * Remove a friend (unfriend)
+   * Also removes all shared content between the two users
    */
   async removeFriend(
     friendshipId: number,
@@ -299,8 +306,48 @@ export class FriendshipService {
       throw new BadRequestException('You are not friends with this user.');
     }
 
-    await this.dbService.friendship.delete({
-      where: { id: friendshipId },
+    // Get the other user's ID
+    const otherUserId =
+      friendship.requesterId === currentUserId
+        ? friendship.addresseeId
+        : friendship.requesterId;
+
+    // Use a transaction to delete friendship and all shared content
+    await this.dbService.$transaction(async (tx) => {
+      // Delete all shared files between the two users (both directions)
+      await tx.sharedFile.deleteMany({
+        where: {
+          OR: [
+            { ownerId: currentUserId, recipientId: otherUserId },
+            { ownerId: otherUserId, recipientId: currentUserId },
+          ],
+        },
+      });
+
+      // Delete all shared notes between the two users (both directions)
+      await tx.sharedNote.deleteMany({
+        where: {
+          OR: [
+            { ownerId: currentUserId, recipientId: otherUserId },
+            { ownerId: otherUserId, recipientId: currentUserId },
+          ],
+        },
+      });
+
+      // Delete all shared flashcard decks between the two users (both directions)
+      await tx.sharedFlashcardDeck.deleteMany({
+        where: {
+          OR: [
+            { ownerId: currentUserId, recipientId: otherUserId },
+            { ownerId: otherUserId, recipientId: currentUserId },
+          ],
+        },
+      });
+
+      // Finally, delete the friendship
+      await tx.friendship.delete({
+        where: { id: friendshipId },
+      });
     });
   }
 
@@ -314,8 +361,8 @@ export class FriendshipService {
         status: FriendshipStatusEnum.PENDING,
       },
       include: {
-        requester: { select: { id: true, name: true, email: true } },
-        addressee: { select: { id: true, name: true, email: true } },
+        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
+        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -331,8 +378,8 @@ export class FriendshipService {
         status: FriendshipStatusEnum.PENDING,
       },
       include: {
-        requester: { select: { id: true, name: true, email: true } },
-        addressee: { select: { id: true, name: true, email: true } },
+        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
+        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -348,8 +395,8 @@ export class FriendshipService {
         OR: [{ requesterId: currentUserId }, { addresseeId: currentUserId }],
       },
       include: {
-        requester: { select: { id: true, name: true, email: true } },
-        addressee: { select: { id: true, name: true, email: true } },
+        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
+        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -361,6 +408,7 @@ export class FriendshipService {
         id: friend.id,
         name: friend.name,
         email: friend.email,
+        profilePicture: friend.profilePicture,
         friendshipId: f.id,
         friendsSince: f.updatedAt,
       };

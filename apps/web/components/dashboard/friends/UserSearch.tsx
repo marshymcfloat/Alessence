@@ -4,7 +4,7 @@ import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -196,6 +196,7 @@ export default function UserSearch() {
               <CardContent className="flex items-center justify-between p-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="size-12 border-2 border-primary/10">
+                    <AvatarImage src={user.profilePicture || undefined} alt={user.name} />
                     <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 font-semibold text-white">
                       {getInitials(user.name)}
                     </AvatarFallback>

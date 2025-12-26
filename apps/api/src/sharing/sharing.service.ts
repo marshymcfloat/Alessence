@@ -132,7 +132,7 @@ export class SharingService {
       where: { recipientId: userId },
       include: {
         file: { select: { id: true, name: true, type: true, fileUrl: true } },
-        owner: { select: { id: true, name: true, email: true } },
+        owner: { select: { id: true, name: true, email: true, profilePicture: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -224,7 +224,7 @@ export class SharingService {
       where: { recipientId: userId },
       include: {
         note: { select: { id: true, title: true, content: true, isMarkdown: true } },
-        owner: { select: { id: true, name: true, email: true } },
+        owner: { select: { id: true, name: true, email: true, profilePicture: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -323,7 +323,7 @@ export class SharingService {
             _count: { select: { cards: true } },
           },
         },
-        owner: { select: { id: true, name: true, email: true } },
+        owner: { select: { id: true, name: true, email: true, profilePicture: true } },
       },
       orderBy: { createdAt: 'desc' },
     });

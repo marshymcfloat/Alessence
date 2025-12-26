@@ -30,6 +30,7 @@ import {
   Inbox,
 } from "lucide-react";
 import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { getAllFiles } from "@/lib/actions/fileActionts";
 import { getAllNotes } from "@/lib/actions/noteActions";
 import { getAllDecks } from "@/lib/actions/flashcardActions";
@@ -162,13 +163,28 @@ export function ShareWithFriendDialog({
     </div>
   );
 
+  const getInitials = (name: string) => {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length >= 2 && parts[0] && parts[parts.length - 1]) {
+      return ((parts[0][0] ?? "") + (parts[parts.length - 1]?.[0] ?? "")).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Share2 className="size-5" />
-            Share with {friend.name}
+          <DialogTitle className="flex items-center gap-3">
+            <Avatar className="size-10 border-2 border-primary/20">
+              <AvatarImage src={friend.profilePicture || undefined} alt={friend.name} />
+              <AvatarFallback className="bg-gradient-to-br from-emerald-500 to-teal-600 text-sm font-semibold text-white">
+                {getInitials(friend.name)}
+              </AvatarFallback>
+            </Avatar>
+            <div>
+              <span>Share with {friend.name}</span>
+            </div>
           </DialogTitle>
           <DialogDescription>
             Select content to share with your friend
