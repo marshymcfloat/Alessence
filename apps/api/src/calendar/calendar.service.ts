@@ -27,6 +27,7 @@ export class CalendarService {
     // Get tasks with deadlines
     const tasks = await this.dbService.task.findMany({
       where: {
+        userId: userId, // Only return tasks owned by this user
         deadline: {
           gte: startDate,
           lte: endDate,
@@ -61,6 +62,7 @@ export class CalendarService {
     // Get exams
     const exams = await this.dbService.exam.findMany({
       where: {
+        userId: userId, // Only return exams owned by this user
         createdAt: {
           gte: startDate,
           lte: endDate,

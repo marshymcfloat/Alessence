@@ -29,7 +29,7 @@ export class TaskController {
   async getAll(
     @GetUser() user: AuthenticatedUser,
   ): Promise<GetAllTasksReturnType> {
-    const allTasks = await this.taskService.getAll();
+    const allTasks = await this.taskService.getAll(user.userId);
 
     return { allTasks, userId: user.userId };
   }
@@ -40,7 +40,7 @@ export class TaskController {
     @Body() createTaskDto: CreateTaskDTO,
     @GetUser() user: AuthenticatedUser,
   ): Promise<CreateNewTaskReturnType> {
-    const newTask = await this.taskService.create(createTaskDto);
+    const newTask = await this.taskService.create(createTaskDto, user.userId);
 
     return { newTask, userId: user.userId };
   }
@@ -52,7 +52,7 @@ export class TaskController {
     @Body() updateTaskDto: CreateTaskDTO,
     @GetUser() user: AuthenticatedUser,
   ): Promise<UpdateTaskStatusReturnType> {
-    const updatedTask = await this.taskService.updateTask(+id, updateTaskDto);
+    const updatedTask = await this.taskService.updateTask(+id, updateTaskDto, user.userId);
 
     return { updatedTask, userId: user.userId };
   }
@@ -63,15 +63,18 @@ export class TaskController {
     @Query('status') status: TaskStatusEnum,
     @GetUser() user: AuthenticatedUser,
   ): Promise<UpdateTaskStatusReturnType> {
-    const updatedTask = await this.taskService.updateTaskStatus(+id, status);
+    const updatedTask = await this.taskService.updateTaskStatus(+id, status, user.userId);
 
     return { updatedTask, userId: user.userId };
   }
 
   @UseGuards(AuthGuard('jwt'))
   @Delete(':id')
-  async deleteTask(@Param('id') id: number): Promise<{ success: boolean }> {
-    await this.taskService.deleteTask(+id);
+  async deleteTask(
+    @Param('id') id: number,
+    @GetUser() user: AuthenticatedUser,
+  ): Promise<{ success: boolean }> {
+    await this.taskService.deleteTask(+id, user.userId);
     return { success: true };
   }
 }

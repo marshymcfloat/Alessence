@@ -55,7 +55,7 @@ export class FlashcardService {
   async getAllDecks(userId: string): Promise<FlashcardDeck[]> {
     const decks = await this.dbService.flashcardDeck.findMany({
       where: {
-        userId,
+        userId: userId, // Only return decks owned by this user
       },
       include: {
         subject: {
@@ -450,10 +450,11 @@ export class FlashcardService {
       throw new BadRequestException('At least one file is required');
     }
 
-    // Fetch files and verify ownership (files are user-agnostic, but we can check if they exist)
+    // Fetch files and verify ownership
     const files = await this.dbService.file.findMany({
       where: {
         id: { in: fileIds },
+        userId: userId, // Only allow files owned by this user
       },
       select: {
         id: true,
@@ -463,7 +464,7 @@ export class FlashcardService {
     });
 
     if (files.length !== fileIds.length) {
-      throw new NotFoundException('One or more files not found');
+      throw new NotFoundException('One or more files not found or you do not have permission to access them');
     }
 
     // Combine file content

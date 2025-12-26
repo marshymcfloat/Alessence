@@ -10,22 +10,22 @@ export * from "./next schemas/noteSchema";
 export * from "./next schemas/goalSchemas";
 export * from "./next schemas/flashcardSchemas";
 export type SafeUser = {
-  id: String;
-  email: String;
+  id: string;
+  email: string;
   createdAt: Date;
   updatedAt: Date;
-  name: String;
+  name: string;
 };
 
 export type GetAllSubjectReturnType = {
   subjects: SubjectWithTaskProgress[];
-  userId: String;
+  userId: string;
 };
 
 export type ActionReturnType<T = unknown> = {
   success: boolean;
-  error?: String;
-  message?: String;
+  error?: string;
+  message?: string;
   data?: T;
 };
 
@@ -39,22 +39,22 @@ export type TaskWithSubject = Task & {
 
 export type CreateNewSubjectReturnType = {
   newSubject: Subject;
-  userId: String;
+  userId: string;
 };
 
 export type CreateNewTaskReturnType = {
   newTask: Task;
-  userId: String;
+  userId: string;
 };
 
 export type GetAllTasksReturnType = {
   allTasks: Task[];
-  userId: String;
+  userId: string;
 };
 
 export type UpdateTaskStatusReturnType = {
   updatedTask: Task;
-  userId: String;
+  userId: string;
 };
 
 export type SubjectWithTaskProgress = Subject & {
@@ -68,5 +68,5 @@ export type SubjectWithTaskProgress = Subject & {
 
 export type getAllFilesReturnType = {
   files: File[];
-  userId: String;
+  userId: string;
 };

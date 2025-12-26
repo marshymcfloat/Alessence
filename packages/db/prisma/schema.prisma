@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,184 +7,301 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// --- CORE MODELS ---
-
 model User {
-  id String @id @default(uuid())
-
-  email          String @unique
-  hashedPassword String
-  name           String
-
-  // A user can have many exam attempts
-  examAttempts ExamAttempt[]
-  
-  // A user can have many study sessions
-  studySessions StudySession[]
-  
-  // A user can have many notes
-  notes Note[]
-  
-  // A user can have many study goals
-  studyGoals StudyGoal[]
-  
-  // A user can have many flashcard decks
-  flashcardDecks FlashcardDeck[]
-  
-  // A user can have many flashcard reviews
-  flashcardReviews FlashcardReview[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                     String              @id @default(uuid())
+  email                  String              @unique
+  hashedPassword         String
+  name                   String
+  profilePicture         String?             // URL to profile picture
+  bio                    String?             // Short bio/description
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  exams                  Exam[]
+  examAttempts           ExamAttempt[]
+  files                  File[]
+  flashcardDecks         FlashcardDeck[]
+  flashcardReviews       FlashcardReview[]
+  friendshipsAsAddressee Friendship[]        @relation("FriendshipAddressee")
+  friendshipsAsRequester Friendship[]        @relation("FriendshipRequester")
+  notes                  Note[]
+  studyGoals             StudyGoal[]
+  studySessions          StudySession[]
+  subjects               Subject[]
+  summaries              Summary[]
+  tasks                  Task[]
+  sharedFilesOwned       SharedFile[]        @relation("SharedFileOwner")
+  sharedFilesReceived    SharedFile[]        @relation("SharedFileRecipient")
+  sharedNotesOwned       SharedNote[]        @relation("SharedNoteOwner")
+  sharedNotesReceived    SharedNote[]        @relation("SharedNoteRecipient")
+  sharedDecksOwned       SharedFlashcardDeck[] @relation("SharedDeckOwner")
+  sharedDecksReceived    SharedFlashcardDeck[] @relation("SharedDeckRecipient")
+  chatConversations      ChatConversation[]
+  studyStreak            StudyStreak?
+  achievements           UserAchievement[]
+  xp                     UserXP?
 }
 
 model Subject {
-  id Int @id @default(autoincrement())
-
-  title       String
-  description String?
-  sem         SemesterEnum @default(FIRST)
-  isEnrolled  Boolean?     @default(true)
-
-  // A subject can contain many tasks, files, exams, and summaries
-  tasks Task[]
-  files File[]
-  exams Exam[] // Relation to the new Exam model
-  summaries Summary[]
-  studySessions StudySession[]
-  notes Note[]
-  studyGoals StudyGoal[]
+  id             Int             @id @default(autoincrement())
+  title          String
+  description    String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  sem            SemesterEnum    @default(FIRST)
+  isEnrolled     Boolean?        @default(true)
+  userId         String?
+  exams          Exam[]
+  files          File[]
   flashcardDecks FlashcardDeck[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  notes          Note[]
+  studyGoals     StudyGoal[]
+  studySessions  StudySession[]
+  user           User?           @relation(fields: [userId], references: [id])
+  summaries      Summary[]
+  tasks          Task[]
 }
+
 model File {
-  id Int @id @default(autoincrement())
-
-  name      String           @unique // <-- ADD THIS @unique ATTRIBUTE
-  fileUrl   String
-  size      Int
-  type      AcceptedFileType
-  embedding Unsupported("vector(1536)")?
-  
-  contentText String? @db.Text
-
-  subjectId Int?
-  subject   Subject? @relation(fields: [subjectId], references: [id])
-  exams     Exam[]
-  summaries Summary[]
-  notes     Note[]
+  id             Int                    @id @default(autoincrement())
+  name           String                 @unique
+  fileUrl        String
+  size           Int
+  type           AcceptedFileType
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  subjectId      Int?
+  embedding      Unsupported("vector")?
+  contentText    String?
+  userId         String?
+  subject        Subject?               @relation(fields: [subjectId], references: [id])
+  user           User?                  @relation(fields: [userId], references: [id])
   flashcardDecks FlashcardDeck[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  notes          Note[]
+  exams          Exam[]                 @relation("ExamToFile")
+  summaries      Summary[]              @relation("FileToSummary")
+  sharedWith     SharedFile[]
 }
 
-// --- NEW EXAM-RELATED MODELS ---
-
-// Represents a single exam generated by the AI
 model Exam {
-  id Int @id @default(autoincrement())
-
-  description    String // The instructions from the form
-  requestedItems Int // The number of items requested
-  status         ExamStatusEnum @default(GENERATING)
-  questionTypes  QuestionTypeEnum[] // The types of questions requested
-  isPracticeMode Boolean @default(false) // Practice mode allows unlimited attempts
-  timeLimit      Int? // Time limit in minutes (null = no limit)
-
-  // An exam belongs to a subject for organization
-  subjectId Int
-  subject   Subject @relation(fields: [subjectId], references: [id])
-
-  // An exam is generated from one or more source files (many-to-many)
-  sourceFiles File[]
-
-  // An exam has many questions
-  questions Question[]
-
-  // An exam can be attempted multiple times
-  attempts ExamAttempt[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id             Int                @id @default(autoincrement())
+  description    String
+  requestedItems Int
+  status         ExamStatusEnum     @default(GENERATING)
+  subjectId      Int
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  questionTypes  QuestionTypeEnum[]
+  isPracticeMode Boolean            @default(false)
+  timeLimit      Int?
+  userId         String?
+  subject        Subject            @relation(fields: [subjectId], references: [id])
+  user           User?              @relation(fields: [userId], references: [id])
+  attempts       ExamAttempt[]
+  questions      Question[]
+  sourceFiles    File[]             @relation("ExamToFile")
 }
 
-// Represents a single question within an exam
 model Question {
-  id Int @id @default(autoincrement())
-
+  id            Int              @id @default(autoincrement())
   text          String
   type          QuestionTypeEnum @default(MULTIPLE_CHOICE)
-  options       Json // e.g., ["Answer A", "Answer B", "Answer C"]
+  options       Json
   correctAnswer String
-
-  // A question belongs to one exam
-  examId Int
-  exam   Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
-
-  // This question can be answered in multiple different attempts
-  userAnswers UserAnswer[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  examId        Int
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  exam          Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  userAnswers   UserAnswer[]
 }
 
 model ExamAttempt {
-  id Int @id @default(autoincrement())
-
-  score       Float? // Nullable until the exam is finished
+  id          Int               @id @default(autoincrement())
+  score       Float?
   status      AttemptStatusEnum @default(IN_PROGRESS)
   startedAt   DateTime          @default(now())
   completedAt DateTime?
-
-  // An attempt is for a specific exam
-  examId Int
-  exam   Exam @relation(fields: [examId], references: [id], onDelete: Cascade)
-
-  // An attempt is made by a specific user
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
-
-  // An attempt is composed of many user answers
-  answers UserAnswer[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  examId      Int
+  userId      String
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  exam        Exam              @relation(fields: [examId], references: [id], onDelete: Cascade)
+  user        User              @relation(fields: [userId], references: [id])
+  answers     UserAnswer[]
 }
 
 model UserAnswer {
-  id Int @id @default(autoincrement())
-
+  id             Int         @id @default(autoincrement())
   selectedAnswer String
-  isCorrect      Boolean // Set after submission for quick scoring/review
-
-  examAttemptId Int
-  attempt       ExamAttempt @relation(fields: [examAttemptId], references: [id], onDelete: Cascade)
-
-  questionId Int
-  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  isCorrect      Boolean
+  examAttemptId  Int
+  questionId     Int
+  attempt        ExamAttempt @relation(fields: [examAttemptId], references: [id], onDelete: Cascade)
+  question       Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([examAttemptId, questionId])
 }
-
-
 
 model Task {
   id          Int            @id @default(autoincrement())
   title       String
   description String
-  deadline    DateTime
   status      TaskStatusEnum @default(PLANNED)
-  subject     Subject?       @relation(fields: [subjectId], references: [id])
   subjectId   Int?
-  notes       Note[]
-  createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  deadline    DateTime
+  createdAt   DateTime       @default(now())
+  userId      String?
+  notes       Note[]
+  subject     Subject?       @relation(fields: [subjectId], references: [id])
+  user        User?          @relation(fields: [userId], references: [id])
 }
 
+model Summary {
+  id          Int                 @id @default(autoincrement())
+  title       String
+  description String
+  content     String?
+  status      SummaryStatusEnum   @default(GENERATING)
+  template    SummaryTemplateEnum @default(COMPREHENSIVE)
+  subjectId   Int?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  userId      String?
+  subject     Subject?            @relation(fields: [subjectId], references: [id])
+  user        User?               @relation(fields: [userId], references: [id])
+  sourceFiles File[]              @relation("FileToSummary")
+}
 
+model StudySession {
+  id             Int               @id @default(autoincrement())
+  type           SessionTypeEnum   @default(POMODORO)
+  duration       Int
+  actualDuration Int?
+  status         SessionStatusEnum @default(IN_PROGRESS)
+  subjectId      Int?
+  userId         String
+  startedAt      DateTime          @default(now())
+  completedAt    DateTime?
+  pausedAt       DateTime?
+  pausedDuration Int               @default(0)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  subject        Subject?          @relation(fields: [subjectId], references: [id])
+  user           User              @relation(fields: [userId], references: [id])
+}
+
+model Note {
+  id         Int          @id @default(autoincrement())
+  title      String
+  content    String
+  isMarkdown Boolean      @default(false)
+  subjectId  Int?
+  fileId     Int?
+  taskId     Int?
+  userId     String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  file       File?        @relation(fields: [fileId], references: [id])
+  subject    Subject?     @relation(fields: [subjectId], references: [id])
+  task       Task?        @relation(fields: [taskId], references: [id])
+  user       User         @relation(fields: [userId], references: [id])
+  tags       NoteTag[]
+  sharedWith SharedNote[]
+}
+
+model Tag {
+  id          Int       @id @default(autoincrement())
+  name        String    @unique
+  color       String?
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  notes       NoteTag[]
+}
+
+model NoteTag {
+  id        Int      @id @default(autoincrement())
+  noteId    Int
+  tagId     Int
+  createdAt DateTime @default(now())
+  note      Note     @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, tagId])
+}
+
+model FlashcardDeck {
+  id           Int                   @id @default(autoincrement())
+  title        String
+  description  String?
+  subjectId    Int?
+  userId       String
+  sourceFileId Int?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  cards        Flashcard[]
+  sourceFile   File?                 @relation(fields: [sourceFileId], references: [id])
+  subject      Subject?              @relation(fields: [subjectId], references: [id])
+  user         User                  @relation(fields: [userId], references: [id])
+  sharedWith   SharedFlashcardDeck[]
+}
+
+model Flashcard {
+  id             Int               @id @default(autoincrement())
+  front          String
+  back           String
+  frontImageUrl  String?
+  backImageUrl   String?
+  deckId         Int
+  easeFactor     Float             @default(2.5)
+  interval       Int               @default(0)
+  repetitions    Int               @default(0)
+  lastReviewedAt DateTime?
+  nextReviewAt   DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  deck           FlashcardDeck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  reviewHistory  FlashcardReview[]
+}
+
+model FlashcardReview {
+  id         Int       @id @default(autoincrement())
+  cardId     Int
+  userId     String
+  quality    Int
+  timeSpent  Int?
+  reviewedAt DateTime  @default(now())
+  createdAt  DateTime  @default(now())
+  card       Flashcard @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id])
+}
+
+model StudyGoal {
+  id            Int            @id @default(autoincrement())
+  periodType    GoalPeriodEnum @default(DAILY)
+  targetMinutes Int
+  subjectId     Int?
+  userId        String
+  isActive      Boolean        @default(true)
+  startDate     DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subject       Subject?       @relation(fields: [subjectId], references: [id])
+  user          User           @relation(fields: [userId], references: [id])
+}
+
+model Friendship {
+  id          Int                  @id @default(autoincrement())
+  requesterId String
+  addresseeId String
+  status      FriendshipStatusEnum @default(PENDING)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+  addressee   User                 @relation("FriendshipAddressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+  requester   User                 @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+}
 
 enum SemesterEnum {
   FIRST
@@ -207,9 +321,9 @@ enum AcceptedFileType {
 }
 
 enum ExamStatusEnum {
-  GENERATING 
-  READY      
-  FAILED     
+  GENERATING
+  READY
+  FAILED
 }
 
 enum QuestionTypeEnum {
@@ -221,28 +335,7 @@ enum QuestionTypeEnum {
 enum AttemptStatusEnum {
   IN_PROGRESS
   COMPLETED
-}
-
-// --- SUMMARY-RELATED MODELS ---
-
-model Summary {
-  id Int @id @default(autoincrement())
-
-  title       String
-  description String // The instructions/focus from the form
-  content     String? @db.Text // The generated summary content
-  status      SummaryStatusEnum @default(GENERATING)
-  template    SummaryTemplateEnum @default(COMPREHENSIVE)
-
-  // A summary belongs to a subject for organization (optional)
-  subjectId Int?
-  subject   Subject? @relation(fields: [subjectId], references: [id])
-
-  // A summary is generated from one or more source files (many-to-many)
-  sourceFiles File[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  ABANDONED
 }
 
 enum SummaryStatusEnum {
@@ -259,39 +352,6 @@ enum SummaryTemplateEnum {
   CUSTOM
 }
 
-// --- STUDY SESSION MODELS ---
-
-model StudySession {
-  id Int @id @default(autoincrement())
-
-  // Session type: POMODORO, CUSTOM, or BREAK
-  type SessionTypeEnum @default(POMODORO)
-  
-  // Duration in seconds
-  duration Int // Planned duration
-  actualDuration Int? // Actual duration (if completed)
-  
-  // Status tracking
-  status SessionStatusEnum @default(IN_PROGRESS)
-  
-  // Optional subject association
-  subjectId Int?
-  subject Subject? @relation(fields: [subjectId], references: [id])
-  
-  // User who owns this session
-  userId String
-  user User @relation(fields: [userId], references: [id])
-  
-  // Timestamps
-  startedAt DateTime @default(now())
-  completedAt DateTime?
-  pausedAt DateTime?
-  pausedDuration Int @default(0) // Total paused time in seconds
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 enum SessionTypeEnum {
   POMODORO
   SHORT_BREAK
@@ -306,174 +366,157 @@ enum SessionStatusEnum {
   CANCELLED
 }
 
-// --- NOTE-TAKING MODELS ---
-
-model Note {
-  id Int @id @default(autoincrement())
-
-  title       String
-  content     String @db.Text // Rich text content (can be HTML or Markdown)
-  isMarkdown  Boolean @default(false) // Whether content is in Markdown format
-  
-  // Optional relationships
-  subjectId Int?
-  subject   Subject? @relation(fields: [subjectId], references: [id])
-  
-  fileId Int?
-  file   File? @relation(fields: [fileId], references: [id])
-  
-  taskId Int?
-  task   Task? @relation(fields: [taskId], references: [id])
-  
-  // User who owns this note
-  userId String
-  user   User @relation(fields: [userId], references: [id])
-  
-  // Tags (many-to-many relationship)
-  tags NoteTag[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Tag {
-  id Int @id @default(autoincrement())
-
-  name        String @unique
-  color       String? // Optional color for UI display
-  description String?
-  
-  // Notes with this tag
-  notes NoteTag[]
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Join table for Note-Tag many-to-many relationship
-model NoteTag {
-  id Int @id @default(autoincrement())
-
-  noteId Int
-  note   Note @relation(fields: [noteId], references: [id], onDelete: Cascade)
-  
-  tagId Int
-  tag   Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
-  
-  createdAt DateTime @default(now())
-
-  @@unique([noteId, tagId])
-}
-
-// --- FLASHCARD MODELS ---
-
-model FlashcardDeck {
-  id Int @id @default(autoincrement())
-
-  title       String
-  description String?
-  
-  // Optional subject association
-  subjectId Int?
-  subject Subject? @relation(fields: [subjectId], references: [id])
-  
-  // User who owns this deck
-  userId String
-  user User @relation(fields: [userId], references: [id])
-  
-  // Cards in this deck
-  cards Flashcard[]
-  
-  // Optional source file for AI-generated decks
-  sourceFileId Int?
-  sourceFile File? @relation(fields: [sourceFileId], references: [id])
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Flashcard {
-  id Int @id @default(autoincrement())
-
-  // Front and back of the card
-  front String @db.Text
-  back String @db.Text
-  
-  // Optional image URLs
-  frontImageUrl String?
-  backImageUrl String?
-  
-  // Card belongs to a deck
-  deckId Int
-  deck FlashcardDeck @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  
-  // Review history for spaced repetition
-  reviewHistory FlashcardReview[]
-  
-  // Spaced repetition fields
-  easeFactor Float @default(2.5) // SM-2 algorithm ease factor
-  interval Int @default(0) // Days until next review
-  repetitions Int @default(0) // Number of successful reviews
-  lastReviewedAt DateTime?
-  nextReviewAt DateTime? // When the card should be reviewed next
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model FlashcardReview {
-  id Int @id @default(autoincrement())
-
-  // Card being reviewed
-  cardId Int
-  card Flashcard @relation(fields: [cardId], references: [id], onDelete: Cascade)
-  
-  // User who reviewed
-  userId String
-  user User @relation(fields: [userId], references: [id])
-  
-  // Review quality (1-4, following SM-2 algorithm)
-  // 1 = Again (hard), 2 = Hard, 3 = Good, 4 = Easy
-  quality Int
-  
-  // Time taken to answer (in seconds)
-  timeSpent Int?
-  
-  reviewedAt DateTime @default(now())
-  
-  createdAt DateTime @default(now())
-}
-
 enum GoalPeriodEnum {
   DAILY
   WEEKLY
 }
 
-// --- STUDY GOAL MODELS ---
+enum FriendshipStatusEnum {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
 
-model StudyGoal {
-  id Int @id @default(autoincrement())
+// Sharing Models
 
-  // Goal type: DAILY or WEEKLY
-  periodType GoalPeriodEnum @default(DAILY)
-  
-  // Target time in minutes (e.g., 120 = 2 hours)
-  targetMinutes Int
-  
-  // Optional subject-specific goal
-  subjectId Int?
-  subject Subject? @relation(fields: [subjectId], references: [id])
-  
-  // User who owns this goal
-  userId String
-  user User @relation(fields: [userId], references: [id])
-  
-  // Whether the goal is currently active
-  isActive Boolean @default(true)
-  
-  // Start date for tracking (for weekly goals, this is the week start)
-  startDate DateTime @default(now())
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model SharedFile {
+  id          Int              @id @default(autoincrement())
+  fileId      Int
+  ownerId     String
+  recipientId String
+  permission  SharePermission  @default(VIEW)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  file        File             @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  owner       User             @relation("SharedFileOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  recipient   User             @relation("SharedFileRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([fileId, recipientId])
+}
+
+model SharedNote {
+  id          Int              @id @default(autoincrement())
+  noteId      Int
+  ownerId     String
+  recipientId String
+  permission  SharePermission  @default(VIEW)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  note        Note             @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  owner       User             @relation("SharedNoteOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  recipient   User             @relation("SharedNoteRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([noteId, recipientId])
+}
+
+model SharedFlashcardDeck {
+  id          Int              @id @default(autoincrement())
+  deckId      Int
+  ownerId     String
+  recipientId String
+  permission  SharePermission  @default(VIEW)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deck        FlashcardDeck    @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  owner       User             @relation("SharedDeckOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  recipient   User             @relation("SharedDeckRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+
+  @@unique([deckId, recipientId])
+}
+
+enum SharePermission {
+  VIEW
+  COPY
+}
+
+// AI Chat History
+model ChatConversation {
+  id        Int           @id @default(autoincrement())
+  userId    String
+  title     String        @default("New Conversation")
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  messages  ChatMessage[]
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model ChatMessage {
+  id             Int              @id @default(autoincrement())
+  conversationId Int
+  role           ChatRoleEnum
+  content        String
+  createdAt      DateTime         @default(now())
+  conversation   ChatConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+}
+
+enum ChatRoleEnum {
+  USER
+  ASSISTANT
+}
+
+// Study Streaks & Gamification
+
+model StudyStreak {
+  id              Int       @id @default(autoincrement())
+  userId          String    @unique
+  currentStreak   Int       @default(0)
+  longestStreak   Int       @default(0)
+  lastStudyDate   DateTime?
+  totalStudyDays  Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Achievement {
+  id          Int               @id @default(autoincrement())
+  code        String            @unique
+  name        String
+  description String
+  icon        String
+  category    AchievementCategory
+  requirement Int               // e.g., 7 for "7-day streak", 10 for "complete 10 exams"
+  xpReward    Int               @default(0)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  userAchievements UserAchievement[]
+}
+
+model UserAchievement {
+  id            Int         @id @default(autoincrement())
+  userId        String
+  achievementId Int
+  unlockedAt    DateTime    @default(now())
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId])
+}
+
+model UserXP {
+  id          Int      @id @default(autoincrement())
+  userId      String   @unique
+  totalXp     Int      @default(0)
+  level       Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+enum AchievementCategory {
+  STREAK
+  EXAM
+  FLASHCARD
+  STUDY_TIME
+  SOCIAL
+  SPECIAL
 }

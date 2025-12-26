@@ -24,7 +24,7 @@ export class SearchService {
     // Search Notes
     const notes = await this.dbService.note.findMany({
       where: {
-        userId,
+        userId: userId, // Only return notes owned by this user
         OR: [
           {
             title: {
@@ -69,6 +69,7 @@ export class SearchService {
     // Search Tasks
     const tasks = await this.dbService.task.findMany({
       where: {
+        userId: userId, // Only return tasks owned by this user
         OR: [
           {
             title: {
@@ -117,6 +118,7 @@ export class SearchService {
     // Search Files
     const files = await this.dbService.file.findMany({
       where: {
+        userId: userId, // Only return files owned by this user
         name: {
           contains: searchTerm,
           mode: 'insensitive',
@@ -151,6 +153,7 @@ export class SearchService {
     // Search Exams
     const exams = await this.dbService.exam.findMany({
       where: {
+        userId: userId, // Only return exams owned by this user
         description: {
           contains: searchTerm,
           mode: 'insensitive',

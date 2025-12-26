@@ -77,7 +77,7 @@ export async function getEnrolledSubject(): Promise<
 
     const data = await response.json();
 
-    if (!response) {
+    if (!response.ok) {
       return {
         success: false,
         error:
@@ -113,12 +113,15 @@ export async function deleteSubjectAction(
       };
     }
 
-    const response = await fetch(`${process.env.FETCH_BASE_URL}/subject/${id}`, {
-      method: "DELETE",
-      headers: {
-        Cookie: `${token.name}=${token.value}`,
-      },
-    });
+    const response = await fetch(
+      `${process.env.FETCH_BASE_URL}/subject/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Cookie: `${token.name}=${token.value}`,
+        },
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json();

@@ -1,6 +1,6 @@
 "use server";
 
-import { AuthLoginTypes } from "@repo/types";
+import { AuthLoginTypes, AuthRegisterTypes } from "@repo/types";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -160,6 +160,135 @@ export async function authLoginAction(values: AuthLoginTypes) {
     return {
       success: false,
       error: "An unexpected error occurred. Please try again.",
+    };
+  }
+}
+
+export async function authRegisterAction(values: AuthRegisterTypes) {
+  // Validate FETCH_BASE_URL is set
+  if (!process.env.FETCH_BASE_URL) {
+    console.error("FETCH_BASE_URL is not configured");
+    return {
+      success: false,
+      error: "Server configuration error. Please contact support.",
+    };
+  }
+
+  try {
+    const response = await fetchWithTimeoutAndRetry(
+      `${process.env.FETCH_BASE_URL}/auth/register`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          name: values.name,
+          email: values.email,
+          password: values.password,
+        }),
+      },
+      2, // maxRetries
+      8000 // timeout in ms (8 seconds)
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.message || "Registration failed. Please try again.",
+      };
+    }
+
+    return {
+      success: true,
+      data: { user: data },
+      message: "Registration successful! Please sign in to continue.",
+    };
+  } catch (error) {
+    console.error("Registration error:", error);
+
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.name === "AbortError" || error.message.includes("timeout")) {
+        return {
+          success: false,
+          error: "Request timed out. The server may be slow. Please try again.",
+        };
+      }
+      if (
+        error.message.includes("fetch") ||
+        error.message.includes("ECONNREFUSED") ||
+        error.message.includes("Connection timeout")
+      ) {
+        return {
+          success: false,
+          error: "Unable to connect to server. Please check your connection and ensure the server is running.",
+        };
+      }
+    }
+
+    return {
+      success: false,
+      error: "An unexpected error occurred. Please try again.",
+    };
+  }
+}
+
+export async function getCurrentUser() {
+  const cookieHeader = await cookies();
+  const token = cookieHeader.get("access_token");
+
+  if (!token?.value) {
+    return {
+      success: false,
+      error: "Not authenticated",
+      data: null,
+    };
+  }
+
+  if (!process.env.FETCH_BASE_URL) {
+    console.error("FETCH_BASE_URL is not configured");
+    return {
+      success: false,
+      error: "Server configuration error. Please contact support.",
+      data: null,
+    };
+  }
+
+  try {
+    const response = await fetch(`${process.env.FETCH_BASE_URL}/auth/me`, {
+      method: "GET",
+      headers: {
+        Cookie: `${token.name}=${token.value}`,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return {
+        success: false,
+        error: errorData.message || "Failed to fetch user data.",
+        data: null,
+      };
+    }
+
+    const userData = await response.json();
+
+    return {
+      success: true,
+      data: userData,
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "An unexpected error occurred.";
+    console.error("Get Current User Action Error:", message);
+    return {
+      success: false,
+      error: message,
+      data: null,
     };
   }
 }

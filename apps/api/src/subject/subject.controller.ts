@@ -27,7 +27,7 @@ export class SubjectController {
     @Body() createSubjectDTO: CreateSubjectDTO,
     @GetUser() user: AuthenticatedUser,
   ): Promise<CreateNewSubjectReturnType> {
-    const newSubject = await this.subjectService.create(createSubjectDTO);
+    const newSubject = await this.subjectService.create(createSubjectDTO, user.userId);
 
     const userId = user.userId;
     return { newSubject, userId };
@@ -38,7 +38,7 @@ export class SubjectController {
   async getAll(
     @GetUser() user: AuthenticatedUser,
   ): Promise<GetAllSubjectReturnType> {
-    const subjects = await this.subjectService.getAll();
+    const subjects = await this.subjectService.getAll(user.userId);
 
     return { subjects, userId: user.userId };
   }
@@ -49,7 +49,7 @@ export class SubjectController {
     @Param('id') id: string,
     @GetUser() user: AuthenticatedUser,
   ): Promise<{ message: string; userId: string }> {
-    await this.subjectService.delete(parseInt(id));
+    await this.subjectService.delete(parseInt(id), user.userId);
     return {
       message: 'Subject deleted successfully',
       userId: String(user.userId),

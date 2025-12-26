@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/sonner";
 import ReduxProvider from "@/components/providers/ReduxProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { RouteProgressBar } from "@/components/RouteProgressBar";
+import { Suspense } from "react";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -37,6 +39,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
+          <Suspense fallback={null}>
+            <RouteProgressBar />
+          </Suspense>
           <main className="min-h-screen w-full relative">
             <ReduxProvider>
               <TanstackProvider>

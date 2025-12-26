@@ -2,19 +2,27 @@
 
 > Comprehensive feature tracking and implementation guide for enhancing the study platform
 
-**Last Updated:** December 2024
+**Last Updated:** December 26, 2024
 **Status:** 🚧 In Progress
-**Note:** Third-party integrations deferred - focusing on core platform features
+**Note:** Third-party integrations and email notifications deferred - focusing on core platform features
 
 ---
 
 ## 📊 Progress Overview
 
-- **Total Features:** 55+
-- **Completed:** 11 major features + multiple sub-features
+- **Total Features:** 60+
+- **Completed:** 17 major features + multiple sub-features
 - **In Progress:** 0
 - **Planned:** 45+
-- **Deferred:** Third-party integrations (5+ features)
+- **Deferred:** Third-party integrations, email notifications, export/backup (10+ features)
+
+### 🎯 Current High Priorities
+
+1. ✅ ~~**Friend System & Social Features**~~ - COMPLETED (Search users, friend requests, content sharing)
+2. ✅ ~~**AI Study Assistant**~~ - COMPLETED (Specialized for Accounting & Law with chat history)
+3. **UX/UI Improvements** - Better design and responsive layouts
+4. **Mobile Responsiveness** - PWA and mobile-optimized views
+5. **Collaborative Exam Sessions** - Take exams together with friends (real-time)
 
 ### ✅ Completed Features
 
@@ -80,6 +88,79 @@
 - Review interface with quality ratings (Again/Hard/Good/Easy)
 - Progress tracking and review history
 
+11. **User Privacy & Data Isolation**
+
+- User authentication with JWT
+- User registration flow
+- All data (files, exams, subjects, tasks, notes, flashcards, goals, study sessions) scoped by userId
+- Privacy enforcement across all API endpoints
+- Friendship model added for future social features
+
+12. **Friend System** (6.0.1-6.0.5)
+
+- User search by name with debounced search
+- Friend request system (send/accept/reject/cancel)
+- Friends list management with remove functionality
+- Pending request notifications with badge count
+- Share Files with friends (VIEW/COPY permissions)
+- Share Notes with friends
+- Share Flashcard Decks with friends (with copy functionality)
+- "Shared with Me" view for all shared content
+- Use shared files when creating exams
+
+13. **AI Study Assistant** (8.1.1-8.1.3)
+
+- Modern chat interface with typing indicators
+- Chat history persistence with conversation management
+- Create/rename/delete conversations
+- Specialized prompts for Accounting concepts
+- Philippine Law knowledge (tax law, civil law, criminal law)
+- CPA and Bar exam preparation focus
+- Concept explanations with examples
+- Practice question generation
+- Content summarization
+- Suggested follow-up questions
+- Quick action buttons
+
+14. **Enhanced Exam Experience**
+
+- Visual countdown timer with warning states (orange at 5 min, red at 1 min)
+- Exam history view with score trends chart
+- Detailed attempt review with question-by-question breakdown
+- Attempt count tracking
+- Auto-submit on time expiration
+- Use shared files from friends in exam creation
+
+15. **Study Streaks & Gamification** (7.1.1-7.1.4)
+
+- Study streak tracking (current, longest, total study days)
+- XP and leveling system
+- 18 achievements across 5 categories (Streaks, Exams, Flashcards, Study Time, Social)
+- Achievement unlocking with XP rewards
+- Gamification widget in navbar with streak and level display
+- Achievement gallery dialog with progress tracking
+
+16. **Mobile Responsiveness & UI Polish** (10.1.2, 10.0.4)
+
+- Route progress bar for navigation feedback
+- Mobile-friendly hamburger navigation menu
+- Loading skeleton components for all major pages
+- Suspense boundaries for better loading states
+- Animated active state indicators in navigation
+- Responsive layout adjustments for smaller screens
+
+17. **User Profile System**
+
+- Profile picture upload to Vercel Blob storage
+- Profile picture display in UserButton dropdown
+- Bio/description field
+- Edit profile name and bio
+- Profile page with stats overview (exams, decks, notes, sessions)
+- Gamification stats display (streak, level, XP progress)
+- Recent achievements showcase
+- All achievements gallery with locked/unlocked status
+- Public profile view for other users
+
 ---
 
 ## 🎯 Priority Levels
@@ -97,7 +178,7 @@
 
 - [x] **1.1.1** AI-generated flashcards from uploaded files
   - [x] Backend: Flashcard model and service
-  - [ ] Backend: AI integration for flashcard generation (deferred - can be added later)
+  - [x] Backend: AI integration for flashcard generation (via Gemini)
   - [x] Frontend: Flashcard creation UI
   - [x] Frontend: Flashcard deck management
   - [x] Frontend: Flashcard study interface
@@ -267,23 +348,24 @@
 
 ---
 
-### 3.2 Smart Reminders & Notifications
+### 3.2 Smart Reminders & Notifications (In-App Only)
+
+**Note:** Email notifications are DEFERRED - focusing on in-app notifications only
 
 - [ ] **3.2.1** Task Deadline Reminders
   - [ ] Backend: Reminder scheduling
+  - [ ] Frontend: In-app reminder display
   - [ ] Frontend: Reminder settings
-  - [ ] Backend: Notification service
 - [ ] **3.2.2** Exam Preparation Alerts
   - [ ] Backend: Exam reminder logic
   - [ ] Frontend: Alert configuration
-  - [ ] Frontend: Alert display
+  - [ ] Frontend: In-app alert display
 - [ ] **3.2.3** Study Session Notifications
   - [ ] Backend: Session reminders
-  - [ ] Frontend: Notification preferences
-- [ ] **3.2.4** Email/Push Notifications
-  - [ ] Backend: Email service integration
-  - [ ] Backend: Push notification setup
-  - [ ] Frontend: Notification preferences
+  - [ ] Frontend: In-app notification center
+- [ ] **3.2.4** Email/Push Notifications (DEFERRED)
+  - [ ] ~~Backend: Email service integration~~ (deferred indefinitely)
+  - [ ] ~~Backend: Push notification setup~~ (deferred indefinitely)
 - [ ] **3.2.5** Customizable Reminder Settings
   - [ ] Frontend: Reminder configuration UI
   - [ ] Backend: User preference storage
@@ -318,14 +400,20 @@
   - [ ] Frontend: Template selection
 - [x] **4.1.6** Time Limits Per Exam
   - [x] Backend: Time limit storage
-  - [x] Frontend: Timer during exam
-  - [x] Frontend: Time limit settings
-- [ ] **4.1.7** Question Bookmarking
+  - [x] Frontend: Visual countdown timer with warning states (orange/red)
+  - [x] Frontend: Auto-submit on time expiration
+  - [x] Frontend: Time limit settings in exam form
+- [x] **4.1.7** Enhanced Exam History View
+  - [x] Frontend: Score trends chart (area chart)
+  - [x] Frontend: Attempt history with detailed review
+  - [x] Frontend: Stats cards (total attempts, best score, average, improvement)
+  - [x] Frontend: Question-by-question breakdown in attempt review
+- [ ] **4.1.8** Question Bookmarking
   - [ ] Backend: Bookmark model
   - [ ] Frontend: Bookmark functionality
   - [ ] Frontend: Bookmarked questions view
 
-**Priority:** 🔴 High | **Estimated Effort:** 2 weeks
+**Priority:** ✅ Mostly completed | **Estimated Effort:** 2 weeks
 
 ---
 
@@ -410,6 +498,46 @@
 
 ## 6. 👥 Collaboration & Social
 
+### 6.0 Friend System ✅ COMPLETED
+
+- [x] **6.0.1** User Search & Discovery
+  - [x] Backend: User search API (by name)
+  - [x] Frontend: User search interface with debounce
+  - [x] Frontend: User profile cards
+  - [x] Backend: Exclude self and existing friends from search
+- [x] **6.0.2** Friend Requests
+  - [x] Backend: Friend request endpoints (send/accept/reject/cancel)
+  - [x] Backend: Friendship service (uses existing Friendship model)
+  - [x] Frontend: Friend request notifications (badge count)
+  - [x] Frontend: Pending requests management (received & sent)
+  - [x] Frontend: Friends list view with share button
+- [x] **6.0.3** Share Files with Friends
+  - [x] Backend: File sharing model (SharedFile with VIEW/COPY permissions)
+  - [x] Backend: Share/unshare endpoints
+  - [x] Frontend: Share file dialog (ShareWithFriendDialog)
+  - [x] Frontend: Shared files view ("Shared with Me" page)
+- [x] **6.0.4** Share Flashcard Decks with Friends
+  - [x] Backend: Deck sharing model (SharedFlashcardDeck)
+  - [x] Backend: Share/copy deck endpoints
+  - [x] Frontend: Share deck dialog
+  - [x] Frontend: Shared decks view with copy functionality
+- [x] **6.0.5** Share Notes with Friends
+  - [x] Backend: Note sharing model (SharedNote)
+  - [x] Backend: Share/unshare endpoints
+  - [x] Frontend: Share note dialog
+  - [x] Frontend: Shared notes view
+- [ ] **6.0.6** Collaborative Exam Sessions (FUTURE)
+  - [ ] Backend: Real-time exam sync (WebSockets or polling)
+  - [ ] Frontend: Invite friends to exam
+  - [ ] Frontend: Live exam competition view
+  - [ ] Frontend: Comparative results display
+
+**Priority:** ✅ Completed (except collaborative exams) | **Completed:** December 2024
+
+**Database:** Friendship, SharedFile, SharedNote, SharedFlashcardDeck models implemented
+
+---
+
 ### 6.1 Study Groups
 
 - [ ] **6.1.1** Create/Join Study Groups
@@ -417,8 +545,8 @@
   - [ ] Backend: Group membership
   - [ ] Frontend: Group creation UI
   - [ ] Frontend: Group discovery
-- [ ] **6.1.2** Share Files & Notes
-  - [ ] Backend: Sharing permissions
+- [ ] **6.1.2** Share Files & Notes (Group-level)
+  - [ ] Backend: Group sharing permissions
   - [ ] Frontend: Share interface
   - [ ] Frontend: Shared content view
 - [ ] **6.1.3** Group Exams & Quizzes
@@ -434,7 +562,7 @@
   - [ ] Frontend: Forum UI
   - [ ] Frontend: Post creation and replies
 
-**Priority:** 🟢 Low | **Estimated Effort:** 3-4 weeks
+**Priority:** 🟡 Medium | **Estimated Effort:** 3-4 weeks
 
 ---
 
@@ -463,31 +591,31 @@
 
 ## 7. 🎮 Gamification & Motivation
 
-### 7.1 Achievement System
+### 7.1 Achievement System ✅ COMPLETED
 
-- [ ] **7.1.1** Badges & Achievements
-  - [ ] Backend: Achievement model
-  - [ ] Backend: Achievement logic
-  - [ ] Frontend: Badge display
-  - [ ] Frontend: Achievement gallery
-- [ ] **7.1.2** Study Streaks
-  - [ ] Backend: Streak tracking
-  - [ ] Frontend: Streak display
-  - [ ] Frontend: Streak rewards
-- [ ] **7.1.3** Leveling System
-  - [ ] Backend: Level calculation
-  - [ ] Frontend: Level display
-  - [ ] Frontend: Level progression
-- [ ] **7.1.4** Points & Rewards
-  - [ ] Backend: Points system
-  - [ ] Frontend: Points display
-  - [ ] Frontend: Rewards shop (optional)
-- [ ] **7.1.5** Milestone Celebrations
+- [x] **7.1.1** Badges & Achievements
+  - [x] Backend: Achievement model (18 achievements across 5 categories)
+  - [x] Backend: Achievement logic (auto-unlock based on activity)
+  - [x] Frontend: Badge display with icons and descriptions
+  - [x] Frontend: Achievement gallery dialog with locked/unlocked states
+- [x] **7.1.2** Study Streaks
+  - [x] Backend: StudyStreak model (current, longest, total days)
+  - [x] Frontend: Streak display in navbar with fire icon
+  - [x] Frontend: Streak rewards via achievements
+- [x] **7.1.3** Leveling System
+  - [x] Backend: UserXP model with level calculation
+  - [x] Frontend: Level display with XP progress bar
+  - [x] Frontend: Level progression visualization
+- [x] **7.1.4** Points & Rewards
+  - [x] Backend: XP system (earned from activities and achievements)
+  - [x] Frontend: XP display with progress to next level
+  - [ ] Frontend: Rewards shop (optional - future)
+- [ ] **7.1.5** Milestone Celebrations (FUTURE)
   - [ ] Frontend: Celebration animations
   - [ ] Frontend: Milestone notifications
   - [ ] Frontend: Achievement sharing
 
-**Priority:** 🟢 Low | **Estimated Effort:** 2 weeks
+**Priority:** ✅ Mostly completed | **Completed:** December 2024
 
 ---
 
@@ -516,31 +644,47 @@
 
 ## 8. 🤖 Advanced AI Features
 
-### 8.1 AI Study Assistant
+### 8.1 AI Study Assistant ✅ MOSTLY COMPLETED
 
-- [ ] **8.1.1** Chat Interface for Questions
-  - [ ] Backend: Chat API
-  - [ ] Backend: AI integration
-  - [ ] Frontend: Chat UI
-  - [ ] Frontend: Chat history
-- [ ] **8.1.2** Concept Explanations
-  - [ ] Backend: Explanation generation
-  - [ ] Frontend: Explanation display
-  - [ ] Frontend: Concept linking
-- [ ] **8.1.3** Study Plan Generation
-  - [ ] Backend: Plan generation algorithm
-  - [ ] Frontend: Plan display
-  - [ ] Frontend: Plan customization
-- [ ] **8.1.4** Personalized Study Recommendations
-  - [ ] Backend: Recommendation engine
+**Specialization:** Accounting & Law (with focus on Philippine laws and regulations)
+
+- [x] **8.1.1** Chat Interface for Questions
+  - [x] Backend: Chat API with conversation history (ChatConversation, ChatMessage models)
+  - [x] Backend: Gemini AI integration with specialized prompts
+  - [x] Backend: Context-aware responses using uploaded materials
+  - [x] Frontend: Modern chat UI with typing indicators
+  - [x] Frontend: Chat history persistence with sidebar
+  - [x] Frontend: Quick action buttons (explain, summarize, quiz me)
+  - [x] Frontend: Suggested follow-up questions
+  - [x] Frontend: Conversation management (create, rename, delete)
+- [x] **8.1.2** Accounting & Law Specialization
+  - [x] Backend: Specialized system prompts for accounting concepts
+  - [x] Backend: Philippine law knowledge (Civil Code, RPC, Tax Code, Corporation Code)
+  - [x] Backend: Tax law and regulations assistance
+  - [x] Backend: Legal terminology explanations
+  - [x] Frontend: Domain-specific badges and UI elements
+  - [x] Frontend: CPA & Bar Exam prep focus
+- [x] **8.1.3** Concept Explanations
+  - [x] Backend: Explanation generation with examples (via /ai-chat/explain endpoint)
+  - [x] Backend: Step-by-step breakdowns for complex topics
+  - [x] Frontend: Markdown rendering for formatted explanations
+- [ ] **8.1.4** Study Plan Generation (FUTURE)
+  - [ ] Backend: Plan generation based on exam dates
+  - [ ] Backend: Workload balancing algorithm
+  - [ ] Frontend: Plan display with calendar integration
+  - [ ] Frontend: Plan customization and adjustments
+- [ ] **8.1.5** Personalized Study Recommendations (FUTURE)
+  - [ ] Backend: Recommendation engine based on weak areas
+  - [ ] Backend: Learning pattern analysis
   - [ ] Frontend: Recommendations UI
-  - [ ] Frontend: Recommendation feedback
-- [ ] **8.1.5** Q&A from Uploaded Materials
-  - [ ] Backend: Material-based Q&A
-  - [ ] Frontend: Q&A interface
-  - [ ] Frontend: Source citation
+  - [ ] Frontend: Recommendation feedback loop
+- [x] **8.1.6** Q&A from Uploaded Materials (Partial)
+  - [x] Backend: File context integration for chat
+  - [ ] Backend: Full RAG with source citations (future enhancement)
+  - [x] Frontend: Q&A through chat interface
+  - [ ] Frontend: Highlight relevant passages (future)
 
-**Priority:** 🟡 Medium | **Estimated Effort:** 3-4 weeks
+**Priority:** ✅ Core features completed | **Completed:** December 2024
 
 ---
 
@@ -596,7 +740,9 @@
 
 ---
 
-### 9.2 Export & Backup
+### 9.2 Export & Backup (DEFERRED)
+
+**Status:** Low priority - focus on core features first
 
 - [ ] **9.2.1** Export Notes as PDF/Markdown
   - [ ] Backend: Export generation
@@ -615,7 +761,7 @@
   - [ ] Frontend: Print preview
   - [ ] Frontend: Print optimization
 
-**Priority:** 🟡 Medium | **Estimated Effort:** 1-2 weeks
+**Priority:** 🟢 Low | **Estimated Effort:** 1-2 weeks
 
 ---
 
@@ -648,26 +794,60 @@
 
 ## 10. 📱 Mobile & Accessibility
 
-### 10.1 Mobile Responsiveness
+### 10.0 UX/UI Improvements ⭐ PARTIALLY COMPLETED
+
+- [ ] **10.0.1** Design System Refinement
+  - [ ] Frontend: Consistent color palette and theming
+  - [ ] Frontend: Typography hierarchy improvements
+  - [ ] Frontend: Spacing and layout consistency
+  - [ ] Frontend: Component design polish
+- [ ] **10.0.2** Dashboard Redesign
+  - [ ] Frontend: Modern dashboard layout
+  - [ ] Frontend: Widget-based customizable sections
+  - [ ] Frontend: Quick actions and shortcuts
+  - [ ] Frontend: At-a-glance statistics
+- [x] **10.0.3** Navigation Improvements
+  - [x] Frontend: Intuitive navigation structure
+  - [ ] Frontend: Breadcrumbs for deep navigation
+  - [x] Frontend: Quick search access
+  - [ ] Frontend: Recent items quick access
+- [x] **10.0.4** Loading States & Feedback
+  - [x] Frontend: Skeleton loaders (for all major pages)
+  - [x] Frontend: Route progress indicators (top progress bar)
+  - [x] Frontend: Toast notifications
+  - [x] Frontend: Error state handling
+- [x] **10.0.5** Micro-interactions & Animations
+  - [x] Frontend: Smooth transitions (Framer Motion)
+  - [x] Frontend: Hover effects
+  - [x] Frontend: Success/error feedback animations
+  - [x] Frontend: Route transition with progress bar
+
+**Priority:** 🟡 Mostly completed | **Estimated Effort:** 1 week remaining
+
+---
+
+### 10.1 Mobile Responsiveness ⭐ PARTIALLY COMPLETED
 
 - [ ] **10.1.1** Progressive Web App (PWA)
   - [ ] Frontend: PWA manifest
   - [ ] Frontend: Service worker
   - [ ] Frontend: Install prompt
-- [ ] **10.1.2** Mobile-Optimized Views
-  - [ ] Frontend: Responsive design improvements
-  - [ ] Frontend: Mobile navigation
-  - [ ] Frontend: Touch optimizations
-- [ ] **10.1.3** Offline Mode
+- [x] **10.1.2** Mobile-Optimized Views
+  - [x] Frontend: Responsive design for all pages
+  - [x] Frontend: Mobile navigation (hamburger menu with slide-out drawer)
+  - [x] Frontend: Touch-friendly buttons and inputs
+  - [ ] Frontend: Swipe gestures where appropriate
+- [x] **10.1.3** Responsive Components
+  - [x] Frontend: Mobile-friendly tables (card view)
+  - [x] Frontend: Responsive dialogs and modals
+  - [x] Frontend: Mobile-optimized forms
+  - [ ] Frontend: Touch-friendly date pickers
+- [ ] **10.1.4** Offline Mode (Future)
   - [ ] Frontend: Offline detection
   - [ ] Frontend: Offline data caching
   - [ ] Frontend: Offline UI indicators
-- [ ] **10.1.4** Mobile Notifications
-  - [ ] Backend: Push notification setup
-  - [ ] Frontend: Notification permissions
-  - [ ] Frontend: Notification handling
 
-**Priority:** 🟡 Medium | **Estimated Effort:** 2-3 weeks
+**Priority:** 🟡 Partially completed | **Estimated Effort:** 1-2 weeks remaining
 
 ---
 
@@ -739,12 +919,16 @@ These features can be implemented quickly and provide immediate value:
 2. [x] **Basic Note-Taking** (2-3 days) ✅
 3. [x] **Simple Analytics Charts** (2-3 days) ✅
 4. [x] **Search Bar** (1-2 days) ✅
-5. [ ] **Export Exam Results to PDF** (1-2 days)
-6. [ ] **Task Priorities** (1 day)
-7. [ ] **Subject Color Coding** (1 day)
-8. [ ] **Keyboard Shortcuts** (2-3 days)
+5. [x] **User Search & Friend Requests** (2-3 days) ✅
+6. [x] **Content Sharing (Files, Notes, Decks)** (3-4 days) ✅
+7. [x] **AI Chat Assistant** (4-5 days) ✅
+8. [ ] **Task Priorities** (1 day)
+9. [ ] **Subject Color Coding** (1 day)
+10. [ ] **Keyboard Shortcuts** (2-3 days)
+11. [ ] **Mobile Navigation Menu** (1-2 days) ⭐ NEXT
+12. [ ] **Loading Skeletons** (1-2 days)
 
-**Total Quick Wins Effort:** ~2 weeks
+**Total Quick Wins Effort:** ~2-3 weeks
 
 ---
 
@@ -805,7 +989,7 @@ The following integration features are deferred for future consideration:
 4. ✅ Performance Dashboard (basic)
 5. ✅ Calendar View
 
-### Phase 2: Core Features (Weeks 5-10) - IN PROGRESS
+### Phase 2: Core Features (Weeks 5-10) ✅ MOSTLY COMPLETED
 
 6. ✅ Exam History & Comparison
 7. ✅ Wrong Answer Review Mode
@@ -813,36 +997,51 @@ The following integration features are deferred for future consideration:
 9. ✅ Time Limits Per Exam
 10. ✅ Study Goals & Tracking
 11. ✅ Flashcard System
-12. [ ] Reminders & Notifications
-13. [ ] Export Features
+12. ✅ User Privacy & Isolation
 
-### Phase 3: Advanced Features (Weeks 11-16)
+### Phase 3: Social & AI Features (Weeks 11-16) ✅ MOSTLY COMPLETED
 
-14. AI Study Assistant
-15. Advanced Analytics
-16. Adaptive Learning
-17. File Enhancements
-18. Task Enhancements
+13. [x] **Friend System** (Search users, friend requests, content sharing) ✅
+14. [x] **AI Study Assistant** (Accounting & Law specialization, Philippine laws, chat history) ✅
+15. [ ] **Collaborative Exam Sessions** (Take exams together with friends - FUTURE)
+16. [ ] **UX/UI Improvements** (Design polish, better layouts) ⭐ NEXT
+17. [ ] **Mobile Responsiveness** (PWA, responsive design) ⭐ NEXT
 
-### Phase 4: Polish & Extras (Weeks 17+)
+### Phase 4: Enhanced Learning (Weeks 17-22)
 
-19. Mobile PWA
-20. Collaboration Features
-21. Gamification
-22. Accessibility Improvements
-23. Advanced Customization
+18. [ ] Adaptive Learning (weak area focus, personalized recommendations)
+19. [ ] Advanced Analytics (study insights, productivity patterns)
+20. [ ] In-App Reminders & Notifications
+21. [ ] File Enhancements (PDF viewer, annotations)
+22. [ ] Task Enhancements (subtasks, priorities, recurring)
+
+### Phase 5: Polish & Extras (Weeks 23+) - LOWER PRIORITY
+
+23. [ ] Study Groups (beyond friend system)
+24. [ ] Gamification (badges, streaks, levels)
+25. [ ] Accessibility Improvements
+26. [ ] Export & Backup Features (deferred)
+27. [ ] Advanced Customization
 
 ---
 
 ## 📌 Notes & Considerations
 
+- **AI Specialization**: The AI Study Assistant will focus on:
+  - Accounting concepts and principles
+  - Philippine laws and regulations (tax law, civil law, criminal law, etc.)
+  - Legal terminology and case analysis
+  - CPA and Bar exam preparation
 - **AI Costs**: Consider API usage costs for Gemini when implementing AI features
 - **Performance**: Monitor database query performance as data grows
 - **Scalability**: Plan for user growth and data volume
 - **Security**: Ensure proper authentication and authorization for all features
 - **Testing**: Add comprehensive tests as features are implemented
 - **Documentation**: Update API docs and user guides as features are added
-- **Third-Party Integrations**: External integrations (Google Calendar, Drive, etc.) are deferred for now. Focus on core platform features first.
+- **Deferred Features**:
+  - Email notifications (focus on in-app only)
+  - Export & backup features (lower priority)
+  - Third-party integrations (Google Calendar, Drive, etc.)
 
 ---
 

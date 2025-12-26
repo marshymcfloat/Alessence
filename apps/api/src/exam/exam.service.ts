@@ -25,18 +25,86 @@ export class ExamService {
     newFiles: MulterFile[],
     user: AuthenticatedUser,
   ): Promise<Exam> {
+    if (!user?.userId) {
+      throw new Error('User authentication is required');
+    }
+
     let newFileIds: number[] = [];
 
     if (newFiles && newFiles.length > 0) {
       const createdFiles =
-        await this.fileService.createMultipleFilesWithEmbeddings(newFiles);
+        await this.fileService.createMultipleFilesWithEmbeddings(newFiles, user.userId);
       newFileIds = createdFiles.map((file) => file.id);
+    }
+
+    // Validate that all existing file IDs belong to the user OR are shared with them
+    if (dto.existingFileIds && dto.existingFileIds.length > 0) {
+      const requestedFileIds = dto.existingFileIds.map((id) => +id);
+      
+      const existingFiles = await this.dbService.file.findMany({
+        where: {
+          id: { in: requestedFileIds },
+        },
+        select: {
+          id: true,
+          userId: true,
+        },
+      });
+
+      // Check if all files exist
+      const fileIdsSet = new Set(existingFiles.map((f) => f.id));
+      const requestedFileIdsSet = new Set(requestedFileIds);
+
+      if (fileIdsSet.size !== requestedFileIdsSet.size) {
+        throw new Error('One or more requested files do not exist');
+      }
+
+      // Check which files don't belong to the user (need to check if shared)
+      const notOwnedFileIds = existingFiles
+        .filter((file) => file.userId !== user.userId)
+        .map((file) => file.id);
+
+      if (notOwnedFileIds.length > 0) {
+        // Check if these files are shared with the user
+        const sharedFiles = await this.dbService.sharedFile.findMany({
+          where: {
+            fileId: { in: notOwnedFileIds },
+            recipientId: user.userId,
+          },
+          select: {
+            fileId: true,
+          },
+        });
+
+        const sharedFileIds = new Set(sharedFiles.map((sf) => sf.fileId));
+        const unauthorizedFiles = notOwnedFileIds.filter(
+          (id) => !sharedFileIds.has(id),
+        );
+
+        if (unauthorizedFiles.length > 0) {
+          throw new Error(
+            'You do not have permission to use one or more of the selected files',
+          );
+        }
+      }
     }
 
     const allSourceFileIds = [...(dto.existingFileIds || []), ...newFileIds];
 
     if (allSourceFileIds.length === 0) {
       throw new Error('An exam must have at least one source file.');
+    }
+
+    // Validate that the subject belongs to the user
+    const subject = await this.dbService.subject.findFirst({
+      where: {
+        id: +dto.subjectId,
+        userId: user.userId,
+      },
+    });
+
+    if (!subject) {
+      throw new Error('Subject not found or you do not have permission to use it');
     }
 
     const exam = await this.dbService.exam.create({
@@ -48,6 +116,7 @@ export class ExamService {
         questionTypes: dto.questionTypes as QuestionTypeEnum[],
         isPracticeMode: dto.isPracticeMode || false,
         timeLimit: dto.timeLimit ? +dto.timeLimit : null,
+        userId: user.userId, // Set user ownership
         sourceFiles: {
           connect: allSourceFileIds.map((id) => ({ id: +id })),
         },
@@ -63,9 +132,12 @@ export class ExamService {
     return exam;
   }
 
-  async findAll(subjectId?: number): Promise<Exam[]> {
-    return this.dbService.exam.findMany({
-      where: subjectId ? { subjectId } : undefined,
+  async findAll(userId: string, subjectId?: number): Promise<any[]> {
+    const exams = await this.dbService.exam.findMany({
+      where: {
+        userId: userId, // Only return exams owned by this user
+        ...(subjectId ? { subjectId } : {}),
+      },
       include: {
         subject: {
           select: {
@@ -76,6 +148,22 @@ export class ExamService {
         _count: {
           select: {
             questions: true,
+            attempts: true,
+          },
+        },
+        attempts: {
+          where: {
+            userId,
+            status: 'COMPLETED',
+          },
+          orderBy: {
+            completedAt: 'desc',
+          },
+          take: 1,
+          select: {
+            id: true,
+            score: true,
+            completedAt: true,
           },
         },
       },
@@ -83,11 +171,22 @@ export class ExamService {
         createdAt: 'desc',
       },
     });
+
+    // Transform to include useful attempt info
+    return exams.map((exam) => ({
+      ...exam,
+      lastAttempt: exam.attempts[0] || null,
+      attemptCount: exam._count.attempts,
+      attempts: undefined, // Remove raw attempts array
+    }));
   }
 
-  async findOne(id: number): Promise<Exam | null> {
-    return this.dbService.exam.findUnique({
-      where: { id },
+  async findOne(id: number, userId: string): Promise<Exam | null> {
+    return this.dbService.exam.findFirst({
+      where: { 
+        id,
+        userId: userId, // Verify ownership
+      },
       include: {
         subject: {
           select: {
@@ -110,11 +209,20 @@ export class ExamService {
     });
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number, userId: string): Promise<void> {
+    // Verify ownership before deletion
+    const exam = await this.dbService.exam.findFirst({
+      where: { id, userId },
+    });
+
+    if (!exam) {
+      throw new Error('Exam not found or you do not have permission to delete it.');
+    }
+
     await this.dbService.exam.delete({
       where: { id },
     });
-    this.logger.log(`Exam [ID: ${id}] deleted.`);
+    this.logger.log(`Exam [ID: ${id}] deleted by user [${userId}].`);
   }
 
   @OnEvent('exam.created')

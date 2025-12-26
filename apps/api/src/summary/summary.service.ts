@@ -29,7 +29,7 @@ export class SummaryService {
 
     if (newFiles && newFiles.length > 0) {
       const createdFiles =
-        await this.fileService.createMultipleFilesWithEmbeddings(newFiles);
+        await this.fileService.createMultipleFilesWithEmbeddings(newFiles, user.userId);
       newFileIds = createdFiles.map((file) => file.id);
     }
 
@@ -46,6 +46,7 @@ export class SummaryService {
         status: SummaryStatusEnum.GENERATING,
         template: (dto.template || 'COMPREHENSIVE') as SummaryTemplateEnum,
         subjectId: dto.subjectId ? +dto.subjectId : undefined,
+        userId: user.userId, // Set user ownership
         sourceFiles: {
           connect: allSourceFileIds.map((id) => ({ id: +id })),
         },
@@ -61,9 +62,12 @@ export class SummaryService {
     return summary;
   }
 
-  async findAll(subjectId?: number): Promise<Summary[]> {
+  async findAll(userId: string, subjectId?: number): Promise<Summary[]> {
     return this.dbService.summary.findMany({
-      where: subjectId ? { subjectId } : undefined,
+      where: {
+        userId: userId, // Only return summaries owned by this user
+        ...(subjectId ? { subjectId } : {}),
+      },
       include: {
         subject: {
           select: {
@@ -84,9 +88,12 @@ export class SummaryService {
     });
   }
 
-  async findOne(id: number): Promise<Summary | null> {
-    return this.dbService.summary.findUnique({
-      where: { id },
+  async findOne(id: number, userId: string): Promise<Summary | null> {
+    return this.dbService.summary.findFirst({
+      where: { 
+        id,
+        userId: userId, // Verify ownership
+      },
       include: {
         subject: {
           select: {
@@ -104,11 +111,20 @@ export class SummaryService {
     });
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: number, userId: string): Promise<void> {
+    // Verify ownership before deletion
+    const summary = await this.dbService.summary.findFirst({
+      where: { id, userId },
+    });
+
+    if (!summary) {
+      throw new Error('Summary not found or you do not have permission to delete it.');
+    }
+
     await this.dbService.summary.delete({
       where: { id },
     });
-    this.logger.log(`Summary [ID: ${id}] deleted.`);
+    this.logger.log(`Summary [ID: ${id}] deleted by user [${userId}].`);
   }
 
   @OnEvent('summary.created')

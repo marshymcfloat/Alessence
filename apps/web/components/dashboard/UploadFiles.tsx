@@ -1,9 +1,11 @@
 "use client";
 
 import { getAllFiles } from "@/lib/actions/fileActionts";
+import { getFilesSharedWithMe } from "@/lib/actions/sharingActions";
 import { useQuery } from "@tanstack/react-query";
 import { Item, ItemHeader, ItemTitle } from "../ui/item";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
   Empty,
   EmptyDescription,
@@ -11,22 +13,42 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { Cloud, LoaderCircle, XCircle } from "lucide-react";
+import { Cloud, LoaderCircle, XCircle, Users } from "lucide-react";
 import { Input } from "../ui/input";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { File as DBFile } from "@repo/db";
 import { Separator } from "../ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 type UploadFilesProps = {
   value?: (DBFile | File)[];
   onChange: (files: (DBFile | File)[]) => void;
 };
 
+// Type for shared files from the API
+interface SharedFileItem {
+  id: number;
+  permission: string;
+  createdAt: string;
+  owner: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  file: {
+    id: number;
+    name: string;
+    type: string;
+    fileUrl: string;
+  };
+}
+
 export default function UploadFiles({
   value = [],
   onChange,
 }: UploadFilesProps) {
   const hiddenInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState<"my-files" | "shared">("my-files");
 
   const {
     data: filesData,
@@ -36,6 +58,16 @@ export default function UploadFiles({
   } = useQuery({
     queryKey: ["files"],
     queryFn: getAllFiles,
+  });
+
+  // Fetch files shared with the user
+  const { data: sharedFilesData, isLoading: isLoadingShared } = useQuery({
+    queryKey: ["sharedFilesWithMe"],
+    queryFn: async () => {
+      const result = await getFilesSharedWithMe();
+      if (!result.success) return [];
+      return result.data || [];
+    },
   });
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,55 +105,155 @@ export default function UploadFiles({
     value.filter((f): f is DBFile => "id" in f).map((f) => f.id)
   );
 
+  const sharedFiles = sharedFilesData || [];
+  const myFiles = filesData?.data?.files || [];
+
+  const handleSharedFileToggle = (sharedFile: SharedFileItem) => {
+    // Use the actual file from the shared item
+    const file = {
+      id: sharedFile.file.id,
+      name: sharedFile.file.name,
+      type: sharedFile.file.type,
+      fileUrl: sharedFile.file.fileUrl,
+    } as DBFile;
+
+    const isSelected = selectedDbFileIds.has(file.id);
+    if (isSelected) {
+      onChange(
+        value.filter(
+          (selected) => !("id" in selected) || selected.id !== file.id
+        )
+      );
+    } else {
+      onChange([...value, file]);
+    }
+  };
+
   return (
     <div className="w-full space-y-3 rounded-md border p-4">
-      {isLoading ? (
-        <div className="flex items-center justify-center p-4">
-          <LoaderCircle className="animate-spin" />
-        </div>
-      ) : filesData?.data?.files && filesData.data.files.length > 0 ? (
-        <>
-          <p className="text-sm font-medium text-slate-600">
-            Select existing file(s):
-          </p>
-          <div className="max-h-48 space-y-2 overflow-y-auto">
-            {filesData.data.files.map((file: DBFile) => (
-              <Item
-                key={file.id}
-                variant={"outline"}
-                className={`cursor-pointer transition-colors hover:border-blue-500 ${
-                  selectedDbFileIds.has(file.id)
-                    ? "border-2 border-blue-600 bg-blue-50"
-                    : "border-slate-300 bg-slate-50"
-                }`}
-                onClick={() => handleDbFileToggle(file)}
-              >
-                <ItemHeader>
-                  <ItemTitle>{file.name}</ItemTitle>
-                </ItemHeader>
-              </Item>
-            ))}
-          </div>
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "my-files" | "shared")}>
+        <TabsList className="grid w-full grid-cols-2 mb-3">
+          <TabsTrigger value="my-files" className="text-xs">
+            My Files
+            {myFiles.length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">
+                {myFiles.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="shared" className="text-xs">
+            <Users className="size-3 mr-1" />
+            Shared with Me
+            {sharedFiles.length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">
+                {sharedFiles.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
 
-          <div className="flex items-center gap-2">
-            <Separator className="flex-1" />
-            <span className="font-medium">OR</span>
-            <Separator className="flex-1" />
-          </div>
-        </>
-      ) : (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <Cloud />
-            </EmptyMedia>
-            <EmptyTitle>No files in storage</EmptyTitle>
-            <EmptyDescription>
-              Upload new file(s) below to get started.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      )}
+        <TabsContent value="my-files" className="mt-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center p-4">
+              <LoaderCircle className="animate-spin" />
+            </div>
+          ) : myFiles.length > 0 ? (
+            <>
+              <p className="text-sm font-medium text-slate-600 mb-2">
+                Select existing file(s):
+              </p>
+              <div className="max-h-40 space-y-2 overflow-y-auto">
+                {myFiles.map((file: DBFile) => (
+                  <Item
+                    key={file.id}
+                    variant={"outline"}
+                    className={`cursor-pointer transition-colors hover:border-blue-500 ${
+                      selectedDbFileIds.has(file.id)
+                        ? "border-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20"
+                        : "border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
+                    }`}
+                    onClick={() => handleDbFileToggle(file)}
+                  >
+                    <ItemHeader>
+                      <ItemTitle>{file.name}</ItemTitle>
+                    </ItemHeader>
+                  </Item>
+                ))}
+              </div>
+            </>
+          ) : (
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Cloud />
+                </EmptyMedia>
+                <EmptyTitle>No files in storage</EmptyTitle>
+                <EmptyDescription>
+                  Upload new file(s) below to get started.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
+        </TabsContent>
+
+        <TabsContent value="shared" className="mt-0">
+          {isLoadingShared ? (
+            <div className="flex items-center justify-center p-4">
+              <LoaderCircle className="animate-spin" />
+            </div>
+          ) : sharedFiles.length > 0 ? (
+            <>
+              <p className="text-sm font-medium text-slate-600 mb-2">
+                Select file(s) shared by friends:
+              </p>
+              <div className="max-h-40 space-y-2 overflow-y-auto">
+                {sharedFiles.map((sharedFile: SharedFileItem) => (
+                  <Item
+                    key={sharedFile.id}
+                    variant={"outline"}
+                    className={`cursor-pointer transition-colors hover:border-green-500 ${
+                      selectedDbFileIds.has(sharedFile.file.id)
+                        ? "border-2 border-green-600 bg-green-50 dark:bg-green-900/20"
+                        : "border-slate-300 bg-slate-50 dark:border-slate-600 dark:bg-slate-800"
+                    }`}
+                    onClick={() => handleSharedFileToggle(sharedFile)}
+                  >
+                    <ItemHeader className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <ItemTitle className="truncate">{sharedFile.file.name}</ItemTitle>
+                        <p className="text-xs text-muted-foreground">
+                          Shared by {sharedFile.owner.name}
+                        </p>
+                      </div>
+                      <Badge variant="outline" className="text-[10px] ml-2 shrink-0">
+                        {sharedFile.permission}
+                      </Badge>
+                    </ItemHeader>
+                  </Item>
+                ))}
+              </div>
+            </>
+          ) : (
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Users />
+                </EmptyMedia>
+                <EmptyTitle>No shared files</EmptyTitle>
+                <EmptyDescription>
+                  Files shared by friends will appear here.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      <div className="flex items-center gap-2">
+        <Separator className="flex-1" />
+        <span className="text-xs font-medium text-muted-foreground">OR UPLOAD NEW</span>
+        <Separator className="flex-1" />
+      </div>
 
       <Input
         type="file"

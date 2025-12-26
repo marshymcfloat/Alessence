@@ -17,7 +17,7 @@ export default function AddExamDialog({ onClose }: { onClose: () => void }) {
           <DialogTitle className="!text-2xl !font-bold">Exams</DialogTitle>
         </DialogHeader>
       </div>
-      <ScrollableContainer className="!flex-1 !overflow-y-auto !p-6 !min-h-0">
+      <ScrollableContainer className="!flex-1 max-h-[70vh]! overflow-y-auto !p-6 !min-h-0">
         <ExamsList />
       </ScrollableContainer>
       <div className="!p-6 !border-t !bg-gray-50 dark:!bg-slate-900/50">

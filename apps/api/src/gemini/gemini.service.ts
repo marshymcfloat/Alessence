@@ -665,6 +665,83 @@ Do not include any text before or after the JSON object.`;
     }
   }
 
+  /**
+   * Generic method to generate content from a prompt
+   */
+  async generateContent(prompt: string): Promise<string> {
+    try {
+      const result = (await this.genAI.models.generateContent({
+        model: 'gemini-2.5-flash-lite',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      })) as GeminiResult;
+
+      let responseText: string | undefined;
+
+      if (typeof result === 'string') {
+        responseText = result;
+      } else if (result && typeof result === 'object') {
+        if ('text' in result && typeof result.text === 'string') {
+          responseText = result.text;
+        } else if (
+          'response' in result &&
+          result.response &&
+          typeof result.response === 'object' &&
+          'text' in result.response
+        ) {
+          responseText = result.response.text as string;
+        } else if (
+          'candidates' in result &&
+          Array.isArray(result.candidates) &&
+          result.candidates.length > 0
+        ) {
+          const candidate = result.candidates[0];
+          if (
+            candidate &&
+            typeof candidate === 'object' &&
+            'content' in candidate
+          ) {
+            const content = candidate.content;
+            if (
+              content &&
+              'parts' in content &&
+              Array.isArray(content.parts) &&
+              content.parts.length > 0
+            ) {
+              const part = content.parts[0];
+              if (part && 'text' in part && typeof part.text === 'string') {
+                responseText = part.text;
+              }
+            }
+          }
+        }
+      }
+
+      if (!responseText) {
+        this.logger.error(
+          'Received an empty or unexpected response from Gemini.',
+        );
+        throw new Error(
+          'Received an empty or unexpected response from Gemini.',
+        );
+      }
+
+      return responseText.trim();
+    } catch (error) {
+      this.logger.error(
+        `Error generating content: ${error instanceof Error ? error.message : String(error)}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      if (error instanceof Error) {
+        throw error;
+      }
+
+      throw new Error(
+        `Failed to generate content from Gemini: ${String(error)}`,
+      );
+    }
+  }
+
   private getSummaryTemplateInstructions(template: string): string {
     switch (template) {
       case 'KEY_POINTS':

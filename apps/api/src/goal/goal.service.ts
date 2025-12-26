@@ -55,7 +55,7 @@ export class GoalService {
   async getAll(userId: string): Promise<StudyGoal[]> {
     const goals = await this.dbService.studyGoal.findMany({
       where: {
-        userId,
+        userId: userId, // Only return goals owned by this user
       },
       include: {
         subject: {

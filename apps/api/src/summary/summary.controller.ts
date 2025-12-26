@@ -35,22 +35,35 @@ export class SummaryController {
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
-  findAll(@Query('subjectId') subjectId?: string) {
+  findAll(
+    @Query('subjectId') subjectId?: string,
+    @GetUser() user?: AuthenticatedUser,
+  ) {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
     return this.summaryService.findAll(
+      user.userId,
       subjectId ? parseInt(subjectId, 10) : undefined,
     );
   }
 
   @Get(':id')
   @UseGuards(AuthGuard('jwt'))
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.summaryService.findOne(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.summaryService.findOne(id, user.userId);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.summaryService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.summaryService.remove(id, user.userId);
   }
 }
 

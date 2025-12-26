@@ -10,4 +10,6 @@ export {
   SessionTypeEnum,
   SessionStatusEnum,
   GoalPeriodEnum,
+  FriendshipStatusEnum,
+  SharePermission,
 } from "@prisma/client";

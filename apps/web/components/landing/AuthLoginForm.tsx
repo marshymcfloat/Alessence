@@ -19,7 +19,11 @@ import { authLoginAction } from "@/lib/actions/authActions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
-const AuthLoginForm = () => {
+type AuthLoginFormProps = {
+  onSuccess?: () => void;
+};
+
+const AuthLoginForm = ({ onSuccess }: AuthLoginFormProps = {}) => {
   const form = useForm<AuthLoginTypes>({
     resolver: zodResolver(authLoginSchema),
     defaultValues: {
@@ -40,6 +44,7 @@ const AuthLoginForm = () => {
       }
 
       toast.success(data.message || "Login successful!");
+      onSuccess?.();
       router.push(`/${data.data?.user.id}/dashboard`);
       router.refresh();
     },

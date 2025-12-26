@@ -185,7 +185,6 @@ export function GenerateFlashcardsDialog({
                 )}
               </div>
 
-              {/* Options Column */}
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="cardCount">
@@ -213,7 +212,6 @@ export function GenerateFlashcardsDialog({
               </div>
             </div>
 
-            {/* Generate Button */}
             <Button
               onClick={handleGenerate}
               disabled={isGenerating || selectedFileIds.length === 0}

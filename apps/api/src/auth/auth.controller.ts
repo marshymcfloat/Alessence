@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Request,
   Res,
@@ -11,10 +12,15 @@ import type { Response } from 'express';
 import { DbService } from 'src/db/db.service';
 import { AuthService } from './auth.service';
 import { AuthRegisterDTO } from '@repo/types/nest';
+import { GetUser } from './decorator/get-user.decorator';
+import type { AuthenticatedUser } from './decorator/get-user.decorator';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly dbService: DbService,
+  ) {}
   @Post('register')
   async register(@Body() authRegisterDto: AuthRegisterDTO) {
     const newUser = await this.authService.registerUser(authRegisterDto);
@@ -43,5 +49,28 @@ export class AuthController {
       user: req.user,
       token: { value: access_token, expires: expiryDate.toISOString() },
     };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me')
+  async getCurrentUser(@GetUser() user: AuthenticatedUser) {
+    const fullUser = await this.dbService.user.findUnique({
+      where: { id: user.userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        profilePicture: true,
+        bio: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!fullUser) {
+      throw new Error('User not found');
+    }
+
+    return fullUser;
   }
 }

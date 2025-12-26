@@ -173,7 +173,7 @@ export class AnalyticsService {
 
     const sessions = await this.dbService.studySession.findMany({
       where: {
-        userId,
+        userId: userId, // Only return sessions owned by this user
         status: SessionStatusEnum.COMPLETED,
         completedAt: { gte: startDate },
         actualDuration: { not: null },
@@ -219,6 +219,7 @@ export class AnalyticsService {
 
     const tasks = await this.dbService.task.findMany({
       where: {
+        userId: userId, // Only return tasks owned by this user
         createdAt: { gte: startDate },
       },
       orderBy: {

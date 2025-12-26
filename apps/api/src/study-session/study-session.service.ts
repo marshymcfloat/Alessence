@@ -48,7 +48,7 @@ export class StudySessionService {
   async getAll(userId: string): Promise<StudySession[]> {
     const sessions = await this.dbService.studySession.findMany({
       where: {
-        userId,
+        userId: userId, // Only return sessions owned by this user
       },
       include: {
         subject: {

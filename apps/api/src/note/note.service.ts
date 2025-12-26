@@ -66,7 +66,7 @@ export class NoteService {
   async getAll(userId: string): Promise<Note[]> {
     const notes = await this.dbService.note.findMany({
       where: {
-        userId,
+        userId: userId, // Only return notes owned by this user
       },
       include: {
         subject: {

@@ -11,8 +11,11 @@ import { DbService } from 'src/db/db.service';
 export class TaskService {
   constructor(private readonly dbService: DbService) {}
 
-  async getAll(): Promise<Task[]> {
+  async getAll(userId: string): Promise<Task[]> {
     const allTasks = await this.dbService.task.findMany({
+      where: {
+        userId: userId, // Only return tasks owned by this user
+      },
       include: {
         subject: {
           select: {
@@ -29,7 +32,7 @@ export class TaskService {
     return allTasks;
   }
 
-  async create(createTaskDto: CreateTaskDTO): Promise<Task> {
+  async create(createTaskDto: CreateTaskDTO, userId: string): Promise<Task> {
     const { deadline, status, title, description, subject } = createTaskDto;
 
     const newDescription = description || '';
@@ -42,22 +45,28 @@ export class TaskService {
         deadline,
         status,
         subjectId: subjectId,
+        userId: userId, // Set user ownership
       },
     });
 
     return newTask;
   }
 
-  async updateTaskStatus(id: number, status: TaskStatusEnum): Promise<Task> {
+  async updateTaskStatus(id: number, status: TaskStatusEnum, userId: string): Promise<Task> {
     try {
+      // Verify ownership
+      const task = await this.dbService.task.findFirst({
+        where: { id, userId },
+      });
+
+      if (!task) {
+        throw new BadRequestException('Task not found or you do not have permission to update it.');
+      }
+
       const updatedTask = await this.dbService.task.update({
         where: { id },
         data: { status },
       });
-
-      if (!updatedTask) {
-        throw new BadRequestException();
-      }
 
       return updatedTask;
     } catch (error) {
@@ -71,7 +80,7 @@ export class TaskService {
     }
   }
 
-  async updateTask(id: number, updateTaskDto: CreateTaskDTO): Promise<Task> {
+  async updateTask(id: number, updateTaskDto: CreateTaskDTO, userId: string): Promise<Task> {
     const { deadline, status, title, description, subject } = updateTaskDto;
 
     if (!updateTaskDto) {
@@ -79,6 +88,15 @@ export class TaskService {
     }
 
     try {
+      // Verify ownership
+      const task = await this.dbService.task.findFirst({
+        where: { id, userId },
+      });
+
+      if (!task) {
+        throw new BadRequestException('Task not found or you do not have permission to update it.');
+      }
+
       const updatedTask = await this.dbService.task.update({
         where: { id },
         data: { deadline, status, title, description, subjectId: subject },
@@ -96,8 +114,17 @@ export class TaskService {
     }
   }
 
-  async deleteTask(id: number): Promise<void> {
+  async deleteTask(id: number, userId: string): Promise<void> {
     try {
+      // Verify ownership
+      const task = await this.dbService.task.findFirst({
+        where: { id, userId },
+      });
+
+      if (!task) {
+        throw new BadRequestException('Task not found or you do not have permission to delete it.');
+      }
+
       await this.dbService.task.delete({
         where: { id },
       });

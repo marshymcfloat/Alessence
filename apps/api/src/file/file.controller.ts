@@ -22,8 +22,11 @@ export class FileController {
   @UseGuards(AuthGuard('jwt'))
   @Post('upload')
   @UseInterceptors(FilesInterceptor('files', 10))
-  async uploadFiles(@UploadedFiles() files: Array<Express.Multer.File>) {
-    return this.fileService.createMultipleFilesWithEmbeddings(files);
+  async uploadFiles(
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.fileService.createMultipleFilesWithEmbeddings(files, user.userId);
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -31,7 +34,7 @@ export class FileController {
   async getAllFiles(
     @GetUser() user: AuthenticatedUser,
   ): Promise<getAllFilesReturnType> {
-    const files = await this.fileService.getAllFiles();
+    const files = await this.fileService.getAllFiles(user.userId);
     return { userId: user.userId, files };
   }
 }

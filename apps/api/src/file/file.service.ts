@@ -25,19 +25,20 @@ export class FileService {
 
   async createMultipleFilesWithEmbeddings(
     files: MulterFile[],
+    userId: string,
   ): Promise<File[]> {
     if (!files || files.length === 0) {
       throw new BadRequestException('No files were provided for upload.');
     }
 
     const createdDbFiles = await Promise.all(
-      files.map((file) => this.createFileWithEmbedding(file)),
+      files.map((file) => this.createFileWithEmbedding(file, userId)),
     );
 
     return createdDbFiles;
   }
 
-  async createFileWithEmbedding(file: MulterFile): Promise<File> {
+  async createFileWithEmbedding(file: MulterFile, userId: string): Promise<File> {
     if (!file) {
       throw new BadRequestException('A file object is required.');
     }
@@ -90,6 +91,7 @@ export class FileService {
           size: file.size,
           type: fileType,
           contentText: fileText,
+          userId: userId, // Set user ownership
         },
       });
 
@@ -120,8 +122,12 @@ export class FileService {
     }
   }
 
-  async getAllFiles(): Promise<File[]> {
-    const files = await this.dbService.file.findMany({});
+  async getAllFiles(userId: string): Promise<File[]> {
+    const files = await this.dbService.file.findMany({
+      where: {
+        userId: userId, // Only return files owned by this user
+      },
+    });
     return files;
   }
 

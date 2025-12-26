@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ExamService } from './exam.service';
 import { ExamHistoryService } from './exam-history.service';
+import { ExamAttemptService } from './exam-attempt.service';
 import { AuthGuard } from '@nestjs/passport';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
@@ -24,6 +25,7 @@ export class ExamController {
   constructor(
     private readonly examService: ExamService,
     private readonly examHistoryService: ExamHistoryService,
+    private readonly examAttemptService: ExamAttemptService,
   ) {}
 
   @Post()
@@ -39,28 +41,74 @@ export class ExamController {
 
   @Get()
   @UseGuards(AuthGuard('jwt'))
-  findAll(@Query('subjectId') subjectId?: string) {
+  findAll(
+    @Query('subjectId') subjectId?: string,
+    @GetUser() user?: AuthenticatedUser,
+  ) {
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
     return this.examService.findAll(
+      user.userId,
       subjectId ? parseInt(subjectId, 10) : undefined,
     );
   }
 
   @Get(':id')
   @UseGuards(AuthGuard('jwt'))
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.examService.findOne(id);
+  findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.examService.findOne(id, user.userId);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.examService.remove(id);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.examService.remove(id, user.userId);
   }
 
   @Post('evaluate-answers')
   @UseGuards(AuthGuard('jwt'))
   evaluateAnswers(@Body() dto: EvaluateAnswersDto) {
     return this.examService.evaluateAnswers(dto.answers);
+  }
+
+  @Post(':id/start-attempt')
+  @UseGuards(AuthGuard('jwt'))
+  startAttempt(
+    @Param('id', ParseIntPipe) examId: number,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.examAttemptService.startAttempt(examId, user.userId);
+  }
+
+  @Post(':id/submit-attempt')
+  @UseGuards(AuthGuard('jwt'))
+  submitAttempt(
+    @Param('id', ParseIntPipe) examId: number,
+    @Body() body: { attemptId: number; answers: Array<{ questionId: number; userAnswer: string }> },
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.examAttemptService.submitAttempt(
+      examId,
+      body.attemptId,
+      user.userId,
+      body.answers,
+    );
+  }
+
+  @Post('attempt/:attemptId/abandon')
+  @UseGuards(AuthGuard('jwt'))
+  abandonAttempt(
+    @Param('attemptId', ParseIntPipe) attemptId: number,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.examAttemptService.abandonAttempt(attemptId, user.userId);
   }
 
   @Get(':id/history')

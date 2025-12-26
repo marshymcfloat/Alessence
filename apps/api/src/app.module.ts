@@ -17,6 +17,11 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { CalendarModule } from './calendar/calendar.module';
 import { GoalModule } from './goal/goal.module';
 import { FlashcardModule } from './flashcard/flashcard.module';
+import { FriendshipModule } from './friendship/friendship.module';
+import { SharingModule } from './sharing/sharing.module';
+import { AiChatModule } from './ai-chat/ai-chat.module';
+import { GamificationModule } from './gamification/gamification.module';
+import { ProfileModule } from './profile/profile.module';
 
 @Module({
   imports: [
@@ -40,6 +45,11 @@ import { FlashcardModule } from './flashcard/flashcard.module';
     CalendarModule,
     GoalModule,
     FlashcardModule,
+    FriendshipModule,
+    SharingModule,
+    AiChatModule,
+    GamificationModule,
+    ProfileModule,
   ],
   controllers: [],
   providers: [],
