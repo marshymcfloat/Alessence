@@ -276,16 +276,26 @@ export function ExamHistoryView({
                     }}
                   />
                   <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "0.75rem",
-                      boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+                    content={({ active, payload }) => {
+                      if (!active || !payload || payload.length === 0) return null;
+                      const data = payload[0]?.payload;
+                      if (!data) return null;
+                      const scoreColor = data.score >= 75 ? "#10B981" : data.score >= 50 ? "#F59E0B" : "#EF4444";
+                      return (
+                        <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 min-w-[140px]">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Attempt #{data.attemptNumber}</p>
+                          <div className="flex items-center gap-2">
+                            <Trophy className="w-4 h-4" style={{ color: scoreColor }} />
+                            <span className="text-lg font-bold" style={{ color: scoreColor }}>
+                              {data.score.toFixed(1)}%
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            {data.correctAnswers}/{data.totalQuestions} correct
+                          </p>
+                        </div>
+                      );
                     }}
-                    formatter={(value: number) => [
-                      `${value.toFixed(1)}%`,
-                      "Score",
-                    ]}
                   />
                   <Area
                     type="monotone"

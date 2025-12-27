@@ -59,10 +59,10 @@ export class GeminiService {
     );
 
     const prompt = `
-      You are an expert accounting professor from top Philippine universities like Jose Rizal University, creating a comprehensive and challenging practice exam. Your task is to generate ${itemCount} questions based ONLY on the provided context.
+      You are an expert professor from top Philippine universities (like UP, Ateneo, La Salle, Jose Rizal University), specializing in BOTH Accountancy and Law. Your task is to create a comprehensive and challenging practice exam with ${itemCount} questions based ONLY on the provided context.
 
       EXAM CONTEXT:
-      The user has described the exam as follows: "${description}". Use this description to focus the questions on the most relevant accounting topics within the context.
+      The user has described the exam as follows: "${description}". Use this description to focus the questions on the most relevant topics within the context.
 
       SOURCE MATERIAL:
       ---
@@ -72,22 +72,39 @@ export class GeminiService {
       QUESTION TYPE DISTRIBUTION:
       ${typeInstructions}
 
-      CRITICAL REQUIREMENTS FOR ACCOUNTING EXAMS:
+      CRITICAL REQUIREMENTS:
       1. All questions must be derived directly from the provided SOURCE MATERIAL. Do not use any external knowledge.
       2. Generate exactly ${itemCount} questions following the distribution above.
-      3. Questions must be COMPREHENSIVE and CHALLENGING - suitable for top-tier Philippine universities like Jose Rizal University.
-      4. Focus on:
+      3. Questions must be COMPREHENSIVE and CHALLENGING - suitable for CPA Board Exams, Bar Exams, or top-tier Philippine university standards.
+      4. Intelligently detect the subject matter from the content and focus accordingly:
+
+         FOR ACCOUNTING/FINANCE CONTENT, focus on:
          - Complex accounting principles and concepts
-         - Application of accounting standards (PAS, PFRS)
+         - Application of accounting standards (PAS, PFRS, GAAP)
          - Problem-solving scenarios requiring deep understanding
-         - Critical analysis and interpretation of accounting data
-         - Integration of multiple accounting concepts
-      5. Make questions challenging enough to distinguish between students who truly understand accounting principles and those who only have surface-level knowledge.
+         - Critical analysis and interpretation of financial data
+         - Auditing standards and procedures
+         - Taxation principles and computations
+         - Management accounting and cost analysis
+
+         FOR LAW/LEGAL CONTENT, focus on:
+         - Philippine laws and jurisprudence (Civil Code, Revised Penal Code, Corporation Code, Tax Code, Labor Code, etc.)
+         - Constitutional law principles
+         - Legal definitions and terminology
+         - Application of legal provisions to case scenarios
+         - Interpretation of statutes and their elements
+         - Criminal law elements and penalties
+         - Civil obligations and contracts
+         - Remedial law procedures
+         - Commercial law and business regulations
+
+      5. Make questions challenging enough to distinguish students who truly understand the subject from those with surface-level knowledge.
       6. Include questions that test:
          - Higher-order thinking skills (analysis, synthesis, evaluation)
-         - Real-world accounting scenarios
-         - Ethical considerations in accounting
-         - Technical proficiency in accounting procedures
+         - Real-world scenarios and case applications
+         - Ethical considerations
+         - Technical proficiency and practical application
+         - Integration of multiple concepts
 
       RESPONSE FORMAT:
       Your response MUST be a valid JSON array of objects. Do not include any text before or after the JSON array (e.g., no "json\`\`\`"). Each object in the array must have the following structure based on question type:
@@ -110,13 +127,13 @@ export class GeminiService {
 
       For IDENTIFICATION questions:
       {
-        "text": "The question asking for identification (e.g., 'What accounting principle states that...?')",
+        "text": "The question asking for identification (e.g., 'What principle/law states that...?')",
         "type": "IDENTIFICATION",
         "options": [],
-        "correctAnswer": "The exact answer expected (e.g., 'Matching Principle')"
+        "correctAnswer": "The exact answer expected"
       }
 
-      IMPORTANT: Ensure questions are rigorous, comprehensive, and test deep understanding of accounting concepts suitable for top Philippine universities.
+      IMPORTANT: Ensure questions are rigorous, comprehensive, and suitable for Philippine professional board exams (CPA/Bar) or top university standards.
     `;
 
     try {
@@ -233,7 +250,7 @@ export class GeminiService {
     cardCount: number,
   ): Promise<Array<{ front: string; back: string }>> {
     const prompt = `
-      You are an expert study assistant creating flashcards for effective memorization and learning. Your task is to generate ${cardCount} flashcards based ONLY on the provided context.
+      You are an expert study assistant specializing in Accountancy and Law (especially Philippine laws). Your task is to generate ${cardCount} flashcards based ONLY on the provided context.
 
       SOURCE MATERIAL:
       ---
@@ -243,25 +260,37 @@ export class GeminiService {
       CRITICAL REQUIREMENTS FOR FLASHCARDS:
       1. All flashcards must be derived directly from the provided SOURCE MATERIAL. Do not use any external knowledge.
       2. Generate exactly ${cardCount} flashcards.
-      3. Flashcards should focus on:
-         - Key definitions and concepts
-         - Important facts and figures
-         - Formulas and equations
-         - Terminology and vocabulary
-         - Key principles and rules
+      3. Intelligently detect the subject matter and create appropriate flashcards:
+
+         FOR ACCOUNTING/FINANCE CONTENT:
+         - Key accounting definitions and concepts
+         - Important formulas and calculations
+         - Accounting standards (PAS, PFRS, GAAP)
+         - Auditing procedures and terminology
+         - Tax computation rules
+
+         FOR LAW/LEGAL CONTENT:
+         - Legal definitions and terminology
+         - Key provisions from Philippine laws (Civil Code, RPC, Tax Code, Corporation Code, Labor Code, etc.)
+         - Elements of crimes or civil obligations
+         - Important jurisprudence and case doctrines
+         - Legal maxims and principles
+         - Statutory requirements and procedures
+
       4. Each flashcard should be:
          - Simple and focused (one concept per card)
          - Clear and concise
          - Suitable for spaced repetition learning
-         - Easy to memorize
+         - Helpful for CPA/Bar exam preparation
       5. Front side (question) should be:
          - A clear question or prompt
          - Brief and direct
-         - Examples: "What is X?", "Define Y", "What does Z mean?"
+         - Examples: "What is X?", "Define Y", "Under Article ___, what are the elements of...?"
       6. Back side (answer) should be:
          - A clear, concise answer
          - Direct and factual
          - Complete enough to understand the concept
+         - Include article numbers or references when relevant
 
       RESPONSE FORMAT:
       Your response MUST be a valid JSON array of objects. Do not include any text before or after the JSON array. Each object must have the following structure:
@@ -271,7 +300,7 @@ export class GeminiService {
         "back": "The answer or explanation for the back of the card"
       }
 
-      IMPORTANT: Ensure flashcards are clear, concise, and suitable for effective memorization through spaced repetition.
+      IMPORTANT: Ensure flashcards are clear, concise, and suitable for effective memorization and professional exam preparation.
     `;
 
     try {
@@ -405,7 +434,7 @@ export class GeminiService {
             break;
           case QuestionTypeEnum.IDENTIFICATION:
             instructions.push(
-              `- ${count} IDENTIFICATION questions: Ask for specific accounting terms, principles, or concepts. Provide the exact expected answer.`,
+              `- ${count} IDENTIFICATION questions: Ask for specific terms, principles, legal provisions, or concepts. Provide the exact expected answer (e.g., accounting terms, article numbers, legal doctrines).`,
             );
             break;
         }
@@ -439,7 +468,7 @@ export class GeminiService {
     }
 
     try {
-      const prompt = `You are an expert accounting professor evaluating exam answers. Determine if the student's answer is semantically equivalent to the correct answer.
+      const prompt = `You are an expert professor specializing in Accountancy and Philippine Law, evaluating exam answers. Determine if the student's answer is semantically equivalent to the correct answer.
 
 QUESTION: ${questionText}
 
@@ -449,9 +478,11 @@ STUDENT'S ANSWER: ${normalizedUserAnswer}
 
 Evaluate if the student's answer demonstrates the same understanding and correctness as the correct answer. Consider:
 - Semantic equivalence (same meaning, even if worded differently)
-- Key concepts and terminology
+- Key concepts and terminology (accounting terms, legal provisions, article numbers)
 - Accuracy of the information
 - Minor spelling or grammatical differences should not affect correctness
+- For legal answers: correct citation of laws/articles even if phrasing differs
+- For accounting answers: correct principles even if explained differently
 
 Respond with ONLY a JSON object in this exact format:
 {
@@ -562,7 +593,7 @@ Do not include any text before or after the JSON object.`;
     const templateInstructions = this.getSummaryTemplateInstructions(template);
 
     const prompt = `
-      You are an expert accounting professor creating a comprehensive summary for accountancy students. Your task is to generate a well-structured summary based on the provided document and the user's specific requirements.
+      You are an expert professor specializing in BOTH Accountancy and Philippine Law. Your task is to generate a well-structured summary based on the provided document and the user's specific requirements.
 
       USER'S REQUIREMENTS:
       "${description}"
@@ -575,21 +606,45 @@ Do not include any text before or after the JSON object.`;
       SUMMARY FORMAT/TEMPLATE:
       ${templateInstructions}
 
-      CRITICAL REQUIREMENTS FOR ACCOUNTANCY STUDENTS:
+      CRITICAL REQUIREMENTS:
+      Intelligently detect the subject matter and summarize accordingly:
+
+      FOR ACCOUNTING/FINANCE CONTENT:
       1. Focus on accounting principles, standards, and practical applications
       2. Highlight key formulas, calculations, and methodologies
       3. Include important definitions and terminology
-      4. Organize information in a logical, easy-to-follow structure
-      5. Emphasize concepts that are commonly tested in accounting exams
-      6. Use clear, concise language suitable for students
-      7. Include examples where relevant to illustrate concepts
-      8. Make connections between related accounting topics
-      9. Highlight any regulatory frameworks or standards mentioned (PAS, PFRS, etc.)
+      4. Emphasize concepts commonly tested in CPA board exams
+      5. Highlight regulatory frameworks (PAS, PFRS, GAAP, BIR regulations)
+      6. Include auditing standards and procedures if mentioned
+      7. Note tax implications and computations
+
+      FOR LAW/LEGAL CONTENT:
+      1. Focus on key legal provisions and their interpretations
+      2. Highlight elements of crimes, obligations, or rights
+      3. Include important definitions and legal terminology
+      4. Emphasize concepts commonly tested in Bar exams
+      5. Reference specific articles, sections, or provisions from Philippine laws:
+         - Civil Code of the Philippines
+         - Revised Penal Code
+         - National Internal Revenue Code (Tax Code)
+         - Corporation Code / Revised Corporation Code
+         - Labor Code
+         - Family Code
+         - Rules of Court
+         - Special laws and jurisprudence
+      6. Note landmark cases and doctrines if mentioned
+      7. Explain legal maxims in context
+
+      GENERAL REQUIREMENTS:
+      - Organize information in a logical, easy-to-follow structure
+      - Use clear, concise language suitable for students
+      - Include examples where relevant to illustrate concepts
+      - Make connections between related topics
 
       RESPONSE FORMAT:
       Your response should be a well-formatted summary following the template instructions above. Do not include any markdown code blocks or JSON formatting - just provide the summary text directly.
 
-      IMPORTANT: The summary should be comprehensive yet focused, helping accountancy students understand and retain the key information from the document.
+      IMPORTANT: The summary should be comprehensive yet focused, helping students prepare for professional exams (CPA/Bar) and understand the key information from the document.
     `;
 
     try {

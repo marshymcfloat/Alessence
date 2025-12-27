@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,6 +38,12 @@ const UserButton = () => {
   const router = useRouter();
   const params = useParams();
   const userId = params.id as string;
+  const [mounted, setMounted] = useState(false);
+
+  // Ensure consistent rendering between server and client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const { data: userData, isLoading } = useQuery({
     queryKey: ["currentUser"],
@@ -73,11 +80,14 @@ const UserButton = () => {
   const userEmail = String(userData?.email || "");
   const profilePicture = userData?.profilePicture;
 
+  // Show consistent loading state during SSR and initial hydration
+  const showLoading = !mounted || isLoading;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="cursor-pointer rounded-full outline-none transition-opacity hover:opacity-90">
         <Avatar className="size-9 border-2 border-white/50">
-          {isLoading ? (
+          {showLoading ? (
             <AvatarFallback className="bg-gray-200 dark:bg-gray-700">
               <LoaderCircle className="size-4 animate-spin" />
             </AvatarFallback>
