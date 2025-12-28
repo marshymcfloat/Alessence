@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAllExams, deleteExam, getExamById } from "@/lib/actions/examActionts";
 import {
   startExamAttempt,
@@ -51,6 +52,7 @@ import {
 } from "@/components/ui/empty";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type ExamWithCount = Exam & {
   subject: { id: number; title: string };
@@ -71,8 +73,16 @@ type QuestionType = {
 };
 
 export default function ExamsList() {
-  const [exams, setExams] = useState<ExamWithCount[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  
+  // React Query for fetching exams
+  const { data: examsData, isLoading: loading, refetch } = useQuery({
+    queryKey: ["exams"],
+    queryFn: () => getAllExams(),
+  });
+  
+  const exams = examsData?.success ? (examsData.data?.exams as ExamWithCount[]) || [] : [];
+  
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // Exam taking state
@@ -91,9 +101,13 @@ export default function ExamsList() {
     description: string;
   } | null>(null);
 
-  useEffect(() => {
-    loadExams();
-  }, []);
+  // Confirm dialog hook
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
+
+  // Expose refetch for external use
+  const loadExams = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   // Timer effect
   useEffect(() => {
@@ -119,20 +133,17 @@ export default function ExamsList() {
     return () => clearInterval(interval);
   }, [currentAttempt, isExamDialogOpen, examResult]);
 
-  const loadExams = async () => {
-    setLoading(true);
-    const result = await getAllExams();
-    if (result.success && result.data) {
-      setExams(result.data.exams as ExamWithCount[]);
-    } else {
-      toast.error(result.error || "Failed to load exams");
-    }
-    setLoading(false);
-  };
-
   const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this exam?")) return;
+    const confirmed = await confirm({
+      title: "Delete Exam",
+      description: "Are you sure you want to delete this exam? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+    });
+    
+    if (!confirmed) return;
 
     setDeletingId(id);
     const result = await deleteExam(id);
@@ -186,11 +197,15 @@ export default function ExamsList() {
     const answeredQuestions = Object.keys(answers).length;
 
     if (!autoSubmit && answeredQuestions < totalQuestions) {
-      if (
-        !confirm(
-          `You have only answered ${answeredQuestions} out of ${totalQuestions} questions. Submit anyway?`
-        )
-      ) {
+      const confirmed = await confirm({
+        title: "Incomplete Exam",
+        description: `You have only answered ${answeredQuestions} out of ${totalQuestions} questions. Submit anyway?`,
+        confirmText: "Submit Anyway",
+        cancelText: "Continue Exam",
+        variant: "default",
+      });
+      
+      if (!confirmed) {
         return;
       }
     }
@@ -225,7 +240,15 @@ export default function ExamsList() {
 
   const handleCloseExam = async () => {
     if (currentAttempt && !examResult) {
-      if (confirm("You have an exam in progress. Abandon it?")) {
+      const confirmed = await confirm({
+        title: "Abandon Exam",
+        description: "You have an exam in progress. Are you sure you want to abandon it?",
+        confirmText: "Abandon",
+        cancelText: "Continue Exam",
+        variant: "destructive",
+      });
+      
+      if (confirmed) {
         await abandonExamAttempt(currentAttempt.attemptId);
       } else {
         return;
@@ -768,6 +791,9 @@ export default function ExamsList() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </>
   );
 }

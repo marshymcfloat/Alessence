@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 const SubjectAccordion = ({
   subject,
@@ -29,6 +30,7 @@ const SubjectAccordion = ({
 }) => {
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
   const { taskCounts } = subject;
   const total = taskCounts.total;
   const progressPercentage =
@@ -36,13 +38,15 @@ const SubjectAccordion = ({
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (
-      !confirm(
-        `Are you sure you want to delete "${subject.title}"? This action cannot be undone.`
-      )
-    ) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "Delete Subject",
+      description: `Are you sure you want to delete "${subject.title}"? This action cannot be undone.`,
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+    });
+    
+    if (!confirmed) return;
 
     setIsDeleting(true);
     const result = await deleteSubjectAction(subject.id);
@@ -206,6 +210,9 @@ const SubjectAccordion = ({
           </div>
         </motion.div>
       </AccordionContent>
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </AccordionItem>
   );
 };

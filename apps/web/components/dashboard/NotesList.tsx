@@ -30,6 +30,7 @@ import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface NotesListProps {
   onEditNote: (note: Note) => void;
@@ -40,6 +41,7 @@ export function NotesList({ onEditNote, onCreateNote }: NotesListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("my-notes");
   const queryClient = useQueryClient();
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["notes", searchQuery],
@@ -63,7 +65,15 @@ export function NotesList({ onEditNote, onCreateNote }: NotesListProps) {
   });
 
   const handleDelete = async (id: number) => {
-    if (confirm("Are you sure you want to delete this note?")) {
+    const confirmed = await confirm({
+      title: "Delete Note",
+      description: "Are you sure you want to delete this note? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+    });
+    
+    if (confirmed) {
       await deleteMutation.mutateAsync(id);
     }
   };
@@ -317,6 +327,9 @@ export function NotesList({ onEditNote, onCreateNote }: NotesListProps) {
           {renderSharedNotes()}
         </TabsContent>
       </Tabs>
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </div>
   );
 }

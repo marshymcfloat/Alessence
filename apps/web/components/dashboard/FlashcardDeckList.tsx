@@ -12,11 +12,13 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import type { FlashcardDeck } from "@repo/db/client-types";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 export function FlashcardDeckList() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("my-decks");
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["flashcard-decks"],
@@ -151,8 +153,15 @@ export function FlashcardDeckList() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => {
-                    if (confirm("Are you sure you want to delete this deck?")) {
+                  onClick={async () => {
+                    const confirmed = await confirm({
+                      title: "Delete Deck",
+                      description: "Are you sure you want to delete this deck? This action cannot be undone.",
+                      confirmText: "Delete",
+                      cancelText: "Cancel",
+                      variant: "destructive",
+                    });
+                    if (confirmed) {
                       deleteMutation.mutate(deck.id);
                     }
                   }}
@@ -252,26 +261,31 @@ export function FlashcardDeckList() {
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-      <TabsList>
-        <TabsTrigger value="my-decks" className="gap-2">
-          <BookOpen className="w-4 h-4" />
-          My Decks ({decks.length})
-        </TabsTrigger>
-        <TabsTrigger value="shared" className="gap-2">
-          <Users className="w-4 h-4" />
-          Shared with Me ({sharedDecks.length})
-        </TabsTrigger>
-      </TabsList>
-      
-      <TabsContent value="my-decks">
-        {renderMyDecks()}
-      </TabsContent>
-      
-      <TabsContent value="shared">
-        {renderSharedDecks()}
-      </TabsContent>
-    </Tabs>
+    <>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="my-decks" className="gap-2">
+            <BookOpen className="w-4 h-4" />
+            My Decks ({decks.length})
+          </TabsTrigger>
+          <TabsTrigger value="shared" className="gap-2">
+            <Users className="w-4 h-4" />
+            Shared with Me ({sharedDecks.length})
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="my-decks">
+          {renderMyDecks()}
+        </TabsContent>
+        
+        <TabsContent value="shared">
+          {renderSharedDecks()}
+        </TabsContent>
+      </Tabs>
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
+    </>
   );
 }
 

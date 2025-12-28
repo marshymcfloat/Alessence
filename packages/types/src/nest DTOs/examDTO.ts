@@ -26,7 +26,10 @@ export const createExamBackendSchema = z.object({
     )
     .optional(),
 
-  isPracticeMode: z.boolean().optional().default(false),
+  isPracticeMode: z
+    .preprocess((val) => val === "true" || val === true, z.boolean())
+    .optional()
+    .default(false),
   timeLimit: z.coerce.number().min(1).max(600).optional().nullable(),
 });
 

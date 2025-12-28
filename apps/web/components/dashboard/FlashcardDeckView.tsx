@@ -40,6 +40,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import type { Flashcard } from "@repo/db/client-types";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface FlashcardDeckViewProps {
   deckId: number;
@@ -122,6 +123,7 @@ export function FlashcardDeckView({ deckId }: FlashcardDeckViewProps) {
   const [filterStatus, setFilterStatus] = useState<CardStatus | "all">("all");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [previewCard, setPreviewCard] = useState<Flashcard | null>(null);
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
   const { data: deckData, isLoading: deckLoading } = useQuery({
     queryKey: ["flashcard-deck", deckId],
@@ -471,11 +473,16 @@ export function FlashcardDeckView({ deckId }: FlashcardDeckViewProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={(e) => {
+                        onClick={async (e) => {
                           e.stopPropagation();
-                          if (
-                            confirm("Are you sure you want to delete this card?")
-                          ) {
+                          const confirmed = await confirm({
+                            title: "Delete Card",
+                            description: "Are you sure you want to delete this card? This action cannot be undone.",
+                            confirmText: "Delete",
+                            cancelText: "Cancel",
+                            variant: "destructive",
+                          });
+                          if (confirmed) {
                             deleteMutation.mutate(card.id);
                           }
                         }}
@@ -559,11 +566,16 @@ export function FlashcardDeckView({ deckId }: FlashcardDeckViewProps) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={(e) => {
+                      onClick={async (e) => {
                         e.stopPropagation();
-                        if (
-                          confirm("Are you sure you want to delete this card?")
-                        ) {
+                        const confirmed = await confirm({
+                          title: "Delete Card",
+                          description: "Are you sure you want to delete this card? This action cannot be undone.",
+                          confirmText: "Delete",
+                          cancelText: "Cancel",
+                          variant: "destructive",
+                        });
+                        if (confirmed) {
                           deleteMutation.mutate(card.id);
                         }
                       }}
@@ -660,6 +672,9 @@ export function FlashcardDeckView({ deckId }: FlashcardDeckViewProps) {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </div>
   );
 }

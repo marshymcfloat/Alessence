@@ -34,6 +34,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import AddSubjectForm from "./AddSubjectForm";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 // Color palette for subjects
 const subjectColors = [
@@ -57,6 +58,7 @@ export function SubjectsOverview({ initialSubjects }: SubjectsOverviewProps) {
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<number | null>(null);
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
   const { data, isLoading } = useQuery({
     queryKey: ["enrolledSubjects"],
@@ -246,13 +248,16 @@ export function SubjectsOverview({ initialSubjects }: SubjectsOverviewProps) {
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={(e) => {
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            if (
-                              confirm(
-                                `Are you sure you want to delete "${subject.title}"?`
-                              )
-                            ) {
+                            const confirmed = await confirm({
+                              title: "Delete Subject",
+                              description: `Are you sure you want to delete "${subject.title}"? All associated tasks will also be deleted.`,
+                              confirmText: "Delete",
+                              cancelText: "Cancel",
+                              variant: "destructive",
+                            });
+                            if (confirmed) {
                               deleteMutation.mutate(subject.id);
                             }
                           }}
@@ -355,6 +360,9 @@ export function SubjectsOverview({ initialSubjects }: SubjectsOverviewProps) {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </div>
   );
 }

@@ -21,6 +21,24 @@ const columnTitles: Record<TaskStatus, string> = {
   DONE: "Done",
 };
 
+const columnStyles: Record<TaskStatus, { bg: string; header: string; headerBg: string }> = {
+  PLANNED: {
+    bg: "bg-gray-100/60 dark:bg-gray-800/40",
+    header: "text-gray-500 dark:text-gray-400",
+    headerBg: "",
+  },
+  ON_PROGRESS: {
+    bg: "bg-blue-50/60 dark:bg-blue-950/30",
+    header: "text-blue-600 dark:text-blue-400",
+    headerBg: "",
+  },
+  DONE: {
+    bg: "bg-green-50/60 dark:bg-green-950/30",
+    header: "text-green-600 dark:text-green-400",
+    headerBg: "",
+  },
+};
+
 export function Column({ status, tasks }: ColumnProps) {
   const { setNodeRef } = useDroppable({
     id: status,
@@ -30,12 +48,14 @@ export function Column({ status, tasks }: ColumnProps) {
     },
   });
 
+  const styles = columnStyles[status];
+
   return (
     <div
       ref={setNodeRef}
-      className="flex flex-col gap-4 p-4 bg-gray-100/60 rounded-xl"
+      className={`flex flex-col gap-4 p-4 ${styles.bg} rounded-xl min-h-[200px]`}
     >
-      <h2 className="text-sm font-semibold tracking-wider text-gray-500 uppercase">
+      <h2 className={`text-sm font-semibold tracking-wider uppercase ${styles.header}`}>
         {columnTitles[status]} ({tasks.length})
       </h2>
       <SortableContext

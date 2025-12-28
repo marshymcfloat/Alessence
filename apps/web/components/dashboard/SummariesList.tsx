@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getAllSummaries,
   deleteSummary,
@@ -52,6 +53,7 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
 type SummaryWithSubject = Summary & {
   subject: { id: number; title: string } | null;
@@ -59,8 +61,16 @@ type SummaryWithSubject = Summary & {
 };
 
 export default function SummariesList() {
-  const [summaries, setSummaries] = useState<SummaryWithSubject[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  
+  // React Query for fetching summaries
+  const { data: summariesData, isLoading: loading, refetch } = useQuery({
+    queryKey: ["summaries"],
+    queryFn: () => getAllSummaries(),
+  });
+  
+  const summaries = summariesData?.success ? (summariesData.data?.summaries as SummaryWithSubject[]) || [] : [];
+  
   const [selectedSummary, setSelectedSummary] =
     useState<SummaryWithSubject | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -69,26 +79,25 @@ export default function SummariesList() {
   const contentRef = useRef<HTMLDivElement>(null);
   const pdfContentRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    loadSummaries();
-  }, []);
+  // Expose refetch for external use
+  const loadSummaries = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
-  const loadSummaries = async () => {
-    setLoading(true);
-    const result = await getAllSummaries();
-    if (result.success && result.data) {
-      setSummaries(result.data.summaries as SummaryWithSubject[]);
-    } else {
-      toast.error(result.error || "Failed to load summaries");
-    }
-    setLoading(false);
-  };
+  // Confirm dialog hook
+  const { confirm, ConfirmDialogComponent } = useConfirmDialog();
 
   const handleDelete = async (id: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!confirm("Are you sure you want to delete this summary?")) {
-      return;
-    }
+    const confirmed = await confirm({
+      title: "Delete Summary",
+      description: "Are you sure you want to delete this summary? This action cannot be undone.",
+      confirmText: "Delete",
+      cancelText: "Cancel",
+      variant: "destructive",
+    });
+    
+    if (!confirmed) return;
 
     setDeletingId(id);
     const result = await deleteSummary(id);
@@ -1019,6 +1028,9 @@ export default function SummariesList() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Dialog */}
+      {ConfirmDialogComponent}
     </div>
   );
 }

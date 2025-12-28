@@ -13,20 +13,27 @@ import { NotesSection } from "./NotesSection";
 import { PerformanceDashboard } from "./PerformanceDashboard";
 import { CalendarView } from "./CalendarView";
 import { SubjectsOverview } from "./SubjectsOverview";
+import ExamsList from "./ExamsList";
+import SummariesList from "./SummariesList";
+import { FlashcardDeckList } from "./FlashcardDeckList";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ClipboardList,
   FileText,
   BarChart3,
   Calendar,
-  BookOpen,
   GraduationCap,
   Timer,
   Target,
   History,
   Plus,
+  Library,
+  FileQuestion,
+  ScrollText,
+  Layers,
+  RefreshCw,
 } from "lucide-react";
-import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -37,6 +44,9 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { SubjectWithTaskProgress } from "@repo/types";
+import AddExamSheet from "./AddExamSheet";
+import AddSummarySheet from "./AddSummarySheet";
+import FlashcardDeckForm from "./FlashcardDeckForm";
 
 const DashboardContent = ({
   initialTasks,
@@ -50,6 +60,16 @@ const DashboardContent = ({
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
   const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
   const [timerSubTab, setTimerSubTab] = useState<"timer" | "goals" | "history">("timer");
+  const [studySubTab, setStudySubTab] = useState<"exams" | "summaries" | "flashcards">("exams");
+  const [isNewDeckDialogOpen, setIsNewDeckDialogOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+
+  const handleRefresh = async (queryKey: string) => {
+    setIsRefreshing(true);
+    await queryClient.invalidateQueries({ queryKey: [queryKey] });
+    setIsRefreshing(false);
+  };
 
   return (
     <div className="h-full p-4 md:p-6 lg:p-8 overflow-y-auto custom-scrollbar">
@@ -104,6 +124,13 @@ const DashboardContent = ({
                   <span className="hidden xs:inline">Notes</span>
                 </TabsTrigger>
                 <TabsTrigger 
+                  value="study" 
+                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+                >
+                  <Library className="w-4 h-4 shrink-0" />
+                  <span className="hidden xs:inline">Study Materials</span>
+                </TabsTrigger>
+                <TabsTrigger 
                   value="calendar" 
                   className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
                 >
@@ -119,16 +146,6 @@ const DashboardContent = ({
                 </TabsTrigger>
               </TabsList>
             </div>
-            <Link href={`/${userId}/flashcard`} className="shrink-0">
-              <Button 
-                variant="outline" 
-                size="sm"
-                className="gap-2 border-pink-200 dark:border-pink-800 hover:bg-pink-50 dark:hover:bg-pink-950/30"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span className="hidden sm:inline">Flashcards</span>
-              </Button>
-            </Link>
           </div>
 
           {/* Timer Tab Content */}
@@ -309,6 +326,177 @@ const DashboardContent = ({
               </p>
             </motion.div>
             <NotesSection />
+          </TabsContent>
+
+          {/* Study Materials Tab Content */}
+          <TabsContent value="study" className="mt-0">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Study Materials Header */}
+              <div className="mb-6">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
+                  Study Materials
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Manage your exams, summaries, and flashcards
+                </p>
+              </div>
+
+              {/* Study Materials Sub-tabs */}
+              <div className="flex flex-col gap-6">
+                {/* Sub-navigation - Horizontal centered */}
+                <div className="flex justify-center gap-2 flex-wrap">
+                  <button
+                    onClick={() => setStudySubTab("exams")}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+                      studySubTab === "exams"
+                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
+                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <FileQuestion className="w-4 h-4" />
+                    <span>Exams</span>
+                  </button>
+                  <button
+                    onClick={() => setStudySubTab("summaries")}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+                      studySubTab === "summaries"
+                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
+                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <ScrollText className="w-4 h-4" />
+                    <span>Summaries</span>
+                  </button>
+                  <button
+                    onClick={() => setStudySubTab("flashcards")}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+                      studySubTab === "flashcards"
+                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
+                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Layers className="w-4 h-4" />
+                    <span>Flashcards</span>
+                  </button>
+                </div>
+
+                {/* Study Materials Content Area */}
+                <div className="w-full">
+                  {studySubTab === "exams" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                          <h3 className="text-lg font-semibold">Your Exams</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Create, take, and review your practice exams
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRefresh("exams")}
+                            disabled={isRefreshing}
+                            className="gap-2"
+                          >
+                            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                            <span className="hidden sm:inline">Refresh</span>
+                          </Button>
+                          <AddExamSheet />
+                        </div>
+                      </div>
+                      <ExamsList />
+                    </motion.div>
+                  )}
+
+                  {studySubTab === "summaries" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                          <h3 className="text-lg font-semibold">Your Summaries</h3>
+                          <p className="text-sm text-muted-foreground">
+                            AI-generated summaries from your study materials
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRefresh("summaries")}
+                            disabled={isRefreshing}
+                            className="gap-2"
+                          >
+                            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                            <span className="hidden sm:inline">Refresh</span>
+                          </Button>
+                          <AddSummarySheet />
+                        </div>
+                      </div>
+                      <SummariesList />
+                    </motion.div>
+                  )}
+
+                  {studySubTab === "flashcards" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                        <div>
+                          <h3 className="text-lg font-semibold">Your Flashcard Decks</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Create and study flashcards with spaced repetition
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleRefresh("flashcard-decks")}
+                            disabled={isRefreshing}
+                            className="gap-2"
+                          >
+                            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                            <span className="hidden sm:inline">Refresh</span>
+                          </Button>
+                          <Dialog open={isNewDeckDialogOpen} onOpenChange={setIsNewDeckDialogOpen}>
+                            <DialogTrigger asChild>
+                              <Button className="gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600">
+                                <Plus className="w-4 h-4" />
+                                New Deck
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                              <DialogHeader>
+                                <DialogTitle>Create Flashcard Deck</DialogTitle>
+                                <DialogDescription>
+                                  Create a new deck to organize your flashcards
+                                </DialogDescription>
+                              </DialogHeader>
+                              <FlashcardDeckForm onSuccess={() => setIsNewDeckDialogOpen(false)} />
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </div>
+                      <FlashcardDeckList />
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
           </TabsContent>
 
           {/* Calendar Tab Content */}

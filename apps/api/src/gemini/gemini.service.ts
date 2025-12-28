@@ -593,58 +593,61 @@ Do not include any text before or after the JSON object.`;
     const templateInstructions = this.getSummaryTemplateInstructions(template);
 
     const prompt = `
-      You are an expert professor specializing in BOTH Accountancy and Philippine Law. Your task is to generate a well-structured summary based on the provided document and the user's specific requirements.
+      Create focused study notes from the provided material.
 
-      USER'S REQUIREMENTS:
+      USER'S REQUEST:
       "${description}"
 
-      SOURCE DOCUMENT:
+      SOURCE MATERIAL:
       ---
       ${sourceText}
       ---
 
-      SUMMARY FORMAT/TEMPLATE:
+      TEMPLATE TO FOLLOW:
       ${templateInstructions}
 
-      CRITICAL REQUIREMENTS:
-      Intelligently detect the subject matter and summarize accordingly:
+      WRITING STYLE:
+      - Start directly with the first topic heading. No introductions, no preambles.
+      - Do NOT begin with phrases like "This document provides...", "Let's break down...", "Alright...", or any opening commentary
+      - Write in a clear, neutral tone - professional but readable
+      - Use contractions naturally (it's, don't, can't) but don't be overly casual
+      - Be concise and direct
+      - Focus on explaining concepts clearly, not on being friendly or motivational
+      - No cheerleading phrases like "make sure you get it!" or "this is super important!"
 
-      FOR ACCOUNTING/FINANCE CONTENT:
-      1. Focus on accounting principles, standards, and practical applications
-      2. Highlight key formulas, calculations, and methodologies
-      3. Include important definitions and terminology
-      4. Emphasize concepts commonly tested in CPA board exams
-      5. Highlight regulatory frameworks (PAS, PFRS, GAAP, BIR regulations)
-      6. Include auditing standards and procedures if mentioned
-      7. Note tax implications and computations
+      WHAT TO AVOID:
+      - Meta-commentary about the document ("this covers...", "the material discusses...")
+      - Overly casual language ("Alright", "Okay so", "Here's the thing")
+      - Motivational filler ("This is crucial!", "Pay attention to this!")
+      - Generic AI introductions ("This comprehensive overview...")
 
-      FOR LAW/LEGAL CONTENT:
-      1. Focus on key legal provisions and their interpretations
-      2. Highlight elements of crimes, obligations, or rights
-      3. Include important definitions and legal terminology
-      4. Emphasize concepts commonly tested in Bar exams
-      5. Reference specific articles, sections, or provisions from Philippine laws:
-         - Civil Code of the Philippines
-         - Revised Penal Code
-         - National Internal Revenue Code (Tax Code)
-         - Corporation Code / Revised Corporation Code
-         - Labor Code
-         - Family Code
-         - Rules of Court
-         - Special laws and jurisprudence
-      6. Note landmark cases and doctrines if mentioned
-      7. Explain legal maxims in context
+      CONTENT FOCUS:
+      Detect the subject and include:
 
-      GENERAL REQUIREMENTS:
-      - Organize information in a logical, easy-to-follow structure
-      - Use clear, concise language suitable for students
-      - Include examples where relevant to illustrate concepts
-      - Make connections between related topics
+      FOR ACCOUNTING/FINANCE:
+      - Definitions and key concepts
+      - Formulas and calculations
+      - Standards references (PAS, PFRS, IAS, BIR rules)
+      - Recognition and measurement criteria
+      - Important distinctions and classifications
+
+      FOR LAW/LEGAL:
+      - Elements and requisites
+      - Article/section references
+      - Key definitions
+      - Landmark cases and doctrines
+      - Legal maxims with explanations
+
+      STRUCTURE:
+      - Clear headings and subheadings
+      - Bullet points for lists
+      - Numbered steps for processes
+      - Short, scannable paragraphs
+      - Bold for key terms
 
       RESPONSE FORMAT:
-      Your response should be a well-formatted summary following the template instructions above. Do not include any markdown code blocks or JSON formatting - just provide the summary text directly.
-
-      IMPORTANT: The summary should be comprehensive yet focused, helping students prepare for professional exams (CPA/Bar) and understand the key information from the document.
+      Provide the summary directly. No markdown code blocks. No JSON.
+      Begin immediately with the first heading - no introduction.
     `;
 
     try {

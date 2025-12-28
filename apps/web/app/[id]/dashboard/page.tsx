@@ -1,4 +1,3 @@
-import FloatingAddButton from "@/components/dashboard/FloatingAddButton";
 import DashboardContent from "@/components/dashboard/DashboardContent";
 import { getEnrolledSubject } from "@/lib/actions/subjectActions";
 import { getAllTasks } from "@/lib/actions/taskActionts";
@@ -23,9 +22,6 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
       <div className="flex-1 overflow-hidden">
         <DashboardContent initialTasks={tasks} userId={id} subjects={subjects} />
       </div>
-
-      {/* Floating Action Button */}
-      <FloatingAddButton />
     </div>
   );
 };

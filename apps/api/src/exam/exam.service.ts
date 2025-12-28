@@ -114,7 +114,7 @@ export class ExamService {
         status: ExamStatusEnum.GENERATING,
         subjectId: +dto.subjectId,
         questionTypes: dto.questionTypes as QuestionTypeEnum[],
-        isPracticeMode: dto.isPracticeMode || false,
+        isPracticeMode: dto.isPracticeMode === true || (dto.isPracticeMode as unknown) === 'true',
         timeLimit: dto.timeLimit ? +dto.timeLimit : null,
         userId: user.userId, // Set user ownership
         sourceFiles: {

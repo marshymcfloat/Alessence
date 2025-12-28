@@ -23,6 +23,12 @@ export async function createExam(
     formData.append("describe", values.describe);
     formData.append("items", String(values.items));
     formData.append("subjectId", String(values.subjectId));
+    formData.append("isPracticeMode", String(values.isPracticeMode));
+    
+    // Only append timeLimit if it has a value (not null/undefined)
+    if (values.timeLimit != null) {
+      formData.append("timeLimit", String(values.timeLimit));
+    }
 
     values.questionTypes.forEach((type) => {
       formData.append("questionTypes[]", type);
