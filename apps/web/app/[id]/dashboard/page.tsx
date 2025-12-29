@@ -1,6 +1,11 @@
 import DashboardContent from "@/components/dashboard/DashboardContent";
 import { getEnrolledSubject } from "@/lib/actions/subjectActions";
 import { getAllTasks } from "@/lib/actions/taskActionts";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
   // Await params in Next.js 16
