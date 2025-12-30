@@ -14,3 +14,15 @@ export const createSubjectSchema = z.object({
 });
 
 export type CreateSubjectTypes = z.infer<typeof createSubjectSchema>;
+
+export const createTopicSchema = z.object({
+  title: z
+    .string()
+    .min(1, { message: "Title is required" })
+    .max(100, { message: "Title should not exceed 100 characters" }),
+  subjectId: z.number().int(),
+  parentId: z.number().int().optional(),
+  order: z.number().int().default(0),
+});
+
+export type CreateTopicTypes = z.infer<typeof createTopicSchema>;

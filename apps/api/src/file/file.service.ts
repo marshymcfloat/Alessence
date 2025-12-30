@@ -2,11 +2,13 @@ import {
   Injectable,
   BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { put } from '@vercel/blob';
-import { File, AcceptedFileType } from '@repo/db';
+import { File, AcceptedFileType, DocumentLinkType } from '@repo/db';
 import { GoogleGenAI } from '@google/genai';
+import { GeminiService } from 'src/gemini/gemini.service';
 
 import mammoth from 'mammoth';
 import { PDFParse } from 'pdf-parse';
@@ -15,9 +17,13 @@ type MulterFile = Express.Multer.File;
 
 @Injectable()
 export class FileService {
+  private readonly logger = new Logger(FileService.name);
   private readonly genAI: GoogleGenAI;
 
-  constructor(private readonly dbService: DbService) {
+  constructor(
+    private readonly dbService: DbService,
+    private readonly geminiService: GeminiService,
+  ) {
     this.genAI = new GoogleGenAI({
       apiKey: process.env.GEMINI_API_KEY!,
     });
@@ -167,5 +173,172 @@ export class FileService {
     throw new Error(
       `Mime type ${mimetype} does not map to an AcceptedFileType.`,
     );
+  }
+
+  /**
+   * Find and create cross-document links for a newly uploaded file
+   */
+  async createDocumentLinks(fileId: number, userId: string): Promise<void> {
+    try {
+      const file = await this.dbService.file.findFirst({
+        where: { id: fileId, userId },
+      });
+
+      if (!file || !file.contentText) {
+        return;
+      }
+
+      // Get existing topics from the user's syllabus
+      const topics = await this.dbService.topic.findMany({
+        where: {
+          subject: {
+            OR: [
+              { userId },
+              { userId: null }, // System subjects (CPALE syllabus)
+            ],
+          },
+        },
+        select: { id: true, title: true },
+      });
+
+      // Get existing notes
+      const notes = await this.dbService.note.findMany({
+        where: { userId },
+        select: { id: true, title: true },
+      });
+
+      // Get existing files (excluding the current one)
+      const otherFiles = await this.dbService.file.findMany({
+        where: { userId, id: { not: fileId } },
+        select: { id: true, name: true },
+      });
+
+      // Combine all existing items for linking
+      const existingTopics = [
+        ...topics.map(t => `Topic: ${t.title}`),
+        ...notes.map(n => `Note: ${n.title}`),
+        ...otherFiles.map(f => `File: ${f.name}`),
+      ];
+
+      if (existingTopics.length === 0) {
+        return;
+      }
+
+      // Find related topics using AI
+      const relatedItems = await this.geminiService.findRelatedTopics(
+        file.contentText,
+        existingTopics,
+      );
+
+      // Create links for each related item
+      for (const item of relatedItems) {
+        let targetType: DocumentLinkType;
+        let targetId: number;
+
+        if (item.topic.startsWith('Topic: ')) {
+          const topicTitle = item.topic.replace('Topic: ', '');
+          const topic = topics.find(t => t.title === topicTitle);
+          if (!topic) continue;
+          targetType = DocumentLinkType.TOPIC;
+          targetId = topic.id;
+        } else if (item.topic.startsWith('Note: ')) {
+          const noteTitle = item.topic.replace('Note: ', '');
+          const note = notes.find(n => n.title === noteTitle);
+          if (!note) continue;
+          targetType = DocumentLinkType.NOTE;
+          targetId = note.id;
+        } else if (item.topic.startsWith('File: ')) {
+          const fileName = item.topic.replace('File: ', '');
+          const otherFile = otherFiles.find(f => f.name === fileName);
+          if (!otherFile) continue;
+          targetType = DocumentLinkType.FILE;
+          targetId = otherFile.id;
+        } else {
+          continue;
+        }
+
+        // Create the link (upsert to avoid duplicates)
+        await this.dbService.documentLink.upsert({
+          where: {
+            sourceType_sourceId_targetType_targetId: {
+              sourceType: DocumentLinkType.FILE,
+              sourceId: fileId,
+              targetType,
+              targetId,
+            },
+          },
+          create: {
+            sourceType: DocumentLinkType.FILE,
+            sourceId: fileId,
+            targetType,
+            targetId,
+            relevance: item.relevance,
+            reason: item.reason,
+            userId,
+          },
+          update: {
+            relevance: item.relevance,
+            reason: item.reason,
+          },
+        });
+      }
+
+      this.logger.log(`Created ${relatedItems.length} document links for file ${fileId}`);
+    } catch (error) {
+      this.logger.error('Error creating document links:', error);
+      // Don't throw - linking is not critical
+    }
+  }
+
+  /**
+   * Get all document links for a file
+   */
+  async getDocumentLinks(fileId: number, userId: string) {
+    const links = await this.dbService.documentLink.findMany({
+      where: {
+        userId,
+        OR: [
+          { sourceType: DocumentLinkType.FILE, sourceId: fileId },
+          { targetType: DocumentLinkType.FILE, targetId: fileId },
+        ],
+      },
+      orderBy: { relevance: 'desc' },
+    });
+
+    // Enrich links with target names
+    const enrichedLinks = await Promise.all(
+      links.map(async (link) => {
+        const isSource = link.sourceType === DocumentLinkType.FILE && link.sourceId === fileId;
+        const linkedType = isSource ? link.targetType : link.sourceType;
+        const linkedId = isSource ? link.targetId : link.sourceId;
+
+        let linkedName = '';
+        switch (linkedType) {
+          case DocumentLinkType.FILE:
+            const file = await this.dbService.file.findUnique({ where: { id: linkedId } });
+            linkedName = file?.name || 'Unknown File';
+            break;
+          case DocumentLinkType.NOTE:
+            const note = await this.dbService.note.findUnique({ where: { id: linkedId } });
+            linkedName = note?.title || 'Unknown Note';
+            break;
+          case DocumentLinkType.TOPIC:
+            const topic = await this.dbService.topic.findUnique({ where: { id: linkedId } });
+            linkedName = topic?.title || 'Unknown Topic';
+            break;
+          default:
+            linkedName = 'Unknown';
+        }
+
+        return {
+          ...link,
+          linkedType,
+          linkedId,
+          linkedName,
+        };
+      }),
+    );
+
+    return enrichedLinks;
   }
 }

@@ -8,6 +8,14 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import {
   Send,
   Bot,
   User,
@@ -82,11 +90,21 @@ export default function AiAssistantContent() {
   const [currentConversationId, setCurrentConversationId] = useState<
     number | null
   >(null);
+  const [mode, setMode] = useState<
+    "STANDARD" | "SOCRATIC" | "CITATION_VERIFICATION"
+  >("STANDARD");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [editingTitle, setEditingTitle] = useState<number | null>(null);
   const [editTitleValue, setEditTitleValue] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // On small screens, default the sidebar to closed (avoid cramped layout).
+  useEffect(() => {
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
+  }, []);
 
   // Fetch conversations list
   const { data: conversations = [], isLoading: loadingConversations } =
@@ -114,7 +132,9 @@ export default function AiAssistantContent() {
 
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      return sendChatWithHistory(message, currentConversationId);
+      return sendChatWithHistory(message, currentConversationId, {
+        mode,
+      });
     },
     onSuccess: (result) => {
       if (result.success && result.data) {
@@ -229,12 +249,19 @@ export default function AiAssistantContent() {
 
   return (
     // Outer Container: Fixed Height, hidden overflow
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="relative flex h-[calc(100dvh-4rem)] overflow-hidden bg-slate-50 dark:bg-slate-950">
       {/* Sidebar */}
       <div
         className={cn(
-          "flex flex-col border-r bg-white transition-all duration-300 dark:bg-slate-900/50",
-          sidebarOpen ? "w-72" : "w-0 overflow-hidden"
+          // Mobile: slide-over drawer
+          "fixed inset-y-0 left-0 z-20 flex flex-col border-r bg-white transition-transform duration-300 dark:bg-slate-900/50",
+          "w-[85vw] max-w-xs",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          // Desktop: inline collapsible sidebar (keeps existing behavior)
+          "md:static md:inset-auto md:z-auto md:transition-all md:duration-300",
+          sidebarOpen
+            ? "md:w-72 md:translate-x-0"
+            : "md:w-0 md:overflow-hidden md:translate-x-0"
         )}
       >
         <div className="flex items-center justify-between border-b p-4">
@@ -345,10 +372,17 @@ export default function AiAssistantContent() {
         </ScrollArea>
       </div>
 
-      {/* Main Chat Area - Flex Column */}
+      {sidebarOpen && (
+        <button
+          type="button"
+          aria-label="Close sidebar"
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-10 bg-black/30 md:hidden"
+        />
+      )}
+
       <div className="relative flex flex-1 flex-col overflow-hidden">
-        {/* Header - Fixed Top with Glassmorphism */}
-        <div className="z-10 flex shrink-0 items-center gap-4 border-b bg-white/70 p-4 backdrop-blur-md dark:bg-slate-900/70">
+        <div className="z-10 flex shrink-0 flex-col gap-3 border-b bg-white/70 p-4 backdrop-blur-md dark:bg-slate-900/70 sm:flex-row sm:items-center sm:gap-4">
           <Button
             variant="ghost"
             size="icon"
@@ -362,8 +396,12 @@ export default function AiAssistantContent() {
             )}
           </Button>
 
-          <div className="rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 p-2 shadow-sm">
+          {/* Desktop: brand gradient icon. Mobile: subtle monochrome badge. */}
+          <div className="hidden sm:flex rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 p-2 shadow-sm">
             <Bot className="size-6 text-white" />
+          </div>
+          <div className="sm:hidden flex items-center justify-center size-10 rounded-xl border bg-white/60 text-slate-800 shadow-sm dark:bg-slate-900/40 dark:text-slate-100">
+            <Bot className="size-5" />
           </div>
           <div className="flex-1">
             <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
@@ -373,6 +411,24 @@ export default function AiAssistantContent() {
               Accounting & Philippine Law • CPA & Bar Exam Prep
             </p>
           </div>
+
+          <div className="flex w-full items-center gap-2 rounded-lg border bg-white/60 px-3 py-1 dark:bg-slate-800/60 sm:ml-auto sm:w-auto">
+            <div className="text-xs font-medium text-muted-foreground mr-1">
+              Mode:
+            </div>
+            <Select value={mode} onValueChange={(val: any) => setMode(val)}>
+              <SelectTrigger className="h-8 w-full border-0 bg-transparent focus:ring-0 sm:w-[160px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="STANDARD">Standard Assistant</SelectItem>
+                <SelectItem value="SOCRATIC">Socratic Tutor</SelectItem>
+                <SelectItem value="CITATION_VERIFICATION">
+                  Citation Verification
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Chat Scroll Area - Takes remaining height */}
@@ -381,8 +437,12 @@ export default function AiAssistantContent() {
             {messages.length === 0 ? (
               <div className="py-12">
                 <div className="mb-8 text-center">
-                  <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg shadow-purple-500/25">
+                  {/* Desktop: gradient hero. Mobile: minimal badge to reduce visual noise. */}
+                  <div className="mx-auto mb-4 hidden sm:flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-pink-500 to-purple-600 shadow-lg shadow-purple-500/25">
                     <Sparkles className="size-8 text-white" />
+                  </div>
+                  <div className="mx-auto mb-4 flex sm:hidden size-12 items-center justify-center rounded-2xl border bg-white/60 text-slate-800 shadow-sm dark:bg-slate-900/40 dark:text-slate-100">
+                    <Sparkles className="size-6" />
                   </div>
                   <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100">
                     Welcome to your AI Study Assistant

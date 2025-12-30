@@ -39,6 +39,7 @@ export const createNewSummarySchema = z.object({
     "CHAPTER_SUMMARY",
     "CONCEPT_MAP",
     "CUSTOM",
+    "FILL_IN_THE_BLANKS",
   ]),
 });
 

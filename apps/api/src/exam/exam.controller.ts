@@ -28,6 +28,15 @@ export class ExamController {
     private readonly examAttemptService: ExamAttemptService,
   ) {}
 
+  @Post('mock')
+  @UseGuards(AuthGuard('jwt'))
+  createMockExam(
+    @Body('subjectId', ParseIntPipe) subjectId: number,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.examService.createMockExam(user.userId, subjectId);
+  }
+
   @Post()
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FilesInterceptor('newFiles', 10))

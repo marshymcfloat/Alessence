@@ -12,4 +12,5 @@ export {
   GoalPeriodEnum,
   FriendshipStatusEnum,
   SharePermission,
+  DocumentLinkType,
 } from "@prisma/client";

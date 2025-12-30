@@ -366,13 +366,13 @@ export class ExamService {
       throw new Error(`Question with ID ${questionId} not found.`);
     }
 
-    const isCorrect = await this.geminiService.evaluateAnswer(
+    const isCorrectResult = await this.geminiService.evaluateAnswer(
       userAnswer,
       question.correctAnswer,
       question.text,
     );
 
-    return { isCorrect };
+    return { isCorrect: isCorrectResult.isCorrect };
   }
 
   /**
@@ -400,16 +400,59 @@ export class ExamService {
           return { questionId, isCorrect: false };
         }
 
-        const isCorrect = await this.geminiService.evaluateAnswer(
+        const isCorrectResult = await this.geminiService.evaluateAnswer(
           userAnswer,
           question.correctAnswer,
           question.text,
         );
 
-        return { questionId, isCorrect };
+        return { questionId, isCorrect: isCorrectResult.isCorrect };
       }),
     );
 
     return evaluations;
+  }
+
+  async createMockExam(userId: string, subjectId: number): Promise<Exam> {
+    // 1. Fetch all files for this subject that the user has access to
+    const files = await this.dbService.file.findMany({
+      where: {
+        userId,
+        subjectId,
+      },
+    });
+
+    if (files.length === 0) {
+      throw new Error(
+        'No source files found for this subject. Cannot generate mock exam.',
+      );
+    }
+
+    // 2. Create the exam record
+    const subject = await this.dbService.subject.findUnique({
+      where: { id: subjectId },
+      select: { title: true },
+    });
+
+    const exam = await this.dbService.exam.create({
+      data: {
+        description: `Mock Board Exam: ${subject?.title || 'Subject'}`,
+        requestedItems: 70, // Standard board exam size
+        status: ExamStatusEnum.GENERATING,
+        subjectId: subjectId,
+        questionTypes: [QuestionTypeEnum.MULTIPLE_CHOICE], // Standard board exam format
+        isPracticeMode: false, // It's a "mock exam" so it counts
+        timeLimit: 180, // 3 hours
+        userId: userId,
+        sourceFiles: {
+          connect: files.map((f) => ({ id: f.id })),
+        },
+      },
+    });
+
+    // 3. Trigger generation
+    this.eventEmitter.emit('exam.created', exam);
+
+    return exam;
   }
 }

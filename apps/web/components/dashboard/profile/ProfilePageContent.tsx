@@ -7,16 +7,16 @@ import {
   updateProfile,
   uploadProfilePicture,
   removeProfilePicture,
-  type UserProfile,
 } from "@/lib/actions/profileActions";
-import { getGamificationStats } from "@/lib/actions/gamificationActions";
-import { Card } from "@/components/ui/card";
+import { getGamificationStats } from "@/lib/actions/progressActions";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import {
   Dialog,
   DialogContent,
@@ -25,28 +25,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import {
   Camera,
   Edit,
-  Save,
-  X,
   Flame,
-  Star,
-  Trophy,
   Calendar,
   BookOpen,
   FileText,
   Layers,
   Timer,
-  Trash2,
   Loader2,
   ArrowLeft,
+  GraduationCap,
+  Medal,
+  BarChart3,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import { formatDistanceToNow, format } from "date-fns";
+import { format } from "date-fns";
 
 export default function ProfilePageContent() {
   const router = useRouter();
@@ -157,13 +156,15 @@ export default function ProfilePageContent() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 max-w-4xl">
-        <Skeleton className="h-10 w-20 mb-6" />
-        <div className="flex gap-6 items-start">
-          <Skeleton className="h-32 w-32 rounded-full" />
-          <div className="flex-1 space-y-3">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-4 w-64" />
+      <div className="container mx-auto py-8 max-w-5xl">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="space-y-6">
+            <Skeleton className="h-64 w-full rounded-xl" />
+            <Skeleton className="h-40 w-full rounded-xl" />
+          </div>
+          <div className="md:col-span-2 space-y-6">
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-64 w-full rounded-xl" />
           </div>
         </div>
       </div>
@@ -172,7 +173,7 @@ export default function ProfilePageContent() {
 
   if (!profileData) {
     return (
-      <div className="container mx-auto py-8 max-w-4xl text-center">
+      <div className="container mx-auto py-8 max-w-5xl text-center">
         <p className="text-muted-foreground">Failed to load profile</p>
       </div>
     );
@@ -181,353 +182,337 @@ export default function ProfilePageContent() {
   const xpProgress = profileData?.gamification.xpProgress || gamificationData?.xp.progress || 0;
 
   return (
-    <div className="container mx-auto py-8 space-y-8 max-w-4xl px-4">
+    <div className="container mx-auto py-8 space-y-6 max-w-5xl px-4">
       {/* Back Button */}
       <Button
         variant="ghost"
         onClick={() => router.push(`/${userId}/dashboard`)}
-        className="gap-2"
+        className="gap-2 pl-0 hover:bg-transparent hover:text-primary"
       >
         <ArrowLeft className="w-4 h-4" />
         Back to Dashboard
       </Button>
 
-      {/* Profile Header */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col md:flex-row gap-6 items-start md:items-center"
-      >
-        {/* Avatar with Edit Button */}
-        <div className="relative group">
-          <Avatar className="h-32 w-32 border-4 border-white dark:border-slate-800 shadow-xl">
-            <AvatarImage src={profileData.profilePicture || undefined} />
-            <AvatarFallback className="text-3xl bg-gradient-to-br from-pink-500 to-purple-600 text-white">
-              {getInitials(profileData.name)}
-            </AvatarFallback>
-          </Avatar>
-          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                size="icon"
-                className="absolute bottom-0 right-0 rounded-full h-10 w-10 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Camera className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Update Profile Picture</DialogTitle>
-                <DialogDescription>
-                  Upload a new profile picture. Supported formats: JPEG, PNG, GIF, WebP (max 5MB)
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="flex justify-center">
-                  <Avatar className="h-32 w-32">
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        
+        {/* Left Column: Identity & Core Status (1/3) */}
+        <div className="md:col-span-4 space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card className="overflow-hidden border-border/60 shadow-sm">
+              <div className="h-24 bg-slate-100 dark:bg-slate-800/50 w-full" />
+              <div className="px-6 pb-6 -mt-12 relative">
+                <div className="relative inline-block group">
+                  <Avatar className="h-24 w-24 border-4 border-background shadow-sm">
                     <AvatarImage src={profileData.profilePicture || undefined} />
-                    <AvatarFallback className="text-3xl bg-gradient-to-br from-pink-500 to-purple-600 text-white">
+                    <AvatarFallback className="text-xl bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                       {getInitials(profileData.name)}
                     </AvatarFallback>
                   </Avatar>
+                  <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="absolute bottom-0 right-0 rounded-full h-8 w-8 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Camera className="h-3.5 w-3.5" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Update Profile Picture</DialogTitle>
+                        <DialogDescription>
+                          Upload a new profile picture. Max 5MB.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 py-4">
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept="image/jpeg,image/png,image/gif,image/webp"
+                          onChange={handleFileChange}
+                          className="hidden"
+                        />
+                        <div className="flex flex-col gap-2">
+                          <Button
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={uploadMutation.isPending}
+                            className="w-full"
+                          >
+                            {uploadMutation.isPending ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Camera className="h-4 w-4 mr-2" />
+                            )}
+                            Select Image
+                          </Button>
+                          {profileData.profilePicture && (
+                            <Button
+                              variant="outline"
+                              onClick={() => removeMutation.mutate()}
+                              disabled={removeMutation.isPending}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              Remove Current Picture
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/gif,image/webp"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadMutation.isPending}
-                    className="flex-1"
-                  >
-                    {uploadMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <Camera className="h-4 w-4 mr-2" />
-                    )}
-                    Upload New Picture
-                  </Button>
-                  {profileData.profilePicture && (
-                    <Button
-                      variant="destructive"
-                      onClick={() => removeMutation.mutate()}
-                      disabled={removeMutation.isPending}
-                    >
-                      {removeMutation.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
+
+                <div className="mt-4 space-y-1">
+                  {isEditing ? (
+                    <div className="space-y-3">
+                      <Input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder="Your name"
+                        className="font-semibold"
+                      />
+                      <Textarea
+                        value={editBio}
+                        onChange={(e) => setEditBio(e.target.value)}
+                        placeholder="Write a short bio..."
+                        rows={3}
+                        className="text-sm resize-none"
+                      />
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={handleSaveEdit} disabled={updateMutation.isPending}>
+                          Save
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h1 className="text-xl font-bold text-foreground">{profileData.name}</h1>
+                          <p className="text-sm text-muted-foreground">{profileData.email}</p>
+                        </div>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground" onClick={handleStartEdit}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      
+                      {profileData.bio && (
+                        <p className="text-sm text-foreground/80 mt-3 leading-relaxed border-l-2 border-border pl-3 py-1">
+                          {profileData.bio}
+                        </p>
                       )}
-                    </Button>
+                      
+                      <div className="pt-4 flex items-center gap-2 text-xs text-muted-foreground">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>Member since {format(new Date(profileData.createdAt), "MMMM yyyy")}</span>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
-            </DialogContent>
-          </Dialog>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className="border-border/60 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-medium uppercase tracking-wider text-muted-foreground">
+                  Proficiency & Consistency
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Level / Rank */}
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-primary" />
+                      Rank {profileData.gamification.level}
+                    </span>
+                    <span className="text-muted-foreground text-xs">{profileData.gamification.totalXp} XP</span>
+                  </div>
+                  <Progress value={xpProgress} className="h-1.5" />
+                  <p className="text-xs text-muted-foreground text-right">
+                    {Math.round(100 - xpProgress)}% to next rank
+                  </p>
+                </div>
+
+                <Separator />
+
+                {/* Streak */}
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-orange-50 dark:bg-orange-950/20 rounded-md text-orange-600 dark:text-orange-400">
+                      <Flame className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium">Study Streak</p>
+                      <p className="text-xs text-muted-foreground">{profileData.gamification.longestStreak} day record</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xl font-bold">{profileData.gamification.streak}</p>
+                    <p className="text-xs text-muted-foreground">Current</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
-        {/* Name and Bio */}
-        <div className="flex-1 space-y-2">
-          {isEditing ? (
-            <div className="space-y-3">
-              <Input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="Your name"
-                className="text-2xl font-bold h-12"
-              />
-              <Textarea
-                value={editBio}
-                onChange={(e) => setEditBio(e.target.value)}
-                placeholder="Write a short bio..."
-                rows={2}
-              />
-              <div className="flex gap-2">
-                <Button onClick={handleSaveEdit} disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? (
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  ) : (
-                    <Save className="h-4 w-4 mr-2" />
-                  )}
-                  Save
-                </Button>
-                <Button variant="outline" onClick={() => setIsEditing(false)}>
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-              </div>
+        {/* Right Column: Academic Stats & Milestones (2/3) */}
+        <div className="md:col-span-8 space-y-6">
+          
+          {/* Statistics Grid */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-muted-foreground" />
+              Academic Statistics
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <Card className="p-4 border-border/60 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors shadow-sm">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground uppercase font-medium">Exams Taken</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-2xl font-bold">{profileData.stats.exams}</p>
+                    <FileText className="w-4 h-4 text-muted-foreground opacity-50" />
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-4 border-border/60 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors shadow-sm">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground uppercase font-medium">Notes Created</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-2xl font-bold">{profileData.stats.notes}</p>
+                    <BookOpen className="w-4 h-4 text-muted-foreground opacity-50" />
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-4 border-border/60 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors shadow-sm">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground uppercase font-medium">Sessions</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-2xl font-bold">{profileData.stats.studySessions}</p>
+                    <Timer className="w-4 h-4 text-muted-foreground opacity-50" />
+                  </div>
+                </div>
+              </Card>
+              <Card className="p-4 border-border/60 hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors shadow-sm">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground uppercase font-medium">Decks</p>
+                  <div className="flex items-center justify-between">
+                    <p className="text-2xl font-bold">{profileData.stats.flashcardDecks}</p>
+                    <Layers className="w-4 h-4 text-muted-foreground opacity-50" />
+                  </div>
+                </div>
+              </Card>
             </div>
-          ) : (
-            <>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold">{profileData.name}</h1>
-                <Button variant="ghost" size="icon" onClick={handleStartEdit}>
-                  <Edit className="h-4 w-4" />
-                </Button>
+          </motion.div>
+
+          {/* Milestones / Achievements */}
+          {gamificationData && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Medal className="w-5 h-5 text-muted-foreground" />
+                  Milestones
+                </h2>
+                <div className="text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">{gamificationData?.achievements?.unlockedCount || 0}</span>
+                  <span className="mx-1">/</span>
+                  <span>{gamificationData?.achievements?.total || 0} Unlocked</span>
+                </div>
               </div>
-              <p className="text-muted-foreground">{profileData.email}</p>
-              {profileData.bio && (
-                <p className="text-sm max-w-lg">{profileData.bio}</p>
-              )}
-              <p className="text-xs text-muted-foreground flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                Joined {format(new Date(profileData.createdAt), "MMMM yyyy")}
-              </p>
-            </>
+
+              <Tabs defaultValue="achieved" className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-4 h-9">
+                  <TabsTrigger value="achieved" className="text-xs">Achieved</TabsTrigger>
+                  <TabsTrigger value="available" className="text-xs">Achievable</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="achieved" className="space-y-3">
+                  {gamificationData.achievements?.unlocked && gamificationData.achievements.unlocked.length > 0 ? (
+                    gamificationData.achievements.unlocked.map((achievement) => (
+                      <div
+                        key={achievement.id}
+                        className="group flex items-center gap-4 p-3 rounded-lg border border-border/60 bg-card hover:border-border transition-all"
+                      >
+                        <div className="h-10 w-10 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xl">
+                          {achievement.icon || "🏆"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start">
+                            <p className="font-semibold text-sm truncate">{achievement.name}</p>
+                            <Badge variant="outline" className="text-[10px] h-5 border-green-200 text-green-700 bg-green-50/50 dark:border-green-800 dark:bg-green-900/20 dark:text-green-400">
+                              Completed
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                            {achievement.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground text-sm border border-dashed rounded-lg">
+                      No milestones achieved yet. Check the "Achievable" tab!
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="available" className="space-y-3">
+                  {gamificationData.achievements?.locked && gamificationData.achievements.locked.length > 0 ? (
+                    gamificationData.achievements.locked.map((achievement) => (
+                      <div
+                        key={achievement.id}
+                        className="group flex items-center gap-3 p-3 rounded-lg border border-border/60 bg-card hover:border-border transition-all opacity-70 hover:opacity-100"
+                      >
+                        <div className="h-10 w-10 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xl grayscale">
+                          {achievement.icon || "🎯"}
+                        </div>
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex justify-between items-start">
+                            <p className="font-semibold text-sm text-foreground group-hover:text-foreground truncate">
+                              {achievement.name}
+                            </p>
+                            <Badge variant="secondary" className="text-[10px] h-5">
+                              +{achievement.xpReward ?? 0} XP
+                            </Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground line-clamp-2">
+                            {achievement.description || "Complete the required activity to unlock."}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground text-sm border border-dashed rounded-lg">
+                      All milestones unlocked! Amazing work!
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </motion.div>
           )}
         </div>
-      </motion.div>
-
-      {/* Stats Cards */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 md:grid-cols-4 gap-4"
-      >
-        <Card className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 dark:from-blue-950/30 dark:to-cyan-950/30 border-blue-200/50 dark:border-blue-800/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-blue-500/10">
-              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                {profileData.stats.exams}
-              </p>
-              <p className="text-xs text-muted-foreground">Exams</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 border-purple-200/50 dark:border-purple-800/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-purple-500/10">
-              <Layers className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                {profileData.stats.flashcardDecks}
-              </p>
-              <p className="text-xs text-muted-foreground">Decks</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200/50 dark:border-green-800/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-green-500/10">
-              <BookOpen className="h-5 w-5 text-green-600 dark:text-green-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-green-700 dark:text-green-300">
-                {profileData.stats.notes}
-              </p>
-              <p className="text-xs text-muted-foreground">Notes</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/30 dark:to-amber-950/30 border-orange-200/50 dark:border-orange-800/30">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-orange-500/10">
-              <Timer className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                {profileData.stats.studySessions}
-              </p>
-              <p className="text-xs text-muted-foreground">Sessions</p>
-            </div>
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Gamification Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="grid grid-cols-1 md:grid-cols-3 gap-4"
-      >
-        {/* Streak Card */}
-        <Card className="p-6 bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-red-950/30">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-orange-500/10">
-              <Flame className="h-8 w-8 text-orange-500" />
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-orange-700 dark:text-orange-300">
-                {profileData.gamification.streak}
-              </p>
-              <p className="text-sm text-muted-foreground">Day Streak</p>
-            </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-orange-200/50 dark:border-orange-800/30">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Longest streak</span>
-              <span className="font-medium">{profileData.gamification.longestStreak} days</span>
-            </div>
-            <div className="flex justify-between text-sm mt-1">
-              <span className="text-muted-foreground">Total study days</span>
-              <span className="font-medium">{profileData.gamification.totalStudyDays} days</span>
-            </div>
-          </div>
-        </Card>
-
-        {/* Level Card */}
-        <Card className="p-6 bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-purple-500/10">
-              <Star className="h-8 w-8 text-purple-500 fill-purple-500" />
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-purple-700 dark:text-purple-300">
-                Level {profileData.gamification.level}
-              </p>
-              <p className="text-sm text-muted-foreground">{profileData.gamification.totalXp} XP</p>
-            </div>
-          </div>
-          <div className="mt-4 pt-4 border-t border-purple-200/50 dark:border-purple-800/30 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Progress to next level</span>
-              <span className="font-medium">{Math.round(xpProgress)}%</span>
-            </div>
-            <Progress value={xpProgress} className="h-2" />
-          </div>
-        </Card>
-
-        {/* Achievements Card */}
-        <Card className="p-6 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/30 dark:to-amber-950/30">
-          <div className="flex items-center gap-4">
-            <div className="p-3 rounded-xl bg-yellow-500/10">
-              <Trophy className="h-8 w-8 text-yellow-500" />
-            </div>
-            <div>
-              <p className="text-3xl font-bold text-yellow-700 dark:text-yellow-300">
-                {gamificationData?.achievements.unlockedCount || 0}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                of {gamificationData?.achievements.total || 0} achievements
-              </p>
-            </div>
-          </div>
-        </Card>
-      </motion.div>
-
-      {/* Recent Achievements */}
-      {profileData.gamification.recentAchievements.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-            <Trophy className="h-5 w-5 text-yellow-500" />
-            Recent Achievements
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {profileData.gamification.recentAchievements.map((achievement) => (
-              <Card
-                key={achievement.id}
-                className="p-4 bg-gradient-to-br from-yellow-50/50 to-amber-50/50 dark:from-yellow-950/20 dark:to-amber-950/20 border-yellow-200/50 dark:border-yellow-800/30"
-              >
-                <div className="text-center space-y-2">
-                  <span className="text-3xl">{achievement.icon}</span>
-                  <p className="font-medium text-sm">{achievement.name}</p>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {achievement.description}
-                  </p>
-                  <Badge variant="secondary" className="text-xs">
-                    +{achievement.xpReward} XP
-                  </Badge>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* All Achievements Button */}
-      {gamificationData && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-        >
-          <h2 className="text-xl font-semibold mb-4">All Achievements</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {gamificationData.achievements.unlocked.map((achievement) => (
-              <Card
-                key={achievement.id}
-                className="p-3 bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20 border-yellow-200 dark:border-yellow-800/50"
-              >
-                <div className="text-center space-y-1">
-                  <span className="text-2xl">{achievement.icon}</span>
-                  <p className="font-medium text-xs">{achievement.name}</p>
-                </div>
-              </Card>
-            ))}
-            {gamificationData.achievements.locked.map((achievement) => (
-              <Card
-                key={achievement.id}
-                className="p-3 bg-muted/30 border-muted opacity-50"
-              >
-                <div className="text-center space-y-1">
-                  <span className="text-2xl">🔒</span>
-                  <p className="font-medium text-xs text-muted-foreground">
-                    {achievement.name}
-                  </p>
-                </div>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
-      )}
+      </div>
     </div>
   );
 }
-

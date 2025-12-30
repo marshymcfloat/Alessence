@@ -9,14 +9,15 @@ import {
   getTaskCompletionRates,
   getWeakAreas,
 } from "@/lib/actions/analyticsActions";
+import { getGamificationStats } from "@/lib/actions/progressActions";
 import { ExamScoreTrendChart } from "./analytics/ExamScoreTrendChart";
 import { SubjectPerformanceChart } from "./analytics/SubjectPerformanceChart";
 import { StudyTimeChart } from "./analytics/StudyTimeChart";
 import { TaskCompletionChart } from "./analytics/TaskCompletionChart";
+import { StudyHeatmap } from "./analytics/StudyHeatmap";
 import { WeakAreasCard } from "./analytics/WeakAreasCard";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Calendar, TrendingUp, Clock, CheckCircle2 } from "lucide-react";
+import { MasteryRadar } from "./MasteryRadar";
 import {
   Select,
   SelectContent,
@@ -24,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TrendingUp, Clock, CheckCircle2 } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function PerformanceDashboard() {
@@ -54,19 +56,24 @@ export function PerformanceDashboard() {
     queryFn: getWeakAreas,
   });
 
+  const { data: gamificationStats, isLoading: loadingStats } = useQuery({
+    queryKey: ["gamification-stats"],
+    queryFn: getGamificationStats,
+  });
+
   const isLoading =
     loadingTrends ||
     loadingPerformance ||
     loadingStudyTime ||
     loadingTasks ||
-    loadingWeakAreas;
+    loadingWeakAreas ||
+    loadingStats;
 
   // Calculate summary stats
   const totalStudyHours =
     studyTime?.success && studyTime.data?.data
       ? Math.round(
-          (studyTime.data.data.reduce((sum, d) => sum + d.duration, 0) /
-            3600) *
+          (studyTime.data.data.reduce((sum, d) => sum + d.duration, 0) / 3600) *
             100
         ) / 100
       : 0;
@@ -86,14 +93,14 @@ export function PerformanceDashboard() {
       : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header with Time Range Selector */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent">
             Performance Dashboard
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Track your study progress and performance metrics
           </p>
         </div>
@@ -101,7 +108,7 @@ export function PerformanceDashboard() {
           value={timeRange.toString()}
           onValueChange={(value) => setTimeRange(Number(value))}
         >
-          <SelectTrigger className="w-40">
+          <SelectTrigger className="w-32 h-8 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -114,23 +121,23 @@ export function PerformanceDashboard() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <Card className="p-6">
+          <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">
+                <p className="text-xs text-muted-foreground mb-1">
                   Average Exam Score
                 </p>
-                <p className="text-3xl font-bold">
+                <p className="text-2xl font-bold">
                   {avgScore > 0 ? `${avgScore}%` : "N/A"}
                 </p>
               </div>
-              <TrendingUp className="w-8 h-8 text-primary" />
+              <TrendingUp className="w-5 h-5 text-primary" />
             </div>
           </Card>
         </motion.div>
@@ -140,17 +147,17 @@ export function PerformanceDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
         >
-          <Card className="p-6">
+          <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">
+                <p className="text-xs text-muted-foreground mb-1">
                   Total Study Time
                 </p>
-                <p className="text-3xl font-bold">
+                <p className="text-2xl font-bold">
                   {totalStudyHours > 0 ? `${totalStudyHours}h` : "0h"}
                 </p>
               </div>
-              <Clock className="w-8 h-8 text-primary" />
+              <Clock className="w-5 h-5 text-primary" />
             </div>
           </Card>
         </motion.div>
@@ -160,22 +167,39 @@ export function PerformanceDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <Card className="p-6">
+          <Card className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">
+                <p className="text-xs text-muted-foreground mb-1">
                   Tasks Completed
                 </p>
-                <p className="text-3xl font-bold">{totalTasksCompleted}</p>
+                <p className="text-2xl font-bold">{totalTasksCompleted}</p>
               </div>
-              <CheckCircle2 className="w-8 h-8 text-primary" />
+              <CheckCircle2 className="w-5 h-5 text-primary" />
             </div>
           </Card>
         </motion.div>
       </div>
 
+      {/* Study Heatmap */}
+      {gamificationStats?.success && gamificationStats.data?.heatmap && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+        >
+          <StudyHeatmap
+            data={gamificationStats.data.heatmap}
+            streakCurrent={gamificationStats.data.streak.current}
+            streakLongest={gamificationStats.data.streak.longest}
+          />
+        </motion.div>
+      )}
+
       {/* Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <MasteryRadar />
+
         {scoreTrends?.success && scoreTrends.data?.trends && (
           <ExamScoreTrendChart data={scoreTrends.data.trends} />
         )}
@@ -197,17 +221,20 @@ export function PerformanceDashboard() {
       </div>
 
       {/* Weak Areas */}
-      {weakAreas?.success && weakAreas.data?.weakAreas && (
-        <WeakAreasCard weakAreas={weakAreas.data.weakAreas} />
-      )}
+      {weakAreas?.success &&
+        Array.isArray(weakAreas.data) &&
+        weakAreas.data.length > 0 && (
+          <WeakAreasCard weakAreas={weakAreas.data} />
+        )}
 
       {isLoading && (
         <Card className="p-12 text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-muted-foreground mt-4">Loading analytics...</p>
+          <p className="text-sm text-muted-foreground mt-4">
+            Loading analytics...
+          </p>
         </Card>
       )}
     </div>
   );
 }
-

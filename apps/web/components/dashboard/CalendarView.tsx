@@ -118,14 +118,14 @@ export function CalendarView() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent">
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent">
             Calendar
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             View your tasks, exams, and study sessions
           </p>
         </div>
@@ -134,6 +134,7 @@ export function CalendarView() {
             variant="outline"
             size="icon"
             onClick={() => navigateMonth("prev")}
+            className="h-8 w-8"
           >
             <ChevronLeft className="w-4 h-4" />
           </Button>
@@ -141,25 +142,28 @@ export function CalendarView() {
             variant="outline"
             size="icon"
             onClick={() => navigateMonth("next")}
+            className="h-8 w-8"
           >
             <ChevronRight className="w-4 h-4" />
           </Button>
           <Button
             variant="outline"
+            size="sm"
             onClick={() => {
               setCurrentMonth(new Date());
               setSelectedDate(undefined);
             }}
+            className="h-8"
           >
             Today
           </Button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Calendar */}
         <div className="lg:col-span-2">
-          <Card className="p-6">
+          <Card className="p-4">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -173,24 +177,32 @@ export function CalendarView() {
                 onMonthChange={setCurrentMonth}
                 modifiers={modifiers}
                 modifiersClassNames={modifiersClassNames}
-                className="rounded-md border"
+                className="rounded-md border w-full"
+                classNames={{
+                   month: "space-y-4 w-full",
+                   table: "w-full border-collapse space-y-1",
+                   head_row: "flex w-full justify-between",
+                   row: "flex w-full mt-2 justify-between",
+                   cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20 h-9 w-9",
+                   day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+                }}
               />
             )}
           </Card>
 
           {/* Legend */}
-          <Card className="p-4 mt-4">
-            <div className="flex flex-wrap gap-4 text-sm">
+          <Card className="p-3 mt-4">
+            <div className="flex flex-wrap gap-4 text-xs">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
                 <span className="text-muted-foreground">Tasks</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-pink-500"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-pink-500"></div>
                 <span className="text-muted-foreground">Exams</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
                 <span className="text-muted-foreground">Study Sessions</span>
               </div>
             </div>
@@ -199,8 +211,8 @@ export function CalendarView() {
 
         {/* Events List */}
         <div className="space-y-4">
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4 flex items-center gap-2">
+          <Card className="p-4">
+            <h3 className="font-semibold mb-4 flex items-center gap-2 text-sm">
               <CalendarIcon className="w-4 h-4" />
               {selectedDate
                 ? `Events on ${format(selectedDate, "MMM dd, yyyy")}`
@@ -215,7 +227,7 @@ export function CalendarView() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       className={cn(
-                        "p-3 rounded-lg border cursor-pointer hover:bg-muted transition-colors",
+                        "p-2.5 rounded-lg border cursor-pointer hover:bg-muted transition-colors",
                         `border-l-4`
                       )}
                       style={{
@@ -226,7 +238,7 @@ export function CalendarView() {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
                             {getEventIcon(event.type)}
-                            <Badge variant="secondary" className="text-xs">
+                            <Badge variant="secondary" className="text-[10px] h-5">
                               {getEventTypeLabel(event.type)}
                             </Badge>
                           </div>
@@ -234,12 +246,12 @@ export function CalendarView() {
                             {event.title}
                           </p>
                           {event.metadata?.subject && (
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               {event.metadata.subject.title}
                             </p>
                           )}
                           {event.startTime && (
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-0.5">
                               {format(parseISO(event.startTime), "h:mm a")}
                             </p>
                           )}
@@ -249,20 +261,20 @@ export function CalendarView() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">
+                <p className="text-xs text-muted-foreground text-center py-4">
                   No events on this date
                 </p>
               )
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="text-xs text-muted-foreground text-center py-4">
                 Click on a date to view events
               </p>
             )}
           </Card>
 
           {/* Upcoming Events */}
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">Upcoming This Month</h3>
+          <Card className="p-4">
+            <h3 className="font-semibold mb-4 text-sm">Upcoming This Month</h3>
             {events.length > 0 ? (
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {events.slice(0, 10).map((event) => (
@@ -272,18 +284,18 @@ export function CalendarView() {
                   >
                     <div className="flex items-center gap-2 mb-1">
                       {getEventIcon(event.type)}
-                      <span className="font-medium truncate">
+                      <span className="font-medium truncate text-xs">
                         {event.title}
                       </span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-[10px] text-muted-foreground">
                       {format(parseISO(event.date), "MMM dd")}
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="text-xs text-muted-foreground text-center py-4">
                 No upcoming events
               </p>
             )}

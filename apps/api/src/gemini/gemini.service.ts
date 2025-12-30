@@ -51,6 +51,7 @@ export class GeminiService {
     description: string,
     itemCount: number,
     questionTypes: QuestionTypeEnum[],
+    weakTopics: string[] = [],
   ): Promise<GeneratedQuestion[]> {
     const typeCounts = this.distributeQuestionTypes(itemCount, questionTypes);
     const typeInstructions = this.buildQuestionTypeInstructions(
@@ -58,11 +59,21 @@ export class GeminiService {
       questionTypes,
     );
 
+    const weakTopicsInstruction = weakTopics.length > 0
+      ? `
+      PRIORITY TOPICS (Student Weaknesses):
+      The student has struggled with the following topics. If the SOURCE MATERIAL covers these, you MUST prioritize generating questions about them to help the student improve:
+      ${weakTopics.map(t => `- ${t}`).join('\n')}
+      `
+      : '';
+
     const prompt = `
       You are an expert professor from top Philippine universities (like UP, Ateneo, La Salle, Jose Rizal University), specializing in BOTH Accountancy and Law. Your task is to create a comprehensive and challenging practice exam with ${itemCount} questions based ONLY on the provided context.
 
       EXAM CONTEXT:
       The user has described the exam as follows: "${description}". Use this description to focus the questions on the most relevant topics within the context.
+
+      ${weakTopicsInstruction}
 
       SOURCE MATERIAL:
       ---
@@ -138,7 +149,7 @@ export class GeminiService {
 
     try {
       const result = (await this.genAI.models.generateContent({
-        model: 'gemini-2.5-flash-lite',
+        model: 'gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
@@ -305,7 +316,7 @@ export class GeminiService {
 
     try {
       const result = (await this.genAI.models.generateContent({
-        model: 'gemini-2.5-flash-lite',
+        model: 'gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
@@ -361,12 +372,17 @@ export class GeminiService {
 
       let cleanedText = responseText.trim();
       if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        cleanedText = cleanedText
+          .replace(/^```json\s*/, '')
+          .replace(/\s*```$/, '');
       } else if (cleanedText.startsWith('```')) {
         cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
 
-      const parsed = JSON.parse(cleanedText) as Array<{ front: string; back: string }>;
+      const parsed = JSON.parse(cleanedText) as Array<{
+        front: string;
+        back: string;
+      }>;
 
       if (!Array.isArray(parsed)) {
         throw new Error('Response is not an array of flashcards.');
@@ -379,7 +395,9 @@ export class GeminiService {
       // Validate structure
       for (const card of parsed) {
         if (!card.front || !card.back) {
-          throw new Error('Invalid flashcard structure: missing front or back.');
+          throw new Error(
+            'Invalid flashcard structure: missing front or back.',
+          );
         }
       }
 
@@ -448,12 +466,12 @@ export class GeminiService {
     userAnswer: string,
     correctAnswer: string,
     questionText: string,
-  ): Promise<boolean> {
+  ): Promise<{ isCorrect: boolean; reason?: string }> {
     const normalizedUserAnswer = userAnswer.trim();
     const normalizedCorrectAnswer = correctAnswer.trim();
 
     if (!normalizedUserAnswer || !normalizedCorrectAnswer) {
-      return false;
+      return { isCorrect: false, reason: 'Empty answer provided.' };
     }
 
     const userWords = normalizedUserAnswer.split(/\s+/).length;
@@ -461,10 +479,11 @@ export class GeminiService {
     const isShortAnswer = userWords <= 2 && correctWords <= 2;
 
     if (isShortAnswer) {
-      return (
-        normalizedUserAnswer.toLowerCase() ===
-        normalizedCorrectAnswer.toLowerCase()
-      );
+      const isCorrect = normalizedUserAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase();
+      return { 
+        isCorrect, 
+        reason: isCorrect ? 'Exact match.' : `Expected "${correctAnswer}".` 
+      };
     }
 
     try {
@@ -487,13 +506,13 @@ Evaluate if the student's answer demonstrates the same understanding and correct
 Respond with ONLY a JSON object in this exact format:
 {
   "isCorrect": true or false,
-  "reason": "Brief explanation of why the answer is correct or incorrect"
+  "reason": "Brief explanation (1-2 sentences) of why the answer is correct or incorrect. Correct the student if wrong."
 }
 
 Do not include any text before or after the JSON object.`;
 
       const result = (await this.genAI.models.generateContent({
-        model: 'gemini-2.5-flash-lite',
+        model: 'gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
@@ -542,10 +561,8 @@ Do not include any text before or after the JSON object.`;
         this.logger.warn(
           'Failed to extract response from Gemini for answer evaluation. Falling back to case-insensitive comparison.',
         );
-        return (
-          normalizedUserAnswer.toLowerCase() ===
-          normalizedCorrectAnswer.toLowerCase()
-        );
+        const isCorrect = normalizedUserAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase();
+        return { isCorrect, reason: 'AI evaluation failed, used exact match.' };
       }
 
       let cleanedText = responseText.trim();
@@ -566,22 +583,21 @@ Do not include any text before or after the JSON object.`;
         this.logger.warn(
           'Invalid response format from Gemini for answer evaluation. Falling back to case-insensitive comparison.',
         );
-        return (
-          normalizedUserAnswer.toLowerCase() ===
-          normalizedCorrectAnswer.toLowerCase()
-        );
+         const isCorrect = normalizedUserAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase();
+        return { isCorrect, reason: 'AI returned invalid format.' };
       }
 
-      return parsedResponse.isCorrect;
+      return {
+        isCorrect: parsedResponse.isCorrect,
+        reason: parsedResponse.reason || (parsedResponse.isCorrect ? 'Correct.' : 'Incorrect.'),
+      };
     } catch (error) {
       this.logger.error(
         `Error evaluating answer with AI: ${error instanceof Error ? error.message : String(error)}. Falling back to case-insensitive comparison.`,
       );
 
-      return (
-        normalizedUserAnswer.toLowerCase() ===
-        normalizedCorrectAnswer.toLowerCase()
-      );
+      const isCorrect = normalizedUserAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase();
+      return { isCorrect, reason: 'AI evaluation error.' };
     }
   }
 
@@ -652,7 +668,7 @@ Do not include any text before or after the JSON object.`;
 
     try {
       const result = (await this.genAI.models.generateContent({
-        model: 'gemini-2.5-flash-lite',
+        model: 'gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
@@ -729,7 +745,7 @@ Do not include any text before or after the JSON object.`;
   async generateContent(prompt: string): Promise<string> {
     try {
       const result = (await this.genAI.models.generateContent({
-        model: 'gemini-2.5-flash-lite',
+        model: 'gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
@@ -800,6 +816,67 @@ Do not include any text before or after the JSON object.`;
     }
   }
 
+  async generateMathProblem(
+    topic: string,
+    context?: string,
+    difficulty: 'EASY' | 'MEDIUM' | 'HARD' = 'MEDIUM',
+  ): Promise<{
+    problem: string;
+    solution: string;
+    answer: string;
+    explanation: string;
+  }> {
+    const prompt = `
+      You are an expert accounting and law professor. Create a **unique, variable-based computational problem** for the topic: "${topic}".
+      
+      ${context ? `CONTEXT/SOURCE MATERIAL:\n${context}\n` : ''}
+
+      DIFFICULTY: ${difficulty}
+
+      REQUIREMENTS:
+      1. **Scenario-Based:** Create a realistic scenario (e.g., "ABC Corp.", "Mr. Cruz").
+      2. **New Numbers:** Generate random but realistic numbers for this specific problem. Do not use generic example numbers (e.g., instead of 100,000, use 124,500).
+      3. **Process-Oriented:** The problem must require multiple steps to solve (e.g., gross income -> deductions -> taxable income -> tax due).
+      4. **Step-by-Step Solution:** Provide a detailed computation trace showing exactly how the answer is derived.
+      5. **Explanation:** Explain the principle/law being applied (e.g., "Under CREATE Law, corporate income tax is...").
+
+      RESPONSE FORMAT:
+      Respond with ONLY a JSON object in this exact format:
+      {
+        "problem": "The full text of the problem scenario...",
+        "solution": "Step 1: ... \\nStep 2: ...",
+        "answer": "The final numerical answer (formatted)",
+        "explanation": "Brief explanation of the concept/principle used"
+      }
+      Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      
+      let cleanedText = responseText.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText
+          .replace(/^```json\s*/, '')
+          .replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      const parsed = JSON.parse(cleanedText);
+      
+      return {
+        problem: parsed.problem,
+        solution: parsed.solution,
+        answer: parsed.answer,
+        explanation: parsed.explanation,
+      };
+    } catch (error) {
+      this.logger.error('Error generating math problem:', error);
+      throw new Error('Failed to generate math problem.');
+    }
+  }
+
   private getSummaryTemplateInstructions(template: string): string {
     switch (template) {
       case 'KEY_POINTS':
@@ -826,6 +903,15 @@ Do not include any text before or after the JSON object.`;
           - Connect related ideas
           - Show how concepts build upon each other
         `;
+      case 'FILL_IN_THE_BLANKS':
+        return `
+          Format: Active recall summary with blanked-out key terms.
+          - Rewrite the content as a summary, but replace key keywords, numbers, or legal articles with "_______" (underscores).
+          - Focus on critical information that a student needs to memorize (e.g., "The corporate term is _______ years.").
+          - Number the blanks if necessary.
+          - PROVIDE AN ANSWER KEY at the very bottom of the response, separated by a horizontal rule (---).
+          - Ensure the context around the blank provides enough clues for a knowledgeable student to answer.
+        `;
       case 'CUSTOM':
         return `
           Format: Custom format based on the document structure and user requirements.
@@ -843,6 +929,301 @@ Do not include any text before or after the JSON object.`;
           - Include examples and practical applications
           - Maintain thorough coverage of the source material
         `;
+    }
+  }
+
+  /**
+   * Generate a structured Case Digest from full case text
+   */
+  async generateCaseDigest(caseText: string): Promise<{
+    title: string;
+    citation: string;
+    facts: string;
+    issues: string[];
+    ruling: string;
+    ratio: string;
+    doctrine: string;
+  }> {
+    const prompt = `
+You are an expert Philippine law professor specializing in legal research and case analysis.
+
+Generate a comprehensive CASE DIGEST from the following case text. Follow the standard Philippine law school format.
+
+CASE TEXT:
+---
+${caseText}
+---
+
+RESPONSE FORMAT:
+Return ONLY a JSON object with this exact structure:
+{
+  "title": "Case Name (e.g., People of the Philippines v. Juan Dela Cruz)",
+  "citation": "G.R. No. XXXXX, Date, Ponente (e.g., G.R. No. 123456, January 1, 2024, J. Santos)",
+  "facts": "Concise summary of material facts in paragraph form. Include: parties, relevant dates, transactions, and procedural history.",
+  "issues": ["Issue 1: Whether...", "Issue 2: Whether..."],
+  "ruling": "The Supreme Court GRANTED/DENIED the petition. [Summary of disposition]",
+  "ratio": "The reasoning of the Court. Explain the legal analysis and how the Court applied the law to the facts.",
+  "doctrine": "The legal principle established or reiterated. This is the quotable holding that can be cited in future cases."
+}
+
+GUIDELINES:
+1. **Facts**: Be concise but complete. Include only material facts that affect the legal issues.
+2. **Issues**: Frame as questions starting with "Whether..." 
+3. **Ruling**: State the disposition clearly (granted, denied, affirmed, reversed, etc.)
+4. **Ratio**: The "why" behind the ruling - the Court's legal reasoning
+5. **Doctrine**: The abstract legal principle - suitable for citation in briefs
+
+Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      
+      let cleanedText = responseText.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      return JSON.parse(cleanedText);
+    } catch (error) {
+      this.logger.error('Error generating case digest:', error);
+      throw new Error('Failed to generate case digest. Please ensure the text is a valid legal case.');
+    }
+  }
+
+  /**
+   * Generate flashcards from a legal codal article/provision
+   */
+  async generateCodalFlashcards(
+    articleText: string,
+    lawName?: string,
+  ): Promise<Array<{ front: string; back: string; category: string }>> {
+    const prompt = `
+You are an expert Philippine law professor. Generate comprehensive flashcards from this legal provision.
+
+${lawName ? `LAW: ${lawName}` : ''}
+ARTICLE/PROVISION TEXT:
+---
+${articleText}
+---
+
+FLASHCARD GENERATION RULES:
+1. **Elements Cards**: If the provision has elements (e.g., elements of a crime, requisites of a contract), create one card per element
+2. **Definition Cards**: Key terms must have their own definition cards
+3. **Enumeration Cards**: Lists/enumerations should be broken into individual cards
+4. **Exception Cards**: Any exceptions or qualifications get their own cards
+5. **Penalty Cards**: If penalties are mentioned, create penalty-specific cards
+6. **Comparison Cards**: If the provision distinguishes between concepts, create comparison cards
+
+RESPONSE FORMAT:
+Return ONLY a JSON array:
+[
+  {
+    "front": "What are the elements of [concept]?",
+    "back": "1. Element one\\n2. Element two\\n3. Element three",
+    "category": "ELEMENTS"
+  },
+  {
+    "front": "Define [term] under Article ___",
+    "back": "[Definition from the provision]",
+    "category": "DEFINITION"
+  }
+]
+
+CATEGORIES: ELEMENTS, DEFINITION, REQUISITES, EXCEPTION, PENALTY, ENUMERATION, PROCEDURE, COMPARISON, GENERAL
+
+Generate 5-15 flashcards depending on the complexity of the provision.
+Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      
+      let cleanedText = responseText.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      return JSON.parse(cleanedText);
+    } catch (error) {
+      this.logger.error('Error generating codal flashcards:', error);
+      throw new Error('Failed to generate flashcards from the legal provision.');
+    }
+  }
+
+  /**
+   * Generate a step-by-step audit/computation problem with detailed trace
+   */
+  async generateAuditProblem(
+    topic: string,
+    context?: string,
+    difficulty: 'EASY' | 'MEDIUM' | 'HARD' = 'MEDIUM',
+  ): Promise<{
+    problem: string;
+    given: string[];
+    steps: Array<{ step: number; description: string; computation: string; result: string }>;
+    finalAnswer: string;
+    auditNote: string;
+    relatedStandards: string[];
+  }> {
+    const prompt = `
+You are an expert CPA and accounting professor. Create a STEP-BY-STEP AUDIT/COMPUTATION problem that mimics a professor's whiteboard solution.
+
+TOPIC: ${topic}
+DIFFICULTY: ${difficulty}
+${context ? `CONTEXT:\n${context}` : ''}
+
+REQUIREMENTS:
+1. **Realistic Scenario**: Use a Philippine company name and realistic amounts (avoid round numbers like 100,000)
+2. **Given Data**: List all provided information clearly
+3. **Computation Trace**: Show EVERY step as a professor would on a whiteboard
+4. **Audit Notes**: Include relevant audit procedures or considerations
+5. **Standards Reference**: Cite applicable PAS/PFRS/PSA standards
+
+RESPONSE FORMAT:
+Return ONLY a JSON object:
+{
+  "problem": "Full problem statement with the scenario and what is being asked",
+  "given": [
+    "Sales revenue: ₱2,456,789",
+    "Cost of goods sold: ₱1,234,567",
+    "..."
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "description": "Calculate Gross Profit",
+      "computation": "₱2,456,789 - ₱1,234,567",
+      "result": "₱1,222,222"
+    },
+    {
+      "step": 2,
+      "description": "...",
+      "computation": "...",
+      "result": "..."
+    }
+  ],
+  "finalAnswer": "The [answer] is ₱X,XXX,XXX",
+  "auditNote": "Key audit considerations: [relevant audit procedures, assertions to test, common errors]",
+  "relatedStandards": ["PAS 1, paragraph 82", "PFRS 15, paragraphs 31-34"]
+}
+
+Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      
+      let cleanedText = responseText.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      return JSON.parse(cleanedText);
+    } catch (error) {
+      this.logger.error('Error generating audit problem:', error);
+      throw new Error('Failed to generate audit problem.');
+    }
+  }
+
+  /**
+   * Find related topics/documents for cross-document linking
+   */
+  async findRelatedTopics(
+    content: string,
+    existingTopics: string[],
+  ): Promise<Array<{ topic: string; relevance: number; reason: string }>> {
+    if (existingTopics.length === 0) {
+      return [];
+    }
+
+    const prompt = `
+Analyze the following content and identify which existing topics it relates to.
+
+NEW CONTENT:
+---
+${content.substring(0, 3000)}
+---
+
+EXISTING TOPICS:
+${existingTopics.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+
+For each related topic, provide:
+1. The topic name (exactly as listed)
+2. Relevance score (0-100, where 100 is highly relevant)
+3. Brief reason for the connection
+
+RESPONSE FORMAT:
+Return ONLY a JSON array:
+[
+  {
+    "topic": "Exact topic name from the list",
+    "relevance": 85,
+    "reason": "Both discuss tax computation under CREATE Law"
+  }
+]
+
+Only include topics with relevance >= 50. Return empty array [] if no significant connections.
+Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      
+      let cleanedText = responseText.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      const results = JSON.parse(cleanedText);
+      return results.filter((r: { relevance: number }) => r.relevance >= 50);
+    } catch (error) {
+      this.logger.error('Error finding related topics:', error);
+      return [];
+    }
+  }
+
+  async generateSubTopics(
+    parentTopic: string,
+    subjectTitle: string,
+  ): Promise<string[]> {
+    const prompt = `
+      You are an expert curriculum developer for the Philippine CPA Licensure Examination (CPALE).
+      
+      Generate a list of 3-7 distinct sub-topics for the topic "${parentTopic}" under the subject "${subjectTitle}".
+      
+      Requirements:
+      - The sub-topics must be specific and relevant to the Philippine board exam syllabus (TOS).
+      - Return ONLY the list of sub-topics as a valid JSON array of strings.
+      - Do not include numbering or bullets in the strings.
+      - Example output: ["Sub-topic 1", "Sub-topic 2", "Sub-topic 3"]
+    `;
+
+    try {
+      const result = await this.generateContent(prompt);
+      
+      // Attempt to parse JSON
+      const jsonMatch = result.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+      
+      // Fallback: split by newlines if JSON parsing fails
+      return result.split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0 && !line.startsWith('[') && !line.startsWith(']'))
+        .map(line => line.replace(/^[-*•\d\.]+\s+/, '')); // Remove bullets/numbers
+    } catch (error) {
+      this.logger.error('Failed to generate sub-topics', error);
+      return [];
     }
   }
 }

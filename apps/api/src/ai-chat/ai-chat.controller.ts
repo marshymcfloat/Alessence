@@ -13,6 +13,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { AiChatService, ChatMessage, ChatContext } from './ai-chat.service';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import type { AuthenticatedUser } from 'src/auth/decorator/get-user.decorator';
+import { IsEnum, IsOptional } from 'class-validator';
 
 interface ChatDto {
   message: string;

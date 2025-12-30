@@ -20,8 +20,10 @@ import { FlashcardModule } from './flashcard/flashcard.module';
 import { FriendshipModule } from './friendship/friendship.module';
 import { SharingModule } from './sharing/sharing.module';
 import { AiChatModule } from './ai-chat/ai-chat.module';
-import { GamificationModule } from './gamification/gamification.module';
+import { ProgressModule } from './progress/progress.module';
 import { ProfileModule } from './profile/profile.module';
+import { DrillModule } from './drill/drill.module';
+import { LawModule } from './law/law.module';
 
 @Module({
   imports: [
@@ -48,8 +50,10 @@ import { ProfileModule } from './profile/profile.module';
     FriendshipModule,
     SharingModule,
     AiChatModule,
-    GamificationModule,
+    ProgressModule,
     ProfileModule,
+    DrillModule,
+    LawModule,
   ],
   controllers: [],
   providers: [],

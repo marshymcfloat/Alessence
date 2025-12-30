@@ -50,6 +50,7 @@ export interface SubmitAttemptResult {
     isCorrect: boolean;
     userAnswer: string;
     correctAnswer: string;
+    feedback?: string;
   }>;
 }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, BookOpen, Menu } from "lucide-react";
 import { Button } from "../ui/button";
@@ -14,14 +15,54 @@ const DashboardSidebar = ({
   subjects?: SubjectWithTaskProgress[];
 }) => {
   const { isExpanded, setIsExpanded } = useSidebar();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   return (
-    <motion.aside
-      initial={{ x: -20, opacity: 0 }}
-      animate={{
-        width: isExpanded ? "320px" : "80px",
-        opacity: 1,
-      }}
+    <>
+      {/* Mobile backdrop */}
+      {isMobile && isExpanded && (
+        <button
+          type="button"
+          aria-label="Close subjects sidebar"
+          className="fixed inset-0 z-20 bg-black/30"
+          onClick={() => setIsExpanded(false)}
+        />
+      )}
+
+      {/* Mobile open button when closed */}
+      {isMobile && !isExpanded && (
+        <Button
+          type="button"
+          onClick={() => setIsExpanded(true)}
+          className="fixed bottom-4 left-4 z-20 rounded-full shadow-lg md:hidden"
+        >
+          <Menu className="w-4 h-4 mr-2" />
+          Subjects
+        </Button>
+      )}
+
+      <motion.aside
+        initial={{ x: -20, opacity: 0 }}
+        animate={{
+          width: isMobile
+            ? isExpanded
+              ? "min(85vw, 320px)"
+              : "0px"
+            : isExpanded
+              ? "320px"
+              : "80px",
+          x: isMobile ? (isExpanded ? 0 : -20) : 0,
+          opacity: 1,
+        }}
       transition={{
         type: "spring",
         stiffness: 300,
@@ -29,10 +70,13 @@ const DashboardSidebar = ({
         opacity: { duration: 0.3 },
       }}
       className={cn(
-        "fixed left-0 top-16 h-[calc(100vh-4rem)] z-30",
+        "fixed left-0 top-16 h-[calc(100dvh-4rem)] z-30",
         "bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl",
         "border-r-2 border-gray-200/50 dark:border-gray-800/50",
-        "shadow-2xl"
+        "shadow-2xl",
+        isMobile && "z-30",
+        isMobile && !isExpanded && "pointer-events-none",
+        "md:pointer-events-auto"
       )}
     >
       <div className="h-full flex flex-col">
@@ -140,6 +184,7 @@ const DashboardSidebar = ({
         }
       `}</style>
     </motion.aside>
+    </>
   );
 };
 

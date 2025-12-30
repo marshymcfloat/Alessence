@@ -12,6 +12,7 @@ export interface ChatMessage {
 export interface ChatContext {
   subjectId?: number;
   fileIds?: number[];
+  mode?: 'STANDARD' | 'SOCRATIC' | 'CITATION_VERIFICATION';
 }
 
 export interface ChatResponse {

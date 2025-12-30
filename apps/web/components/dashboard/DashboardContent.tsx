@@ -16,6 +16,8 @@ import { SubjectsOverview } from "./SubjectsOverview";
 import ExamsList from "./ExamsList";
 import SummariesList from "./SummariesList";
 import { FlashcardDeckList } from "./FlashcardDeckList";
+import DrillMode from "./DrillMode";
+import LawTools from "./LawTools";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ClipboardList,
@@ -32,6 +34,9 @@ import {
   ScrollText,
   Layers,
   RefreshCw,
+  Wrench,
+  Gavel,
+  Calculator,
 } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -61,6 +66,7 @@ const DashboardContent = ({
   const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
   const [timerSubTab, setTimerSubTab] = useState<"timer" | "goals" | "history">("timer");
   const [studySubTab, setStudySubTab] = useState<"exams" | "summaries" | "flashcards">("exams");
+  const [toolsSubTab, setToolsSubTab] = useState<"drills" | "law">("drills");
   const [isNewDeckDialogOpen, setIsNewDeckDialogOpen] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();
@@ -143,6 +149,13 @@ const DashboardContent = ({
                 >
                   <BarChart3 className="w-4 h-4 shrink-0" />
                   <span className="hidden xs:inline">Analytics</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="tools" 
+                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+                >
+                  <Wrench className="w-4 h-4 shrink-0" />
+                  <span className="hidden xs:inline">Tools</span>
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -533,6 +546,75 @@ const DashboardContent = ({
               </p>
             </motion.div>
             <PerformanceDashboard />
+          </TabsContent>
+
+          {/* Tools Tab Content */}
+          <TabsContent value="tools" className="mt-0">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Tools Header */}
+              <div className="mb-6">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
+                  Specialized Tools
+                </h1>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Advanced tools for Accounting and Law mastery
+                </p>
+              </div>
+
+              {/* Tools Sub-tabs */}
+              <div className="flex flex-col gap-6">
+                <div className="flex justify-center gap-2">
+                  <button
+                    onClick={() => setToolsSubTab("drills")}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+                      toolsSubTab === "drills"
+                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
+                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Calculator className="w-4 h-4" />
+                    <span>Drills</span>
+                  </button>
+                  <button
+                    onClick={() => setToolsSubTab("law")}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+                      toolsSubTab === "law"
+                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
+                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <Gavel className="w-4 h-4" />
+                    <span>Law Engine</span>
+                  </button>
+                </div>
+
+                <div className="w-full">
+                  {toolsSubTab === "drills" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <DrillMode />
+                    </motion.div>
+                  )}
+
+                  {toolsSubTab === "law" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <LawTools />
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
           </TabsContent>
         </Tabs>
       </div>

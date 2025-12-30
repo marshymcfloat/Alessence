@@ -7,7 +7,7 @@ import {
   reviewCardAction,
   getDeckById,
 } from "@/lib/actions/flashcardActions";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -458,147 +458,168 @@ export function FlashcardReview({ deckId, onComplete }: FlashcardReviewProps) {
           )}
 
           {/* Flashcard */}
-          <AnimatePresence mode="wait">
-            {currentCard && (
-              <motion.div
-                key={currentIndex}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
+          <div className="relative h-[400px] w-full max-w-2xl mx-auto perspective-1000 group">
+            <motion.div
+              className="w-full h-full relative preserve-3d transition-all"
+              initial={false}
+              animate={{ rotateY: isFlipped ? 180 : 0 }}
+              transition={{ duration: 0.4, type: "tween", ease: "easeInOut" }}
+              style={{ transformStyle: "preserve-3d" }}
+            >
+              {/* Front Face */}
+              <Card 
+                className="absolute inset-0 backface-hidden w-full h-full flex flex-col justify-between border-2 hover:border-purple-300 dark:hover:border-purple-700 transition-colors bg-white dark:bg-slate-950 cursor-pointer"
+                onClick={() => !isFlipped && setIsFlipped(true)}
               >
-                <Card
-                  className="p-8 min-h-[350px] flex items-center justify-center relative cursor-pointer"
-                  onClick={() => !isFlipped && setIsFlipped(true)}
-                >
-                  <div className="w-full text-center space-y-4">
-                    {!isFlipped ? (
-                      <motion.div
-                        initial={{ rotateY: 0 }}
-                        animate={{ rotateY: 0 }}
-                        className="space-y-4"
-                      >
-                        <Badge variant="outline" className="mb-4">
-                          Question
-                        </Badge>
-                        <div className="text-2xl font-medium leading-relaxed whitespace-pre-wrap">
-                          {currentCard.front || "No front text"}
-                        </div>
-                        {(currentCard as any).frontImageUrl && (
-                          <img
-                            src={(currentCard as any).frontImageUrl}
-                            alt="Front"
-                            className="max-w-full max-h-48 mx-auto rounded-lg mt-4"
-                          />
-                        )}
-                        <p className="text-xs text-muted-foreground mt-4">
-                          Click or press Space to reveal answer
-                        </p>
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="space-y-4"
-                      >
-                        <Badge variant="default" className="mb-4">
-                          Answer
-                        </Badge>
-                        <div className="text-xl leading-relaxed whitespace-pre-wrap">
-                          {currentCard.back || "No back text"}
-                        </div>
-                        {(currentCard as any).backImageUrl && (
-                          <img
-                            src={(currentCard as any).backImageUrl}
-                            alt="Back"
-                            className="max-w-full max-h-48 mx-auto rounded-lg mt-4"
-                          />
-                        )}
-                      </motion.div>
+                <div className="absolute top-4 right-4 z-10">
+                  {currentCard ? getStatusBadge(getCardStatus(currentCard)) : null}
+                </div>
+                
+                <CardContent className="flex flex-col items-center justify-center h-full p-8 text-center">
+                  <Badge variant="outline" className="mb-6 uppercase tracking-widest text-xs">
+                    Question
+                  </Badge>
+                  
+                  <div className="text-xl font-bold text-slate-800 dark:text-slate-100 leading-snug max-w-2xl mx-auto">
+                    {currentCard?.front || "No front text"}
+                  </div>
+                  
+                  {currentCard && (currentCard as any).frontImageUrl && (
+                    <img
+                      src={(currentCard as any).frontImageUrl}
+                      alt="Front"
+                      className="max-w-full max-h-48 mx-auto rounded-lg mt-6 shadow-sm"
+                    />
+                  )}
+                </CardContent>
+                
+                <div className="p-4 text-center border-t bg-slate-50 dark:bg-slate-900/50">
+                  <span className="text-xs text-muted-foreground flex items-center justify-center gap-2">
+                    <RotateCcw className="w-3 h-3" /> Click or press Space to flip
+                  </span>
+                </div>
+              </Card>
+
+              {/* Back Face */}
+              <Card 
+                className="absolute inset-0 backface-hidden w-full h-full flex flex-col border-2 border-purple-200 dark:border-purple-800 bg-purple-50/10 dark:bg-slate-900 cursor-pointer"
+                style={{ transform: "rotateY(180deg)" }}
+                onClick={() => setIsFlipped(false)}
+              >
+                <div className="absolute top-4 right-4 z-10 opacity-50">
+                   {currentCard ? getStatusBadge(getCardStatus(currentCard)) : null}
+                </div>
+
+                <CardContent className="flex flex-col h-full p-8 overflow-y-auto">
+                   <div className="flex justify-center shrink-0 mb-6">
+                    <Badge variant="default" className="bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/50 dark:text-purple-300 uppercase tracking-widest text-xs border-purple-200">
+                      Answer
+                    </Badge>
+                   </div>
+                   
+                  <div className="text-lg text-slate-700 dark:text-slate-300 leading-relaxed text-center grow flex flex-col justify-center">
+                    <div className="whitespace-pre-wrap">
+                      {currentCard?.back || "No back text"}
+                    </div>
+                    
+                    {currentCard && (currentCard as any).backImageUrl && (
+                      <img
+                        src={(currentCard as any).backImageUrl}
+                        alt="Back"
+                        className="max-w-full max-h-48 mx-auto rounded-lg mt-6 shadow-sm"
+                      />
                     )}
                   </div>
-                </Card>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                </CardContent>
+                
+                <div className="p-4 text-center border-t bg-purple-100/20 dark:bg-purple-900/20 shrink-0">
+                   <span className="text-xs text-purple-600/70 dark:text-purple-400/70 font-medium">
+                     Select a rating below to continue
+                  </span>
+                </div>
+              </Card>
+            </motion.div>
+          </div>
 
           {/* Navigation & Review Buttons */}
           {!isFlipped ? (
-            <div className="flex justify-between">
+            <div className="flex justify-between max-w-2xl mx-auto px-1">
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={handlePrevious}
                 disabled={currentIndex === 0}
+                className="text-muted-foreground hover:text-foreground"
               >
                 ← Previous
               </Button>
-              <Button variant="default" onClick={() => setIsFlipped(true)}>
+              <Button 
+                onClick={() => setIsFlipped(true)}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 min-w-32 shadow-sm"
+              >
                 Show Answer
               </Button>
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={handleSkip}
                 disabled={currentIndex >= filteredCards.length - 1}
+                className="text-muted-foreground hover:text-foreground"
               >
                 Skip →
               </Button>
             </div>
           ) : (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
+              className="space-y-4 max-w-2xl mx-auto"
             >
-              <p className="text-center text-sm text-muted-foreground">
+              <p className="text-center text-sm text-muted-foreground font-medium">
                 How well did you know this?
               </p>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="flex justify-center gap-3">
                 <Button
                   variant="destructive"
-                  className="flex flex-col items-center gap-1 h-auto py-4"
+                  className="flex flex-col gap-0.5 h-14 w-24"
                   onClick={() => handleReview(1)}
                   disabled={reviewMutation.isPending}
                 >
-                  <RotateCcw className="w-5 h-5" />
-                  <span className="text-xs">Again</span>
-                  <span className="text-[10px] opacity-70">&lt;1 min</span>
+                  <span className="font-semibold">Again</span>
+                  <span className="text-[10px] opacity-80 font-normal">&lt;1 min</span>
                 </Button>
                 <Button
-                  variant="secondary"
-                  className="flex flex-col items-center gap-1 h-auto py-4 bg-orange-100 hover:bg-orange-200 text-orange-700"
+                  className="flex flex-col gap-0.5 h-14 w-24 bg-orange-100 hover:bg-orange-200 text-orange-700 border-orange-200"
+                  variant="outline"
                   onClick={() => handleReview(2)}
                   disabled={reviewMutation.isPending}
                 >
-                  <X className="w-5 h-5" />
-                  <span className="text-xs">Hard</span>
-                  <span className="text-[10px] opacity-70">~10 min</span>
+                  <span className="font-semibold">Hard</span>
+                  <span className="text-[10px] opacity-80 font-normal">~10 min</span>
                 </Button>
                 <Button
-                  variant="default"
-                  className="flex flex-col items-center gap-1 h-auto py-4 bg-green-600 hover:bg-green-700"
+                  className="flex flex-col gap-0.5 h-14 w-24 bg-green-100 hover:bg-green-200 text-green-700 border-green-200"
+                  variant="outline"
                   onClick={() => handleReview(3)}
                   disabled={reviewMutation.isPending}
                 >
-                  <Check className="w-5 h-5" />
-                  <span className="text-xs">Good</span>
-                  <span className="text-[10px] opacity-70">~1 day</span>
+                  <span className="font-semibold">Good</span>
+                  <span className="text-[10px] opacity-80 font-normal">~1 day</span>
                 </Button>
                 <Button
+                  className="flex flex-col gap-0.5 h-14 w-24 bg-blue-100 hover:bg-blue-200 text-blue-700 border-blue-200"
                   variant="outline"
-                  className="flex flex-col items-center gap-1 h-auto py-4 bg-blue-100 hover:bg-blue-200 text-blue-700"
                   onClick={() => handleReview(4)}
                   disabled={reviewMutation.isPending}
                 >
-                  <Zap className="w-5 h-5" />
-                  <span className="text-xs">Easy</span>
-                  <span className="text-[10px] opacity-70">~4 days</span>
+                  <span className="font-semibold">Easy</span>
+                  <span className="text-[10px] opacity-80 font-normal">~4 days</span>
                 </Button>
               </div>
-              <div className="flex justify-center">
+              <div className="flex justify-center pt-2">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => setIsFlipped(false)}
+                  className="text-muted-foreground hover:text-foreground"
                 >
                   Hide Answer
                 </Button>

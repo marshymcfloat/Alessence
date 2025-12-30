@@ -6,9 +6,10 @@ import { ExamController } from './exam.controller';
 import { DbModule } from 'src/db/db.module';
 import { FileModule } from 'src/file/file.module';
 import { GeminiModule } from 'src/gemini/gemini.module';
+import { ProgressModule } from 'src/progress/progress.module';
 
 @Module({
-  imports: [FileModule, DbModule, GeminiModule],
+  imports: [FileModule, DbModule, GeminiModule, ProgressModule],
   controllers: [ExamController],
   providers: [ExamService, ExamHistoryService, ExamAttemptService],
 })

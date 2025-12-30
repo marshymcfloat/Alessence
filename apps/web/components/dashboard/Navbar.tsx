@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import UserButton from "./UserButton";
 import { GlobalSearchBar } from "./GlobalSearchBar";
-import { Home, Users, Share2, Bot, Menu, X } from "lucide-react";
+import { Home, Users, Share2, Bot, Menu, X, BookOpen } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useParams, usePathname } from "next/navigation";
@@ -11,7 +11,8 @@ import { useQuery } from "@tanstack/react-query";
 import { getFriendshipCounts } from "@/lib/actions/friendshipActions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { GamificationWidget } from "./GamificationWidget";
+import { ProfessionalProfileWidget } from "./ProfessionalProfileWidget";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const navLinks = [
   {
@@ -22,6 +23,15 @@ const navLinks = [
     hoverGradient: "hover:from-pink-100 hover:to-purple-100 dark:hover:from-pink-900/30 dark:hover:to-purple-900/30",
     iconColor: "text-pink-600 dark:text-pink-400",
     activeGradient: "from-pink-100 to-purple-100 dark:from-pink-900/40 dark:to-purple-900/40",
+  },
+  {
+    href: (id: string) => `/${id}/syllabus`,
+    label: "Syllabus",
+    icon: BookOpen,
+    gradient: "from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20",
+    hoverGradient: "hover:from-orange-100 hover:to-amber-100 dark:hover:from-orange-900/30 dark:hover:to-amber-900/30",
+    iconColor: "text-orange-600 dark:text-orange-400",
+    activeGradient: "from-orange-100 to-amber-100 dark:from-orange-900/40 dark:to-amber-900/40",
   },
   {
     href: (id: string) => `/${id}/friends`,
@@ -151,8 +161,9 @@ const Navbar = () => {
             </div>
             {/* Gamification Stats */}
             <div className="hidden sm:block">
-              <GamificationWidget />
+              <ProfessionalProfileWidget />
             </div>
+            <ThemeSwitcher />
             <UserButton />
           </div>
         </div>

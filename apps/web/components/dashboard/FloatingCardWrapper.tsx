@@ -32,7 +32,7 @@ const FloatingCardWrapper = ({
         opacity: { duration: 0.3 },
       }}
       className={cn(
-        "fixed top-6 left-0 z-40 transition-all duration-300 ease-in-out",
+        "fixed top-4 left-2 md:top-6 md:left-0 z-40 transition-all duration-300 ease-in-out",
         className
       )}
     >
@@ -44,7 +44,7 @@ const FloatingCardWrapper = ({
           "dark:from-slate-900/98 dark:via-slate-800/95 dark:to-slate-900/98",
           "backdrop-blur-xl",
           isExpanded
-            ? "w-[400px] max-h-[calc(100vh-3rem)] overflow-hidden"
+            ? "w-[calc(100vw-1rem)] max-w-[400px] max-h-[calc(100dvh-3rem)] overflow-hidden"
             : "w-14 hover:w-16"
         )}
       >

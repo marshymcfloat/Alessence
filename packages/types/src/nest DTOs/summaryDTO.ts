@@ -23,6 +23,7 @@ export const createSummaryBackendSchema = z.object({
       "CHAPTER_SUMMARY",
       "CONCEPT_MAP",
       "CUSTOM",
+      "FILL_IN_THE_BLANKS",
     ])
     .optional()
     .default("COMPREHENSIVE"),

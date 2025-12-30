@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { DbService } from 'src/db/db.service';
 import { GeminiService, GeneratedQuestion } from 'src/gemini/gemini.service';
+import { ProgressService } from 'src/progress/progress.service';
 import { ExamStatusEnum } from '@repo/db';
 
 import type { Exam, File, Prisma, Question } from '@repo/db';
@@ -11,6 +12,7 @@ export class ExamGenerationService {
   constructor(
     private readonly dbService: DbService,
     private readonly geminiService: GeminiService,
+    private readonly progressService: ProgressService,
   ) {}
 
   @OnEvent('exam.created')
@@ -29,6 +31,24 @@ export class ExamGenerationService {
         throw new NotFoundException('Exam or its source files not found.');
       }
 
+      // Fetch weak topics for the user
+      let weakTopics: string[] = [];
+      if (exam.userId) {
+        try {
+          const weaknesses = await this.progressService.getWeakTopics(exam.userId);
+          // Filter weaknesses relevant to this exam's subject (if specified)
+          weakTopics = weaknesses
+            .filter((w) => !exam.subjectId || w.subjectId === exam.subjectId)
+            .map((w) => w.title);
+            
+          if (weakTopics.length > 0) {
+            console.log(`[RAG] Injecting ${weakTopics.length} weak topics into prompt for Exam ${exam.id}`);
+          }
+        } catch (error) {
+          console.error('[RAG] Failed to fetch weak topics, proceeding without them:', error);
+        }
+      }
+
       const context = exam.sourceFiles
         .map((file) => file.contentText || '')
         .join('\n\n---\n\n');
@@ -38,6 +58,7 @@ export class ExamGenerationService {
         exam.description,
         exam.requestedItems,
         exam.questionTypes,
+        weakTopics,
       );
 
       await this.dbService.question.createMany({

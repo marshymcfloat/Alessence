@@ -7,7 +7,11 @@
     "lint": "eslint . --no-warnings 0",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev --skip-generate",
-    "db:deploy": "prisma migrate deploy"
+    "db:deploy": "prisma migrate deploy",
+    "db:seed": "tsx prisma/seed.ts"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -39,6 +43,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "prisma": "^6.18.0"
+    "prisma": "^6.18.0",
+    "tsx": "^4.21.0"
   }
 }

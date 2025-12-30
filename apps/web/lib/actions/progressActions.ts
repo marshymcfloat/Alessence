@@ -10,12 +10,18 @@ export interface StreakData {
   lastStudyDate: string | null;
 }
 
-export interface XPData {
-  total: number;
+export interface ProfileData {
+  totalPoints: number;
   level: number;
-  currentLevelXP: number;
-  nextLevelXP: number;
+  rank: string;
+  nextRank: string;
   progress: number;
+}
+
+export interface MasteryData {
+  subject: string;
+  score: number;
+  lastActivity: string;
 }
 
 export interface Achievement {
@@ -30,7 +36,7 @@ export interface Achievement {
   unlockedAt?: string;
 }
 
-export interface AchievementsData {
+export interface BadgesData {
   unlocked: Achievement[];
   locked: Achievement[];
   total: number;
@@ -39,8 +45,19 @@ export interface AchievementsData {
 
 export interface GamificationStats {
   streak: StreakData;
-  xp: XPData;
-  achievements: AchievementsData;
+  profile: ProfileData;
+  mastery: MasteryData[];
+  badges: BadgesData;
+  heatmap: { date: string; count: number }[];
+  // Legacy compatibility fields
+  xp: {
+    total: number;
+    level: number;
+    currentLevelXP: number;
+    nextLevelXP: number;
+    progress: number;
+  };
+  achievements: BadgesData;
 }
 
 async function fetchGamification<T>(
@@ -81,23 +98,38 @@ async function fetchGamification<T>(
 }
 
 /**
- * Get user's gamification stats (streak, XP, achievements)
+ * Get user's gamification stats (streak, profile, mastery, badges)
  */
 export async function getGamificationStats(): Promise<ActionReturnType<GamificationStats>> {
-  return fetchGamification<GamificationStats>("/gamification/stats");
+  return fetchGamification<GamificationStats>("/progress/stats");
 }
 
 /**
- * Get all achievements
+ * Get all achievements/badges
  */
 export async function getAllAchievements(): Promise<ActionReturnType<Achievement[]>> {
-  return fetchGamification<Achievement[]>("/gamification/achievements");
+  return fetchGamification<Achievement[]>("/progress/achievements");
+}
+
+export interface WeakTopic {
+  topicId: number;
+  title: string;
+  subject: string;
+  strength: number;
+  nextReviewAt: string;
+  reason: string;
+}
+
+/**
+ * Get user's weak topics
+ */
+export async function getWeakTopics(): Promise<ActionReturnType<WeakTopic[]>> {
+  return fetchGamification<WeakTopic[]>("/progress/weak-topics");
 }
 
 /**
  * Record study activity (updates streak)
  */
 export async function recordStudyActivity(): Promise<ActionReturnType<StreakData>> {
-  return fetchGamification<StreakData>("/gamification/record-activity", "POST");
+  return fetchGamification<StreakData>("/progress/record-activity", "POST");
 }
-

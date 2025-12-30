@@ -2,9 +2,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AssistantLoading() {
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
+    <div className="flex h-[calc(100dvh-4rem)]">
       {/* Sidebar skeleton */}
-      <div className="w-72 border-r p-4 space-y-4">
+      <div className="hidden w-72 border-r p-4 space-y-4 md:block">
         <div className="flex items-center justify-between">
           <Skeleton className="h-6 w-32" />
           <Skeleton className="h-8 w-8 rounded" />

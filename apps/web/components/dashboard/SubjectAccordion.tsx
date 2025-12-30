@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   AccordionContent,
   AccordionItem,
@@ -21,7 +22,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SyllabusTree } from "./SyllabusTree";
 
 const SubjectAccordion = ({
   subject,
@@ -192,6 +193,11 @@ const SubjectAccordion = ({
               </p>
             </div>
           )}
+
+          {/* Syllabus Map */}
+          <div className="pt-3 border-t-2 border-gray-200 dark:border-gray-700">
+             <SyllabusTree subjectId={subject.id} />
+          </div>
 
           {/* Delete Button */}
           <div className="pt-3 border-t-2 border-gray-200 dark:border-gray-700 flex justify-end">

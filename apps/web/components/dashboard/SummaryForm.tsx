@@ -172,13 +172,17 @@ export default function SummaryForm({ onSuccess }: SummaryFormProps) {
                       <SelectItem value="CONCEPT_MAP">
                         Concept Map Style
                       </SelectItem>
+                      <SelectItem value="FILL_IN_THE_BLANKS">
+                        Fill-in-the-Blanks (Active Recall)
+                      </SelectItem>
                       <SelectItem value="CUSTOM">Custom Format</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormDescription className="text-xs">
                     Choose a format that best suits your study needs.
                     Comprehensive includes all details, while Key Points focuses
-                    on main concepts.
+                    on main concepts. Fill-in-the-Blanks hides key terms to
+                    force active recall (answer key included).
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

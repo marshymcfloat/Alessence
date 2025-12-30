@@ -22,7 +22,7 @@ const page = async ({ params }: { params: Promise<{ id: string }> }) => {
     tasksResult.success && tasksResult.data ? tasksResult.data.allTasks : [];
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] relative">
+    <div className="flex h-[calc(100dvh-4rem)] relative">
       {/* Main Content Area - Full Width */}
       <div className="flex-1 overflow-hidden">
         <DashboardContent initialTasks={tasks} userId={id} subjects={subjects} />

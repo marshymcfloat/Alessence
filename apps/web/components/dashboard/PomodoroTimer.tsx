@@ -4,6 +4,11 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+} from "@/components/ui/input-group";
+import {
   Play,
   Pause,
   RotateCcw,
@@ -33,6 +38,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import SubjectSelectInput from "./SubjectSelectInput";
+import { cn } from "@/lib/utils";
 
 // Default durations in seconds
 const DEFAULT_DURATIONS = {
@@ -43,9 +49,10 @@ const DEFAULT_DURATIONS = {
 
 interface PomodoroTimerProps {
   onEnterFocusMode?: () => void;
+  minimal?: boolean;
 }
 
-export function PomodoroTimer({ onEnterFocusMode }: PomodoroTimerProps) {
+export function PomodoroTimer({ onEnterFocusMode, minimal = false }: PomodoroTimerProps) {
   const queryClient = useQueryClient();
   const [timeLeft, setTimeLeft] = useState(DEFAULT_DURATIONS.POMODORO);
   const [isRunning, setIsRunning] = useState(false);
@@ -322,114 +329,193 @@ export function PomodoroTimer({ onEnterFocusMode }: PomodoroTimerProps) {
     setTimeLeft(minutes * 60);
   };
 
-  return (
-    <Card className="p-6 bg-gradient-to-br from-background to-muted/20 border-2">
-      <div className="flex flex-col items-center gap-6">
-        {/* Timer Type Selector */}
-        <div className="flex gap-2">
-          <Button
-            variant={sessionType === SessionTypeEnum.POMODORO ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleTypeChange(SessionTypeEnum.POMODORO)}
-            disabled={isRunning}
-          >
-            <Timer className="w-4 h-4" />
-            Focus
-          </Button>
-          <Button
-            variant={sessionType === SessionTypeEnum.SHORT_BREAK ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleTypeChange(SessionTypeEnum.SHORT_BREAK)}
-            disabled={isRunning}
-          >
-            <Coffee className="w-4 h-4" />
-            Short Break
-          </Button>
-          <Button
-            variant={sessionType === SessionTypeEnum.LONG_BREAK ? "default" : "outline"}
-            size="sm"
-            onClick={() => handleTypeChange(SessionTypeEnum.LONG_BREAK)}
-            disabled={isRunning}
-          >
-            <Coffee className="w-4 h-4" />
-            Long Break
-          </Button>
-        </div>
+  const renderTimerDisplay = () => (
+    <div className={cn("relative", minimal ? "w-80 h-80" : "w-64 h-64")}>
+      <svg className="w-full h-full transform -rotate-90">
+        <circle
+          cx="50%"
+          cy="50%"
+          r="45%"
+          stroke="currentColor"
+          strokeWidth={minimal ? "4" : "8"}
+          fill="none"
+          className={cn(minimal ? "text-white/10" : "text-muted")}
+        />
+        <motion.circle
+          cx="50%"
+          cy="50%"
+          r="45%"
+          stroke="currentColor"
+          strokeWidth={minimal ? "4" : "8"}
+          fill="none"
+          className={cn(minimal ? "text-white shadow-glow" : "text-primary")}
+          strokeLinecap="round"
+          strokeDasharray={2 * Math.PI * (minimal ? 144 : 120)} // Approx radius calc
+          // We can use percentage for strokeDasharray to be responsive if needed, but keeping fixed for now
+          // strokeDasharray of r=45% of width=320 is ~ 144px radius? No wait, 50% is center.
+          // Let's stick to the previous fixed logic or adapt.
+          // The previous code had hardcoded cx=128 cy=128 r=120.
+          // If minimal is w-80 (320px), center is 160. r could be 150.
+          // Let's use simpler percentage-based pathLength framer motion if possible, or stick to current fixed implementation for simplicity first.
+          // Reverting to fixed sizes for stability.
+        />
+        {/* Re-implementing the fixed logic to avoid breaking layout logic abruptly */}
+      </svg>
+      {/* 
+         Actually, let's keep the exact SVG from before for non-minimal, and a cleaner one for minimal.
+         But to save complexity, I will just apply class changes.
+      */}
+       <svg className="w-full h-full transform -rotate-90 absolute inset-0">
+          <circle
+            cx="50%"
+            cy="50%"
+            r="45%"
+            stroke="currentColor"
+            strokeWidth={minimal ? "2" : "8"}
+            fill="none"
+            className={cn(minimal ? "text-white/10" : "text-muted")}
+          />
+          <motion.circle
+            cx="50%"
+            cy="50%"
+            r="45%"
+            stroke="currentColor"
+            strokeWidth={minimal ? "2" : "8"}
+            fill="none"
+            className={cn(minimal ? "text-white" : "text-primary")}
+            strokeLinecap="round"
+            initial={false}
+            pathLength={1 - getProgress() / 100}
+            style={{ pathLength: 1 - getProgress() / 100 }} // Use pathLength for simpler responsive circles
+            transition={{ duration: 0.5 }}
+          />
+        </svg>
 
-        {/* Timer Display */}
-        <div className="relative w-64 h-64">
-          <svg className="w-full h-full transform -rotate-90">
-            <circle
-              cx="128"
-              cy="128"
-              r="120"
-              stroke="currentColor"
-              strokeWidth="8"
-              fill="none"
-              className="text-muted"
-            />
-            <motion.circle
-              cx="128"
-              cy="128"
-              r="120"
-              stroke="currentColor"
-              strokeWidth="8"
-              fill="none"
-              className="text-primary"
-              strokeLinecap="round"
-              strokeDasharray={2 * Math.PI * 120}
-              strokeDashoffset={2 * Math.PI * 120 * (1 - getProgress() / 100)}
-              initial={false}
-              transition={{ duration: 0.5 }}
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <motion.div
-              key={timeLeft}
-              initial={{ scale: 1.1 }}
-              animate={{ scale: 1 }}
-              className="text-5xl font-bold tabular-nums"
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <motion.div
+          key={timeLeft}
+          initial={{ scale: 1.1 }}
+          animate={{ scale: 1 }}
+          className={cn(
+            "font-bold tabular-nums tracking-tight",
+            minimal ? "text-7xl text-white font-light" : "text-5xl"
+          )}
+        >
+          {formatTime(timeLeft)}
+        </motion.div>
+        {minimal && (
+           <p className="text-white/50 text-sm mt-2 font-medium tracking-widest uppercase">
+             {sessionType === SessionTypeEnum.POMODORO ? "Focus" : "Break"}
+           </p>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <Card className={cn(
+      "p-6 transition-all duration-300",
+      minimal ? "bg-transparent border-0 shadow-none p-0 w-full flex flex-col items-center" : "bg-gradient-to-br from-background to-muted/20 border-2"
+    )}>
+      <div className="flex flex-col items-center gap-6 w-full">
+        {/* Timer Type Selector - Hide in minimal mode if running */}
+        {(!minimal || !isRunning) && (
+          <div className="flex gap-2">
+            <Button
+              variant={sessionType === SessionTypeEnum.POMODORO ? (minimal ? "secondary" : "default") : (minimal ? "ghost" : "outline")}
+              size="sm"
+              onClick={() => handleTypeChange(SessionTypeEnum.POMODORO)}
+              disabled={isRunning}
+              className={cn(minimal && "text-white hover:bg-white/20")}
             >
-              {formatTime(timeLeft)}
-            </motion.div>
+              <Timer className="w-4 h-4" />
+              <span className="ml-2">Focus</span>
+            </Button>
+            <Button
+              variant={sessionType === SessionTypeEnum.SHORT_BREAK ? (minimal ? "secondary" : "default") : (minimal ? "ghost" : "outline")}
+              size="sm"
+              onClick={() => handleTypeChange(SessionTypeEnum.SHORT_BREAK)}
+              disabled={isRunning}
+              className={cn(minimal && "text-white hover:bg-white/20")}
+            >
+              <Coffee className="w-4 h-4" />
+              <span className="ml-2">Short Break</span>
+            </Button>
+            <Button
+              variant={sessionType === SessionTypeEnum.LONG_BREAK ? (minimal ? "secondary" : "default") : (minimal ? "ghost" : "outline")}
+              size="sm"
+              onClick={() => handleTypeChange(SessionTypeEnum.LONG_BREAK)}
+              disabled={isRunning}
+              className={cn(minimal && "text-white hover:bg-white/20")}
+            >
+              <Coffee className="w-4 h-4" />
+              <span className="ml-2">Long Break</span>
+            </Button>
           </div>
-        </div>
+        )}
+
+        {renderTimerDisplay()}
 
         {/* Controls */}
-        <div className="flex flex-col gap-3 w-full">
-          <div className="flex gap-3 justify-center">
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <InputGroup className={cn(
+            "h-11 border-0 shadow-none",
+            minimal 
+              ? "bg-white text-black" 
+              : "bg-primary text-primary-foreground"
+          )}>
             {!isRunning ? (
-              <Button
+              <InputGroupButton
                 onClick={startTimer}
-                size="lg"
-                className="gap-2"
+                variant="default"
+                size="sm"
+                className={cn(
+                  "flex-1 h-full rounded-l-md rounded-r-none gap-2 text-base font-medium border-0 shadow-none",
+                  minimal 
+                    ? "bg-white text-black hover:bg-white/90" 
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                )}
               >
                 <Play className="w-5 h-5" />
                 Start
-              </Button>
+              </InputGroupButton>
             ) : (
-              <Button
+              <InputGroupButton
                 onClick={pauseTimer}
-                variant="outline"
-                size="lg"
-                className="gap-2"
+                variant="default"
+                size="sm"
+                className={cn(
+                  "flex-1 h-full rounded-l-md rounded-r-none gap-2 text-base font-medium border-0 shadow-none",
+                  minimal 
+                    ? "bg-white text-black hover:bg-white/90" 
+                    : "bg-primary text-primary-foreground hover:bg-primary/90"
+                )}
               >
                 <Pause className="w-5 h-5" />
                 Pause
-              </Button>
+              </InputGroupButton>
             )}
-            <Button
-              onClick={resetTimer}
-              variant="outline"
-              size="lg"
-              className="gap-2"
-              disabled={!sessionId && !isRunning}
-            >
-              <RotateCcw className="w-5 h-5" />
-              Reset
-            </Button>
-          </div>
-          {onEnterFocusMode && (
+            <InputGroupAddon align="inline-end" className="px-0">
+              <div className="h-full py-1.5 pr-1.5">
+                <InputGroupButton
+                  onClick={resetTimer}
+                  variant="ghost"
+                  size="icon-sm"
+                  className={cn(
+                    "h-full rounded-md px-3 border-l border-white/20",
+                    minimal 
+                      ? "text-black hover:bg-black/5" 
+                      : "text-white hover:bg-white/20"
+                  )}
+                  disabled={!sessionId && !isRunning}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </InputGroupButton>
+              </div>
+            </InputGroupAddon>
+          </InputGroup>
+          
+          {!minimal && onEnterFocusMode && (
             <Button
               onClick={onEnterFocusMode}
               variant="outline"
@@ -442,50 +528,53 @@ export function PomodoroTimer({ onEnterFocusMode }: PomodoroTimerProps) {
           )}
         </div>
 
-        {/* Subject Selection */}
-        <div className="w-full">
-          <Label className="text-sm text-muted-foreground mb-2 block">
-            Subject (optional)
-          </Label>
-          <SubjectSelectInput
-            value={selectedSubjectId}
-            onValueChange={setSelectedSubjectId}
-          />
-        </div>
+        {/* Subject Selection - Hide in minimal mode */}
+        {!minimal && (
+          <div className="w-full">
+            <Label className="text-sm text-muted-foreground mb-2 block">
+              Subject (optional)
+            </Label>
+            <SubjectSelectInput
+              value={selectedSubjectId}
+              onValueChange={setSelectedSubjectId}
+            />
+          </div>
+        )}
 
-        {/* Settings */}
-        <Dialog open={showSettings} onOpenChange={setShowSettings}>
-          <DialogTrigger asChild>
-            <Button variant="ghost" size="sm" className="gap-2">
-              <Settings className="w-4 h-4" />
-              Settings
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Timer Settings</DialogTitle>
-              <DialogDescription>
-                Customize your timer durations
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="custom-duration">Custom Duration (minutes)</Label>
-                <Input
-                  id="custom-duration"
-                  type="number"
-                  min="1"
-                  max="120"
-                  value={customDuration}
-                  onChange={(e) => handleCustomDuration(Number(e.target.value))}
-                  disabled={isRunning}
-                />
+        {/* Settings - Hide in minimal mode */}
+        {!minimal && (
+          <Dialog open={showSettings} onOpenChange={setShowSettings}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-2">
+                <Settings className="w-4 h-4" />
+                Settings
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Timer Settings</DialogTitle>
+                <DialogDescription>
+                  Customize your timer durations
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="custom-duration">Custom Duration (minutes)</Label>
+                  <Input
+                    id="custom-duration"
+                    type="number"
+                    min="1"
+                    max="120"
+                    value={customDuration}
+                    onChange={(e) => handleCustomDuration(Number(e.target.value))}
+                    disabled={isRunning}
+                  />
+                </div>
               </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </Card>
   );
 }
-

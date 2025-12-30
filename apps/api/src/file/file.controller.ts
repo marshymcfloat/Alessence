@@ -3,8 +3,10 @@
 import {
   Controller,
   Get,
+  Param,
+  ParseIntPipe,
   Post,
-  UploadedFiles, // <-- Changed from UploadedFile
+  UploadedFiles,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -26,7 +28,17 @@ export class FileController {
     @UploadedFiles() files: Array<Express.Multer.File>,
     @GetUser() user: AuthenticatedUser,
   ) {
-    return this.fileService.createMultipleFilesWithEmbeddings(files, user.userId);
+    const uploadedFiles = await this.fileService.createMultipleFilesWithEmbeddings(files, user.userId);
+    
+    // Trigger cross-document linking in background for each file
+    for (const file of uploadedFiles) {
+      // Don't await - run in background
+      this.fileService.createDocumentLinks(file.id, user.userId).catch(() => {
+        // Ignore linking errors
+      });
+    }
+    
+    return uploadedFiles;
   }
 
   @UseGuards(AuthGuard('jwt'))
@@ -36,5 +48,17 @@ export class FileController {
   ): Promise<getAllFilesReturnType> {
     const files = await this.fileService.getAllFiles(user.userId);
     return { userId: user.userId, files };
+  }
+
+  /**
+   * Get cross-document links for a specific file
+   */
+  @UseGuards(AuthGuard('jwt'))
+  @Get(':id/links')
+  async getDocumentLinks(
+    @Param('id', ParseIntPipe) fileId: number,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.fileService.getDocumentLinks(fileId, user.userId);
   }
 }

@@ -170,6 +170,52 @@ export async function getExamById(
   }
 }
 
+export async function createMockExam(
+  subjectId: number
+): Promise<ActionReturnType<{ examId: number }>> {
+  try {
+    const cookie = await cookies();
+    const token = cookie.get("access_token");
+
+    if (!token?.name || !token.value) {
+      return {
+        success: false,
+        error: "Authentication failed. Please login again.",
+      };
+    }
+
+    const response = await fetch(`${process.env.FETCH_BASE_URL}/exam/mock`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Cookie: `${token.name}=${token.value}`,
+      },
+      body: JSON.stringify({ subjectId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return {
+        success: false,
+        error: errorData.message || "Failed to create mock exam.",
+      };
+    }
+
+    const data = await response.json();
+
+    return {
+      success: true,
+      data: { examId: data.id },
+      message: "Mock exam is being generated!",
+    };
+  } catch (err) {
+    const message =
+      err instanceof Error ? err.message : "An unexpected error occurred.";
+    console.error("Create Mock Exam Action Error:", message);
+    return { success: false, error: message };
+  }
+}
+
 export async function deleteExam(id: number): Promise<ActionReturnType<null>> {
   try {
     const cookie = await cookies();
@@ -213,7 +259,7 @@ export async function deleteExam(id: number): Promise<ActionReturnType<null>> {
 export async function evaluateAnswers(
   answers: Array<{ questionId: number; userAnswer: string }>
 ): Promise<
-  ActionReturnType<Array<{ questionId: number; isCorrect: boolean }>>
+  ActionReturnType<Array<{ questionId: number; isCorrect: boolean; feedback?: string }>>
 > {
   try {
     const cookie = await cookies();

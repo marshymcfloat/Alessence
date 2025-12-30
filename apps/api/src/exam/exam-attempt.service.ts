@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException, ForbiddenException 
 import { DbService } from 'src/db/db.service';
 import { AttemptStatusEnum } from '@repo/db';
 import { GeminiService } from 'src/gemini/gemini.service';
+import { ProgressService } from 'src/progress/progress.service';
 
 export interface StartAttemptResult {
   attemptId: number;
@@ -27,6 +28,7 @@ export interface SubmitAttemptResult {
     isCorrect: boolean;
     userAnswer: string;
     correctAnswer: string;
+    feedback?: string;
   }>;
 }
 
@@ -35,6 +37,7 @@ export class ExamAttemptService {
   constructor(
     private readonly dbService: DbService,
     private readonly geminiService: GeminiService,
+    private readonly progressService: ProgressService,
   ) {}
 
   /**
@@ -57,6 +60,7 @@ export class ExamAttemptService {
             text: true,
             type: true,
             options: true,
+            topicId: true,
           },
         },
         _count: {
@@ -204,17 +208,24 @@ export class ExamAttemptService {
           };
         }
 
-        const isCorrect = await this.geminiService.evaluateAnswer(
+        const evaluation = await this.geminiService.evaluateAnswer(
           userAnswer,
           question.correctAnswer,
           question.text,
         );
 
+        // Update Topic Mastery if topic is linked
+        if (question.topicId) {
+          // Fire and forget - don't block
+          this.progressService.updateTopicMastery(userId, question.topicId, evaluation.isCorrect).catch(console.error);
+        }
+
         return {
           questionId,
           userAnswer,
           correctAnswer: question.correctAnswer,
-          isCorrect,
+          isCorrect: evaluation.isCorrect,
+          feedback: evaluation.reason,
         };
       }),
     );
@@ -233,6 +244,7 @@ export class ExamAttemptService {
           questionId: answer.questionId,
           selectedAnswer: answer.userAnswer,
           isCorrect: answer.isCorrect,
+          feedback: answer.feedback,
         })),
         skipDuplicates: true,
       });
@@ -247,6 +259,25 @@ export class ExamAttemptService {
         },
       });
     });
+
+    // Update Gamification / Progress
+    // We do this after transaction to avoid locking or complex rollback on gamification failure
+    try {
+      await this.progressService.checkExamAchievements(userId, score);
+      
+      // Update Subject Mastery
+      // We need subjectId from exam
+      if (attempt.exam.subjectId) {
+        await this.progressService.updateSubjectMastery(
+          userId,
+          attempt.exam.subjectId,
+          score,
+        );
+      }
+    } catch (error) {
+      console.error('Failed to update progress stats:', error);
+      // Don't fail the request
+    }
 
     return {
       attemptId,

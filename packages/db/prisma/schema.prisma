@@ -39,6 +39,24 @@ model User {
   studyStreak            StudyStreak?
   achievements           UserAchievement[]
   xp                     UserXP?
+  subjectMastery         SubjectMastery[]
+  topicMastery           TopicMastery[]
+  documentLinks          DocumentLink[]
+}
+
+model SubjectMastery {
+  id           Int      @id @default(autoincrement())
+  userId       String
+  subjectId    Int
+  masteryScore Float    @default(0) // 0 to 100
+  lastActivity DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject      Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId])
+  @@index([userId])
 }
 
 model Subject {
@@ -59,6 +77,43 @@ model Subject {
   user           User?           @relation(fields: [userId], references: [id])
   summaries      Summary[]
   tasks          Task[]
+  masteryEntries SubjectMastery[]
+  topics         Topic[]
+}
+
+model TopicMastery {
+  id             Int      @id @default(autoincrement())
+  userId         String
+  topicId        Int
+  strength       Float    @default(0) // 0 to 100
+  nextReviewAt   DateTime?
+  lastReviewedAt DateTime @default(now())
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic          Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topicId])
+  @@index([userId])
+  @@index([nextReviewAt])
+}
+
+model Topic {
+  id        Int      @id @default(autoincrement())
+  title     String
+  subjectId Int
+  parentId  Int?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  parent    Topic?   @relation("TopicHierarchy", fields: [parentId], references: [id])
+  children  Topic[]  @relation("TopicHierarchy")
+  questions Question[]
+  mastery   TopicMastery[]
+
+  @@index([subjectId])
+  @@index([parentId])
 }
 
 model File {
@@ -108,9 +163,11 @@ model Question {
   options       Json
   correctAnswer String
   examId        Int
+  topicId       Int?
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   exam          Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
+  topic         Topic?           @relation(fields: [topicId], references: [id])
   userAnswers   UserAnswer[]
 }
 
@@ -133,6 +190,7 @@ model UserAnswer {
   id             Int         @id @default(autoincrement())
   selectedAnswer String
   isCorrect      Boolean
+  feedback       String?
   examAttemptId  Int
   questionId     Int
   attempt        ExamAttempt @relation(fields: [examAttemptId], references: [id], onDelete: Cascade)
@@ -350,6 +408,7 @@ enum SummaryTemplateEnum {
   CHAPTER_SUMMARY
   CONCEPT_MAP
   CUSTOM
+  FILL_IN_THE_BLANKS
 }
 
 enum SessionTypeEnum {
@@ -505,11 +564,39 @@ model UserXP {
   userId      String   @unique
   totalXp     Int      @default(0)
   level       Int      @default(1)
+  currentRank String   @default("Student")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+}
+
+// Cross-document linking for knowledge graph
+model DocumentLink {
+  id            Int      @id @default(autoincrement())
+  sourceType    DocumentLinkType
+  sourceId      Int
+  targetType    DocumentLinkType
+  targetId      Int
+  relevance     Int      @default(50) // 0-100 relevance score
+  reason        String?  // Why these are linked
+  createdAt     DateTime @default(now())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@unique([sourceType, sourceId, targetType, targetId])
+  @@index([userId])
+  @@index([sourceType, sourceId])
+  @@index([targetType, targetId])
+}
+
+enum DocumentLinkType {
+  FILE
+  NOTE
+  TOPIC
+  SUMMARY
+  FLASHCARD_DECK
 }
 
 enum AchievementCategory {

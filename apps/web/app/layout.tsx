@@ -5,7 +5,6 @@ import TanstackProvider from "@/components/providers/TanstackProvider";
 import { Toaster } from "@/components/ui/sonner";
 import ReduxProvider from "@/components/providers/ReduxProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { RouteProgressBar } from "@/components/RouteProgressBar";
 import { Suspense } from "react";
 
@@ -99,7 +98,6 @@ export default function RootLayout({
             <ReduxProvider>
               <TanstackProvider>
                 {children}
-                <ThemeSwitcher />
                 <Toaster />
               </TanstackProvider>
             </ReduxProvider>
