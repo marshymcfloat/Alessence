@@ -179,7 +179,19 @@ export default function ProfilePageContent() {
     );
   }
 
-  const xpProgress = profileData?.gamification.xpProgress || gamificationData?.xp.progress || 0;
+  const profileRank =
+    gamificationData?.profile?.rank ||
+    `Rank ${profileData?.gamification.level ?? 1}`;
+  const profileNextRank =
+    gamificationData?.profile?.nextRank || "Next Rank";
+  const profileProgress =
+    gamificationData?.profile?.progress ??
+    profileData?.gamification.xpProgress ??
+    0;
+  const profileTotalPoints =
+    gamificationData?.profile?.totalPoints ??
+    profileData?.gamification.totalXp ??
+    0;
 
   return (
     <div className="container mx-auto py-8 space-y-6 max-w-5xl px-4">
@@ -336,14 +348,17 @@ export default function ProfilePageContent() {
                   <div className="flex justify-between items-center text-sm">
                     <span className="font-semibold flex items-center gap-2">
                       <GraduationCap className="w-4 h-4 text-primary" />
-                      Rank {profileData.gamification.level}
+                      {profileRank}
                     </span>
-                    <span className="text-muted-foreground text-xs">{profileData.gamification.totalXp} XP</span>
+                    <span className="text-muted-foreground text-xs">
+                      {profileTotalPoints} XP
+                    </span>
                   </div>
-                  <Progress value={xpProgress} className="h-1.5" />
-                  <p className="text-xs text-muted-foreground text-right">
-                    {Math.round(100 - xpProgress)}% to next rank
-                  </p>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-muted-foreground">Progress to {profileNextRank}</span>
+                    <span className="font-medium">{Math.round(profileProgress)}%</span>
+                  </div>
+                  <Progress value={profileProgress} className="h-1.5" />
                 </div>
 
                 <Separator />

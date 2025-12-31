@@ -30,6 +30,10 @@ import {
   deleteTaskAction,
 } from "@/lib/actions/taskActionts";
 import { toast } from "sonner";
+import AddTaskDialog from "../AddTaskDialog";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { Dialog } from "@/components/ui/dialog";
 
 type TaskStatus = "PLANNED" | "ON_PROGRESS" | "DONE";
 
@@ -45,6 +49,7 @@ interface UpdateTaskVariables {
 export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [isOverDeleteZone, setIsOverDeleteZone] = useState(false);
+  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data } = useQuery<ActionReturnType<GetAllTasksReturnType>>({
@@ -260,7 +265,14 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
       onDragEnd={handleDragEnd}
     >
       <div className="space-y-6 h-full overflow-hidden flex flex-col">
-        <TaskLegend tasks={allTasks} />
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <TaskLegend tasks={allTasks} />
+          <Button onClick={() => setIsAddTaskOpen(true)} size="sm" className="shrink-0">
+            <Plus className="w-4 h-4 mr-2" />
+            Add Task
+          </Button>
+        </div>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 overflow-y-auto flex-1 min-h-0 pb-4">
           {columns.map((status) => (
             <Column
@@ -275,6 +287,10 @@ export function KanbanBoard({ initialTasks }: KanbanBoardProps) {
       <DragOverlay>
         {activeTask ? <TaskCard task={activeTask} isOverlay /> : null}
       </DragOverlay>
+
+      <Dialog open={isAddTaskOpen} onOpenChange={setIsAddTaskOpen}>
+        <AddTaskDialog onClose={() => setIsAddTaskOpen(false)} />
+      </Dialog>
     </DndContext>
   );
 }

@@ -1,7 +1,10 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { getGamificationStats, type GamificationStats } from "@/lib/actions/progressActions";
+import {
+  getGamificationStats,
+  type GamificationStats,
+} from "@/lib/actions/progressActions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,21 +58,29 @@ export function ProfessionalProfileWidget() {
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
-              streakCurrent > 0
-                ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                : "bg-muted text-muted-foreground"
-            )}>
-              <Flame className={cn(
-                "w-4 h-4",
-                streakCurrent > 0 ? "text-slate-600 dark:text-slate-400" : "text-muted-foreground"
-              )} />
+            <div
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-all",
+                streakCurrent > 0
+                  ? "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                  : "bg-muted text-muted-foreground"
+              )}
+            >
+              <Flame
+                className={cn(
+                  "w-4 h-4",
+                  streakCurrent > 0
+                    ? "text-slate-600 dark:text-slate-400"
+                    : "text-muted-foreground"
+                )}
+              />
               <span>{streakCurrent}</span>
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="font-semibold">Professional Discipline: {streakCurrent} days</p>
+            <p className="font-semibold">
+              Professional Discipline: {streakCurrent} days
+            </p>
             <p className="text-xs text-muted-foreground">
               Consistent study builds professional competence.
             </p>
@@ -77,19 +88,16 @@ export function ProfessionalProfileWidget() {
         </Tooltip>
       </TooltipProvider>
 
-      {/* Professional Rank */}
       <Dialog>
         <DialogTrigger asChild>
           <Button variant="ghost" className="h-auto p-0 hover:bg-transparent">
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 border border-transparent shadow-sm hover:shadow-md transition-all">
               <Briefcase className="w-3.5 h-3.5" />
-              <span className="text-sm font-semibold">
-                {data.profile.rank}
-              </span>
+              <span className="text-sm font-semibold">{data.profile.rank}</span>
             </div>
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="!max-w-[90vw] !w-[800px] !max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Award className="w-5 h-5 text-slate-600 dark:text-slate-400" />
@@ -127,39 +135,51 @@ function ProfilePanel({ stats }: { stats: GamificationStats }) {
       {/* Rank Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="p-6 bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800">
-            <div className="flex items-center gap-4">
-                <div className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm">
-                    <Briefcase className="w-8 h-8 text-slate-700 dark:text-slate-300" />
-                </div>
-                <div>
-                    <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">Current Standing</p>
-                    <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{profileRank}</h3>
-                </div>
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-white dark:bg-slate-800 rounded-full shadow-sm">
+              <Briefcase className="w-8 h-8 text-slate-700 dark:text-slate-300" />
             </div>
-            
-            <div className="mt-6">
-                <div className="flex justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Progress to {profileNextRank}</span>
-                    <span className="font-medium">{Math.round(profileProgress)}%</span>
-                </div>
-                <Progress value={profileProgress} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-2">
-                  {profileTotalPoints} Competency Points accumulated
-                </p>
+            <div>
+              <p className="text-sm text-muted-foreground uppercase tracking-wider font-semibold">
+                Current Standing
+              </p>
+              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                {profileRank}
+              </h3>
             </div>
+          </div>
+
+          <div className="mt-6">
+            <div className="flex justify-between text-sm mb-2">
+              <span className="text-muted-foreground">
+                Progress to {profileNextRank}
+              </span>
+              <span className="font-medium">
+                {Math.round(profileProgress)}%
+              </span>
+            </div>
+            <Progress value={profileProgress} className="h-2" />
+            <p className="text-xs text-muted-foreground mt-2">
+              {profileTotalPoints} Competency Points accumulated
+            </p>
+          </div>
         </Card>
 
         <div className="grid grid-cols-2 gap-4">
-            <Card className="p-4 flex flex-col justify-center items-center text-center">
-                <Flame className="w-6 h-6 text-slate-500 mb-2" />
-                <span className="text-2xl font-bold">{streakCurrent}</span>
-                <span className="text-xs text-muted-foreground">Day Discipline</span>
-            </Card>
-            <Card className="p-4 flex flex-col justify-center items-center text-center">
-                <Award className="w-6 h-6 text-slate-500 mb-2" />
-                <span className="text-2xl font-bold">{badgesUnlockedCount}</span>
-                <span className="text-xs text-muted-foreground">Markers Earned</span>
-            </Card>
+          <Card className="p-4 flex flex-col justify-center items-center text-center">
+            <Flame className="w-6 h-6 text-slate-500 mb-2" />
+            <span className="text-2xl font-bold">{streakCurrent}</span>
+            <span className="text-xs text-muted-foreground">
+              Day Discipline
+            </span>
+          </Card>
+          <Card className="p-4 flex flex-col justify-center items-center text-center">
+            <Award className="w-6 h-6 text-slate-500 mb-2" />
+            <span className="text-2xl font-bold">{badgesUnlockedCount}</span>
+            <span className="text-xs text-muted-foreground">
+              Markers Earned
+            </span>
+          </Card>
         </div>
       </div>
 
@@ -185,10 +205,18 @@ function ProfilePanel({ stats }: { stats: GamificationStats }) {
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {unlocked.map((achievement) => (
-                <BadgeCard key={achievement.id} achievement={achievement} unlocked />
+                <BadgeCard
+                  key={achievement.id}
+                  achievement={achievement}
+                  unlocked
+                />
               ))}
               {locked.map((achievement) => (
-                <BadgeCard key={achievement.id} achievement={achievement} unlocked={false} />
+                <BadgeCard
+                  key={achievement.id}
+                  achievement={achievement}
+                  unlocked={false}
+                />
               ))}
             </div>
           </div>
@@ -216,30 +244,38 @@ function BadgeCard({
           : "bg-slate-50 dark:bg-slate-900/50 border-transparent opacity-60"
       )}
     >
-      <div className={cn(
+      <div
+        className={cn(
           "flex items-center justify-center w-10 h-10 rounded-md text-xl shrink-0",
-          unlocked ? "bg-slate-100 dark:bg-slate-800" : "bg-slate-100 dark:bg-slate-800 grayscale"
-      )}>
+          unlocked
+            ? "bg-slate-100 dark:bg-slate-800"
+            : "bg-slate-100 dark:bg-slate-800 grayscale"
+        )}
+      >
         {achievement.icon}
       </div>
-      
+
       <div className="flex-1 min-w-0">
-        <p className={cn(
-          "font-medium text-sm truncate",
-          !unlocked && "text-muted-foreground"
-        )}>
+        <p
+          className={cn(
+            "font-medium text-sm truncate",
+            !unlocked && "text-muted-foreground"
+          )}
+        >
           {achievement.name}
         </p>
         <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
           {achievement.description}
         </p>
         {unlocked && achievement.unlockedAt && (
-            <p className="text-[10px] text-slate-400 mt-1">
-              Earned {formatDistanceToNow(new Date(achievement.unlockedAt), { addSuffix: true })}
-            </p>
+          <p className="text-[10px] text-slate-400 mt-1">
+            Earned{" "}
+            {formatDistanceToNow(new Date(achievement.unlockedAt), {
+              addSuffix: true,
+            })}
+          </p>
         )}
       </div>
     </motion.div>
   );
 }
-
