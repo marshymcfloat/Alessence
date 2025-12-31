@@ -15,10 +15,14 @@
       ]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint"],
+      "inputs": ["**/*.{ts,tsx,js,jsx,cjs,mjs}", ".eslintrc.*", "eslint.config.js"],
+      "outputs": []
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^check-types"],
+      "inputs": ["**/*.{ts,tsx,js,jsx,cjs,mjs}", "tsconfig.json"],
+      "outputs": []
     },
     "dev": {
       "dependsOn": ["^db:generate"],

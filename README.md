@@ -1,10 +1,17 @@
-# Alessence
+# Alessence 🇵🇭
 
-> Your accountancy study buddy
+> Your AI Study Companion for Accountancy & Philippine Law
 
-Alessence is a comprehensive study management platform designed specifically for accountancy students. It combines task management, AI-powered exam generation, and file organization to help you stay on top of your studies.
+Alessence is a comprehensive study management platform designed specifically for accountancy and law students in the Philippines. It combines task management, AI-powered exam generation, and file organization to help you stay on top of your CPA and Bar exam preparations.
 
 ## ✨ Features
+
+### 🤖 AI-Powered Exam Generation
+- **Philippine Context**: Specialized in Philippine Financial Reporting Standards (PFRS) and Philippine Laws (Civil, Taxation, Commercial, etc.)
+- **Smart Exam Creation**: Generate exams from uploaded study materials using Google Gemini AI
+- **Multiple Question Types**: Support for multiple choice, identification, and true/false questions
+- **Exam Attempts**: Take exams multiple times and track your progress
+- **Performance Tracking**: View scores and review answers with detailed explanations
 
 ### 📋 Task Management
 
@@ -43,8 +50,9 @@ Alessence is a comprehensive study management platform designed specifically for
 ### Frontend
 
 - **Next.js 16** - React framework with App Router
+- **React 19** - Latest React features
 - **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first CSS framework
+- **Tailwind CSS 4** - Utility-first CSS framework
 - **Radix UI** - Accessible component primitives
 - **Redux Toolkit** - State management
 - **TanStack Query** - Data fetching and caching

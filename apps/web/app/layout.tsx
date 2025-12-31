@@ -22,12 +22,25 @@ export const metadata: Metadata = {
     process.env.NEXT_PUBLIC_APP_URL || "https://alessence.vercel.app"
   ),
   title: {
-    default: "Alessence | AI Study Companion",
+    default: "Alessence | AI Study Companion for Accountancy & Law",
     template: "%s | Alessence",
   },
   description:
-    "Manage your tasks, organize your files, and generate AI-powered exams for your accountancy studies. Your personal study space.",
+    "Your personal study space. Manage tasks, organize files, and generate AI-powered exams for accountancy and law studies in the Philippines.",
+  applicationName: "Alessence",
+  authors: [{ name: "Alessence Team", url: "https://alessence.vercel.app" }],
+  generator: "Next.js",
   keywords: [
+    "study assistant",
+    "AI tutor",
+    "accountancy",
+    "CPA board exam",
+    "Philippine Law",
+    "bar exam reviewer",
+    "flashcards",
+    "productivity tools",
+    "student planner",
+    "exam generator",
     "study",
     "AI",
     "exams",
@@ -37,7 +50,17 @@ export const metadata: Metadata = {
     "organization",
     "student productivity",
   ],
-  authors: [{ name: "Alessence Team" }],
+  referrer: "origin-when-cross-origin",
+  creator: "Alessence Team",
+  publisher: "Alessence",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Alessence | AI Study Companion",
     description:
@@ -61,6 +84,7 @@ export const metadata: Metadata = {
     description:
       "Manage your tasks, organize your files, and generate AI-powered exams for your accountancy studies.",
     images: ["/logo.png"],
+    creator: "@alessence",
   },
   robots: {
     index: true,
@@ -73,6 +97,12 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  appleWebApp: {
+    title: "Alessence",
+    statusBarStyle: "default",
+    startupImage: ["/logo.png"],
+  },
+  category: "education",
 };
 
 export default function RootLayout({
@@ -94,6 +124,47 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <RouteProgressBar />
           </Suspense>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                "name": "Alessence",
+                "url": "https://alessence.vercel.app",
+                "potentialAction": {
+                  "@type": "SearchAction",
+                  "target": "https://alessence.vercel.app/search?q={search_term_string}",
+                  "query-input": "required name=search_term_string"
+                }
+              }),
+            }}
+          />
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "WebApplication",
+                "name": "Alessence",
+                "applicationCategory": "EducationalApplication",
+                "operatingSystem": "Any",
+                "offers": {
+                  "@type": "Offer",
+                  "price": "0",
+                  "priceCurrency": "USD"
+                },
+                "description": "Your personal study space. Manage tasks, organize files, and generate AI-powered exams for accountancy and law studies.",
+                "image": "https://alessence.vercel.app/logo.png",
+                "url": "https://alessence.vercel.app",
+                "author": {
+                  "@type": "Organization",
+                  "name": "Alessence Team",
+                  "url": "https://alessence.vercel.app"
+                }
+              }),
+            }}
+          />
           <main className="min-h-screen w-full relative">
             <ReduxProvider>
               <TanstackProvider>

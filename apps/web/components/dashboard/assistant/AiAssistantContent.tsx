@@ -382,7 +382,8 @@ export default function AiAssistantContent() {
       )}
 
       <div className="relative flex flex-1 flex-col overflow-hidden">
-        <div className="z-10 flex shrink-0 flex-col gap-3 border-b bg-white/70 p-4 backdrop-blur-md dark:bg-slate-900/70 sm:flex-row sm:items-center sm:gap-4">
+        {/* Header - Compact on Mobile */}
+        <div className="z-10 flex shrink-0 items-center gap-2 border-b bg-white/70 p-2 backdrop-blur-md dark:bg-slate-900/70 sm:gap-4 sm:p-4">
           <Button
             variant="ghost"
             size="icon"
@@ -396,35 +397,36 @@ export default function AiAssistantContent() {
             )}
           </Button>
 
-          {/* Desktop: brand gradient icon. Mobile: subtle monochrome badge. */}
+          {/* Desktop: brand gradient icon. Mobile: smaller or hidden to save space if needed. Kept small here. */}
           <div className="hidden sm:flex rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 p-2 shadow-sm">
             <Bot className="size-6 text-white" />
           </div>
-          <div className="sm:hidden flex items-center justify-center size-10 rounded-xl border bg-white/60 text-slate-800 shadow-sm dark:bg-slate-900/40 dark:text-slate-100">
-            <Bot className="size-5" />
+          <div className="sm:hidden flex items-center justify-center size-8 rounded-lg border bg-white/60 text-slate-800 shadow-sm dark:bg-slate-900/40 dark:text-slate-100 shrink-0">
+            <Bot className="size-4" />
           </div>
-          <div className="flex-1">
-            <h1 className="text-lg font-bold tracking-tight text-slate-900 dark:text-white">
+          
+          <div className="flex-1 min-w-0">
+            <h1 className="text-sm sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
               AI Study Assistant
             </h1>
-            <p className="text-xs text-muted-foreground">
+            <p className="hidden sm:block text-xs text-muted-foreground">
               Accounting & Philippine Law • CPA & Bar Exam Prep
             </p>
           </div>
 
-          <div className="flex w-full items-center gap-2 rounded-lg border bg-white/60 px-3 py-1 dark:bg-slate-800/60 sm:ml-auto sm:w-auto">
-            <div className="text-xs font-medium text-muted-foreground mr-1">
+          <div className="flex shrink-0 items-center gap-2 rounded-lg border bg-white/60 px-2 py-1 dark:bg-slate-800/60 sm:px-3">
+            <div className="hidden sm:block text-xs font-medium text-muted-foreground mr-1">
               Mode:
             </div>
             <Select value={mode} onValueChange={(val: any) => setMode(val)}>
-              <SelectTrigger className="h-8 w-full border-0 bg-transparent focus:ring-0 sm:w-[160px]">
+              <SelectTrigger className="h-7 w-[100px] sm:h-8 sm:w-[160px] border-0 bg-transparent focus:ring-0 px-1 sm:px-3 text-xs sm:text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="STANDARD">Standard Assistant</SelectItem>
+                <SelectItem value="STANDARD">Standard</SelectItem>
                 <SelectItem value="SOCRATIC">Socratic Tutor</SelectItem>
                 <SelectItem value="CITATION_VERIFICATION">
-                  Citation Verification
+                  Citation Verify
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -432,8 +434,8 @@ export default function AiAssistantContent() {
         </div>
 
         {/* Chat Scroll Area - Takes remaining height */}
-        <ScrollArea ref={scrollRef} className="flex-1 p-4 overflow-y-auto">
-          <div className="mx-auto max-w-3xl space-y-6 pb-4">
+        <ScrollArea ref={scrollRef} className="flex-1 p-2 sm:p-4 overflow-y-auto">
+          <div className="mx-auto max-w-3xl space-y-4 sm:space-y-6 pb-20 sm:pb-4">
             {messages.length === 0 ? (
               <div className="py-12">
                 <div className="mb-8 text-center">
@@ -503,7 +505,7 @@ export default function AiAssistantContent() {
                     )}
 
                     <div
-                      className={`max-w-[80%] rounded-2xl px-5 py-3 shadow-sm ${
+                      className={`max-w-[85%] sm:max-w-[80%] break-words rounded-2xl px-3 py-2 sm:px-5 sm:py-3 shadow-sm ${
                         message.role === "user"
                           ? "bg-gradient-to-r from-pink-500 to-purple-600 text-white"
                           : "bg-white border text-slate-800 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100"
@@ -514,7 +516,7 @@ export default function AiAssistantContent() {
                           <ReactMarkdown>{message.content}</ReactMarkdown>
                         </div>
                       ) : (
-                        <p className="text-sm">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                       )}
                     </div>
                   </div>
@@ -559,17 +561,17 @@ export default function AiAssistantContent() {
         </ScrollArea>
 
         {/* Input Area - Fixed Bottom with Glassmorphism */}
-        <div className="z-10 border-t bg-white/70 p-4 backdrop-blur-md dark:bg-slate-900/70">
-          <div className="mx-auto max-w-3xl">
+        <div className="z-10 border-t bg-white/70 p-2 backdrop-blur-md dark:bg-slate-900/70 sm:p-4">
+          <div className="mx-auto max-w-3xl pl-12 sm:pl-0">
             <div className="flex gap-2">
               <Input
                 ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about accounting, Philippine law, or any study topic..."
+                placeholder="Ask..."
                 disabled={chatMutation.isPending}
-                className="flex-1 bg-white/80 shadow-sm focus-visible:ring-purple-400 dark:bg-slate-800"
+                className="flex-1 bg-white/80 shadow-sm focus-visible:ring-purple-400 dark:bg-slate-800 placeholder:text-muted-foreground/50 sm:placeholder:text-muted-foreground"
               />
               <Button
                 onClick={() => handleSend()}
