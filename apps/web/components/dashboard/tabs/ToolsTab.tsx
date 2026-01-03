@@ -1,15 +1,14 @@
-"use client";
-
 import { motion } from "framer-motion";
-import { Calculator, Scale } from "lucide-react";
+import { Calculator, Scale, Receipt } from "lucide-react";
 import { useQueryState } from "nuqs";
 import DrillMode from "../DrillMode";
 import LawTools from "../LawTools";
+import TaxWizard from "../TaxWizard";
 
 export function ToolsTab() {
   const [toolsSubTab, setToolsSubTab] = useQueryState("toolView", {
     defaultValue: "drills",
-    parse: (value) => value as "drills" | "law",
+    parse: (value) => value as "drills" | "law" | "tax",
   });
 
   return (
@@ -28,7 +27,7 @@ export function ToolsTab() {
       </div>
 
       <div className="flex flex-col gap-6">
-        <div className="flex justify-center gap-2">
+        <div className="flex justify-center gap-2 flex-wrap">
           <button
             onClick={() => setToolsSubTab("drills")}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
@@ -42,7 +41,7 @@ export function ToolsTab() {
           </button>
           <button
             onClick={() => setToolsSubTab("law")}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+             className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
               toolsSubTab === "law"
                 ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
                 : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
@@ -50,6 +49,17 @@ export function ToolsTab() {
           >
             <Scale className="w-4 h-4" />
             <span>Law Reference</span>
+          </button>
+          <button
+            onClick={() => setToolsSubTab("tax")}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
+              toolsSubTab === "tax"
+                ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
+                : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Receipt className="w-4 h-4" />
+            <span>Tax Wizard</span>
           </button>
         </div>
 
@@ -71,6 +81,16 @@ export function ToolsTab() {
               transition={{ duration: 0.2 }}
             >
               <LawTools />
+            </motion.div>
+          )}
+
+          {toolsSubTab === "tax" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <TaxWizard />
             </motion.div>
           )}
         </div>

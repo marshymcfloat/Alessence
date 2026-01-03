@@ -1226,4 +1226,57 @@ Do not include any text before or after the JSON.
       return [];
     }
   }
+
+  /**
+   * Generate expert tax advice with citations
+   */
+  async generateTaxAdvice(query: string): Promise<{
+    answer: string;
+    citations: string[];
+    disclaimer: string;
+  }> {
+    const prompt = `
+      You are the "Bar Topnotcher" and "CPA Board Topnotcher" - the ultimate expert on Philippine Taxation Law.
+      Your task is to answer the user's inquiry with **absolute precision, conservatism, and statutory basis.**
+
+      USER INQUIRY: "${query}"
+
+      ROLE & PERSONA:
+      - You are formal, professional, and authoritative.
+      - You DO NOT guess. If a tax rule is ambiguous, you state the ambiguity and cite relevant BIR Rulings or Supreme Court decisions that clarify or conflict.
+      - You prioritize the **National Internal Revenue Code (Tax Code) as amended by TRAIN / CREATE / EOPT (Ease of Paying Taxes Act)**.
+      
+      RESPONSE FORMAT:
+      Return ONLY a JSON object with this exact structure:
+      {
+        "answer": "Direct, clear, and comprehensive answer to the question. Use professional formatting (paragraphs, bullets). Explain the 'General Rule' first, then 'Exceptions'.",
+        "citations": ["List specific legal bases here, e.g., 'NIRC Sec. 32(B)(7)(e)', 'RR 2-98 as amended', 'TRAIN Law Sec. 5'"],
+        "disclaimer": "Standard professional disclaimer (e.g., 'Computed based on current laws as of [Year]. Consult a tax practitioner for specific filings.')."
+      }
+
+      GUIDELINES FOR ACCURACY:
+      1. **Latest Laws**: Assume the EOPT (Ease of Paying Taxes) Act and latest RR are in effect unless asked otherwise.
+      2. **Specifics**: Do not say "it depends" without explaining exactly WHAT it depends on (e.g., "It depends on whether you are VAT-registered or Non-VAT").
+      3. **Rates**: Verify tax rates (e.g., 8% optional rate vs graduated rates) mentally before generating.
+      4. **Clarity**: Explain simple terms for students, but use technical terms for precision.
+
+      Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      
+      let cleanedText = responseText.trim();
+      if (cleanedText.startsWith('```json')) {
+        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+      } else if (cleanedText.startsWith('```')) {
+        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+      }
+
+      return JSON.parse(cleanedText);
+    } catch (error) {
+      this.logger.error('Error generating tax advice:', error);
+      throw new Error('Failed to generate tax advice.');
+    }
+  }
 }

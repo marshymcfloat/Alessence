@@ -100,5 +100,20 @@ export class LawService {
 
     return this.generateCodalFlashcards(file.contentText, file.name, userId, deckId);
   }
+
+  /**
+   * Generate expert tax advice
+   */
+  async generateTaxAdvice(query: string, userId: string): Promise<{
+    answer: string;
+    citations: string[];
+    disclaimer: string;
+  }> {
+    if (!query || query.trim().length < 5) {
+      throw new BadRequestException('Query is too short.');
+    }
+
+    return this.geminiService.generateTaxAdvice(query);
+  }
 }
 

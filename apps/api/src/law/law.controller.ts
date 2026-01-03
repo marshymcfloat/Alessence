@@ -81,5 +81,13 @@ export class LawController {
       dto.deckId,
     );
   }
+
+  @Post('tax-advice')
+  async generateTaxAdvice(
+    @Body('query') query: string,
+    @GetUser() user: AuthenticatedUser,
+  ) {
+    return this.lawService.generateTaxAdvice(query, user.userId);
+  }
 }
 

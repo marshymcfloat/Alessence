@@ -203,7 +203,7 @@ const DashboardContent = ({
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 z-10 scroll-smooth">
-          <div className="max-w-7xl mx-auto h-full">
+          <div className="max-w-7xl mx-auto">
             <div className="flex justify-end mb-4">
               <Button
                  variant="ghost"
@@ -216,51 +216,51 @@ const DashboardContent = ({
                </Button>
             </div>
 
-            <Tabs value={activeTab || "timer"} className="h-full space-y-0 text-foreground">
+            <Tabs value={activeTab || "timer"} className="space-y-0 text-foreground">
                <ErrorBoundary name="Focus Timer">
-                 <TabsContent value="timer" className="mt-0 h-full">
+                 <TabsContent value="timer" className="mt-0">
                    <TimerTab />
                  </TabsContent>
                </ErrorBoundary>
 
                <ErrorBoundary name="Tasks">
-                 <TabsContent value="tasks" className="mt-0 h-full">
+                 <TabsContent value="tasks" className="mt-0">
                    <TasksTab initialTasks={initialTasks} />
                  </TabsContent>
                </ErrorBoundary>
 
                <ErrorBoundary name="Subjects">
-                 <TabsContent value="subjects" className="mt-0 h-full">
+                 <TabsContent value="subjects" className="mt-0">
                    <SubjectsOverview initialSubjects={subjects || []} />
                  </TabsContent>
                </ErrorBoundary>
 
                <ErrorBoundary name="Notes">
-                 <TabsContent value="notes" className="mt-0 h-full">
+                 <TabsContent value="notes" className="mt-0">
                    <NotesTab />
                  </TabsContent>
                </ErrorBoundary>
 
                <ErrorBoundary name="Study Materials">
-                 <TabsContent value="study" className="mt-0 h-full">
+                 <TabsContent value="study" className="mt-0">
                    <StudyTab />
                  </TabsContent>
                </ErrorBoundary>
 
                <ErrorBoundary name="Schedule">
-                 <TabsContent value="schedule" className="mt-0 h-full">
+                 <TabsContent value="schedule" className="mt-0">
                    <ScheduleTab initialSchedule={initialSchedule || []} />
                  </TabsContent>
                </ErrorBoundary>
 
                <ErrorBoundary name="Analytics">
-                 <TabsContent value="analytics" className="mt-0 h-full">
+                 <TabsContent value="analytics" className="mt-0">
                    <PerformanceDashboard />
                  </TabsContent>
                </ErrorBoundary>
 
                <ErrorBoundary name="Tools">
-                 <TabsContent value="tools" className="mt-0 h-full">
+                 <TabsContent value="tools" className="mt-0">
                    <ToolsTab />
                  </TabsContent>
                </ErrorBoundary>
