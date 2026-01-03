@@ -9,8 +9,6 @@ import {
   LayoutDashboard,
   LogOut,
   MoreVertical,
-  Settings,
-  User,
   Timer,
   FileText,
   BarChart,
@@ -24,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
 import { SubjectWithTaskProgress } from "@repo/types";
 import { Task } from "@repo/db";
 import { PerformanceDashboard } from "./PerformanceDashboard";
@@ -131,31 +129,24 @@ const DashboardContent = ({
           ))}
         </div>
 
-        <div className="p-4 border-t space-y-2">
+
+        <div className="p-4 border-t">
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3"
+            className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950"
             size="sm"
+            onClick={async () => {
+              const { logoutAction } = await import("@/lib/actions/authActions");
+              const result = await logoutAction();
+              if (result.success) {
+                router.push("/");
+                router.refresh();
+              }
+            }}
           >
-            <Settings className="w-4 h-4" />
-            Settings
+            <LogOut className="w-4 h-4" />
+            Logout
           </Button>
-          <div className="flex items-center gap-3 px-2 py-2">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-gradient-to-br from-pink-500 to-purple-600 text-white text-xs">
-                U
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">User</p>
-              <p className="text-xs text-muted-foreground truncate">
-                student@alessence.com
-              </p>
-            </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <LogOut className="w-4 h-4 ml-1" />
-            </Button>
-          </div>
         </div>
       </aside>
 
