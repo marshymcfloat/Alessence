@@ -1,6 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ["@repo/db", "@prisma/client"],
+  transpilePackages: ["@repo/db", "@prisma/client", "nuqs"],
   images: {
     unoptimized: false,
     remotePatterns: [],
