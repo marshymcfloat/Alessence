@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { INCOME_TAX_TABLE_2023, CORP_TAX_RATES } from "@/lib/data/taxTables";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
