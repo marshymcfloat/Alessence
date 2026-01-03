@@ -1,58 +1,51 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { KanbanBoard } from "./kanban/KanbanBoard";
-import type { Task } from "@repo/db";
-import { PomodoroTimer } from "./PomodoroTimer";
-import { StudySessionHistory } from "./StudySessionHistory";
-import { FocusMode } from "./FocusMode";
-import { GoalProgressCard } from "./GoalProgressCard";
-import GoalForm from "./GoalForm";
-import { NotesSection } from "./NotesSection";
-import { PerformanceDashboard } from "./PerformanceDashboard";
-import { CalendarView } from "./CalendarView";
-import { SubjectsOverview } from "./SubjectsOverview";
-import ExamsList from "./ExamsList";
-import SummariesList from "./SummariesList";
-import { FlashcardDeckList } from "./FlashcardDeckList";
-import DrillMode from "./DrillMode";
-import LawTools from "./LawTools";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  ClipboardList,
-  FileText,
-  BarChart3,
-  Calendar,
-  GraduationCap,
-  Timer,
-  Target,
-  History,
-  Plus,
-  Library,
-  FileQuestion,
-  ScrollText,
-  Layers,
-  RefreshCw,
-  Wrench,
-  Gavel,
-  Calculator,
-} from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Bell,
+  BookOpen,
+  Calendar,
+  CheckSquare,
+  LayoutDashboard,
+  LogOut,
+  MoreVertical,
+  Settings,
+  User,
+  Timer,
+  FileText,
+  BarChart,
+  PenTool,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, Suspense, useRef, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { motion } from "framer-motion";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SubjectWithTaskProgress } from "@repo/types";
-import AddExamSheet from "./AddExamSheet";
-import AddSummarySheet from "./AddSummarySheet";
-import FlashcardDeckForm from "./FlashcardDeckForm";
-import { ClassSchedule } from "./ClassSchedule";
+import { Task } from "@repo/db";
+import { PerformanceDashboard } from "./PerformanceDashboard";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+
+// Extracted Tab Components
+import { TimerTab } from "./tabs/TimerTab";
+import { TasksTab } from "./tabs/TasksTab";
+import { StudyTab } from "./tabs/StudyTab";
+import { ScheduleTab } from "./tabs/ScheduleTab";
+import { ToolsTab } from "./tabs/ToolsTab";
+
+import { useQueryState } from "nuqs";
+import { NotesTab } from "./tabs/NotesTab";
+import { SubjectsOverview } from "./SubjectsOverview";
 
 const DashboardContent = ({
   initialTasks,
@@ -65,589 +58,228 @@ const DashboardContent = ({
   subjects?: SubjectWithTaskProgress[];
   initialSchedule?: any[];
 }) => {
-  const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
-  const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
-  const [timerSubTab, setTimerSubTab] = useState<"timer" | "goals" | "history">("timer");
-  const [studySubTab, setStudySubTab] = useState<"exams" | "summaries" | "flashcards">("exams");
-  const [toolsSubTab, setToolsSubTab] = useState<"drills" | "law">("drills");
-  const [isNewDeckDialogOpen, setIsNewDeckDialogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useQueryState("tab", {
+    defaultValue: "timer",
+  });
+  
   const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();
+  const router = useRouter();
 
-  const handleRefresh = async (queryKey: string) => {
+  const handleRefresh = async () => {
     setIsRefreshing(true);
-    await queryClient.invalidateQueries({ queryKey: [queryKey] });
-    setIsRefreshing(false);
+    await queryClient.invalidateQueries();
+    router.refresh();
+    setTimeout(() => setIsRefreshing(false), 1000);
   };
 
+  const navItems = [
+    { value: "timer", label: "Focus Timer", icon: Timer },
+    { value: "tasks", label: "Tasks", icon: CheckSquare },
+    { value: "subjects", label: "Subjects", icon: BookOpen },
+    { value: "notes", label: "Notes", icon: FileText },
+    { value: "study", label: "Study", icon: BookOpen },
+    { value: "schedule", label: "Schedule", icon: Calendar },
+    { value: "analytics", label: "Analytics", icon: BarChart },
+    { value: "tools", label: "Tools", icon: PenTool },
+  ];
+
+  // Scroll to active tab on mobile
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      const activeElement = scrollContainerRef.current.querySelector('[data-active="true"]');
+      if (activeElement) {
+        activeElement.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      }
+    }
+  }, [activeTab]);
+
   return (
-    <div className="h-full p-4 md:p-6 lg:p-8 overflow-y-auto custom-scrollbar">
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: linear-gradient(to bottom, #ec4899, #a855f7);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: linear-gradient(to bottom, #db2777, #9333ea);
-        }
-      `}</style>
-      <div className="max-w-[1800px] mx-auto">
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="timer" className="w-full">
-          {/* Tab Navigation - Responsive */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div className="w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0 -mx-4 px-4 sm:mx-0 sm:px-0">
-              <TabsList className="inline-flex h-auto p-1 bg-muted/50 backdrop-blur-sm">
-                <TabsTrigger 
-                  value="timer" 
-                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-                >
-                  <Timer className="w-4 h-4 shrink-0" />
-                  <span className="hidden xs:inline">Timer</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="tasks" 
-                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-                >
-                  <ClipboardList className="w-4 h-4 shrink-0" />
-                  <span className="hidden xs:inline">Tasks</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="subjects" 
-                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-                >
-                  <GraduationCap className="w-4 h-4 shrink-0" />
-                  <span className="hidden xs:inline">Subjects</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="notes" 
-                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-                >
-                  <FileText className="w-4 h-4 shrink-0" />
-                  <span className="hidden xs:inline">Notes</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="study" 
-                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-                >
-                  <Library className="w-4 h-4 shrink-0" />
-                  <span className="hidden xs:inline">Study Materials</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="schedule" 
-                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-                >
-                  <Calendar className="w-4 h-4 shrink-0" />
-                  <span className="hidden xs:inline">Schedule</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="calendar" 
-                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-                >
-                  <Calendar className="w-4 h-4 shrink-0" />
-                  <span className="hidden xs:inline">Calendar</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="analytics" 
-                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-                >
-                  <BarChart3 className="w-4 h-4 shrink-0" />
-                  <span className="hidden xs:inline">Analytics</span>
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="tools" 
-                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
-                >
-                  <Wrench className="w-4 h-4 shrink-0" />
-                  <span className="hidden xs:inline">Tools</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950">
+      {/* Sidebar - Desktop */}
+      <aside className="hidden md:flex w-64 flex-col border-r bg-white dark:bg-slate-900 z-20">
+        <div className="p-6 flex items-center gap-2 border-b">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center">
+            <LayoutDashboard className="h-5 w-5 text-white" />
           </div>
+          <span className="font-bold text-xl bg-gradient-to-r from-gray-800 to-gray-600 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+            Alessence
+          </span>
+        </div>
 
-          {/* Timer Tab Content */}
-          <TabsContent value="timer" className="mt-0">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
+        <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+          {navItems.map((item) => (
+            <button
+              key={item.value}
+              onClick={() => setActiveTab(item.value)}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                activeTab === item.value
+                  ? "bg-gradient-to-r from-pink-500/10 to-purple-500/10 text-pink-600 dark:text-pink-400"
+                  : "text-gray-600 dark:text-gray-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+              }`}
             >
-              {/* Timer Header */}
-              <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
-                  Study Timer
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Focus with Pomodoro technique - 25 minutes of focused study
-                </p>
-              </div>
+              <item.icon
+                className={`w-5 h-5 ${
+                  activeTab === item.value
+                    ? "text-pink-600 dark:text-pink-400"
+                    : "text-gray-500"
+                }`}
+              />
+              {item.label}
+            </button>
+          ))}
+        </div>
 
-              {/* Timer Sub-tabs */}
-              <div className="flex flex-col gap-6">
-                {/* Timer Sub-navigation - Horizontal on all screens */}
-                <div className="flex justify-center gap-2">
-                  <button
-                    onClick={() => setTimerSubTab("timer")}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                      timerSubTab === "timer"
-                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
-                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Timer className="w-4 h-4" />
-                    <span>Timer</span>
-                  </button>
-                  <button
-                    onClick={() => setTimerSubTab("goals")}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                      timerSubTab === "goals"
-                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
-                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Target className="w-4 h-4" />
-                    <span>Goals</span>
-                  </button>
-                  <button
-                    onClick={() => setTimerSubTab("history")}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                      timerSubTab === "history"
-                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
-                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <History className="w-4 h-4" />
-                    <span>History</span>
-                  </button>
-                </div>
+        <div className="p-4 border-t space-y-2">
+          <Button variant="ghost" className="w-full justify-start gap-3" size="sm">
+            <Settings className="w-4 h-4" />
+            Settings
+          </Button>
+          <div className="flex items-center gap-3 px-2 py-2">
+             <Avatar className="h-8 w-8">
+                <AvatarFallback className="bg-gradient-to-br from-pink-500 to-purple-600 text-white text-xs">U</AvatarFallback>
+             </Avatar>
+             <div className="flex-1 min-w-0">
+               <p className="text-sm font-medium truncate">User</p>
+               <p className="text-xs text-muted-foreground truncate">student@alessence.com</p>
+             </div>
+             <Button variant="ghost" size="icon" className="h-8 w-8">
+               <LogOut className="w-4 h-4 ml-1" />
+             </Button>
+          </div>
+        </div>
+      </aside>
 
-                {/* Timer Content Area */}
-                <div className="w-full">
-                  {timerSubTab === "timer" && (
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
+        {/* Mobile Navigation - Horizontal Scroll */}
+        <div className="md:hidden border-b bg-white dark:bg-slate-900 z-20 shrink-0">
+          <div 
+            ref={scrollContainerRef}
+            className="flex items-center gap-2 overflow-x-auto py-3 px-4 no-scrollbar scroll-smooth"
+          >
+            {navItems.map((item) => {
+              const isActive = activeTab === item.value;
+              return (
+                <button
+                  key={item.value}
+                  onClick={() => setActiveTab(item.value)}
+                  data-active={isActive}
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors duration-200 ${
+                    isActive
+                      ? "text-white"
+                      : "text-gray-600 dark:text-gray-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-gray-200"
+                  }`}
+                >
+                  {isActive && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="flex justify-center"
-                    >
-                      <PomodoroTimer onEnterFocusMode={() => setIsFocusModeOpen(true)} />
-                    </motion.div>
+                      layoutId="activeTab-mobile"
+                      className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
                   )}
+                  <div className="relative z-10 flex items-center gap-2">
+                    <item.icon
+                      className={`w-4 h-4 ${
+                         isActive ? "text-white" : "text-gray-500 dark:text-gray-400"
+                      }`}
+                    />
+                    {item.label}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-                  {timerSubTab === "goals" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-6 max-w-4xl mx-auto"
-                    >
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                          <h3 className="text-lg font-semibold">Study Goals</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Track your daily and weekly study time goals
-                          </p>
-                        </div>
-                        <Dialog open={isGoalDialogOpen} onOpenChange={setIsGoalDialogOpen}>
-                          <DialogTrigger asChild>
-                            <Button className="gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600">
-                              <Plus className="w-4 h-4" />
-                              New Goal
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Create Study Goal</DialogTitle>
-                              <DialogDescription>
-                                Set a daily or weekly study time goal to track your progress
-                              </DialogDescription>
-                            </DialogHeader>
-                            <GoalForm onSuccess={() => setIsGoalDialogOpen(false)} />
-                          </DialogContent>
-                        </Dialog>
-                      </div>
-                      <GoalProgressCard />
-                    </motion.div>
-                  )}
+        {/* Dynamic Background */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+           <div className="absolute -top-[20%] -right-[10%] w-[70%] h-[70%] bg-purple-200/20 dark:bg-purple-900/10 blur-[100px] rounded-full mix-blend-multiply dark:mix-blend-screen animate-blob" />
+           <div className="absolute top-[20%] -left-[10%] w-[50%] h-[50%] bg-pink-200/20 dark:bg-pink-900/10 blur-[100px] rounded-full mix-blend-multiply dark:mix-blend-screen animate-blob animation-delay-2000" />
+        </div>
 
-                  {timerSubTab === "history" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="max-w-4xl mx-auto"
-                    >
-                      <StudySessionHistory />
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 z-10 scroll-smooth">
+          <div className="max-w-7xl mx-auto h-full">
+            <div className="flex justify-end mb-4">
+              <Button
+                 variant="ghost"
+                 size="sm"
+                 onClick={handleRefresh}
+                 disabled={isRefreshing}
+                 className={isRefreshing ? "opacity-50" : ""}
+               >
+                 {isRefreshing ? "Refreshing..." : "Refresh Data"}
+               </Button>
+            </div>
 
-            {/* Focus Mode Overlay */}
-            <FocusMode
-              isOpen={isFocusModeOpen}
-              onClose={() => setIsFocusModeOpen(false)}
-            />
-          </TabsContent>
+            <Tabs value={activeTab || "timer"} className="h-full space-y-0 text-foreground">
+               <ErrorBoundary name="Focus Timer">
+                 <TabsContent value="timer" className="mt-0 h-full">
+                   <TimerTab />
+                 </TabsContent>
+               </ErrorBoundary>
 
-          {/* Tasks Tab Content */}
-          <TabsContent value="tasks" className="mt-0">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-6"
-            >
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
-                Task Board
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Organize and track your tasks across different stages
-              </p>
-            </motion.div>
-            <KanbanBoard initialTasks={initialTasks} />
-          </TabsContent>
+               <ErrorBoundary name="Tasks">
+                 <TabsContent value="tasks" className="mt-0 h-full">
+                   <TasksTab initialTasks={initialTasks} />
+                 </TabsContent>
+               </ErrorBoundary>
 
-          {/* Subjects Tab Content */}
-          <TabsContent value="subjects" className="mt-0">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-6"
-            >
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
-                Subjects
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Track your progress across all subjects and courses
-              </p>
-            </motion.div>
-            <SubjectsOverview initialSubjects={subjects} />
-          </TabsContent>
+               <ErrorBoundary name="Subjects">
+                 <TabsContent value="subjects" className="mt-0 h-full">
+                   <SubjectsOverview initialSubjects={subjects || []} />
+                 </TabsContent>
+               </ErrorBoundary>
 
-          {/* Notes Tab Content */}
-          <TabsContent value="notes" className="mt-0">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-6"
-            >
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
-                Notes
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Capture your thoughts, ideas, and study notes
-              </p>
-            </motion.div>
-            <NotesSection />
-          </TabsContent>
+               <ErrorBoundary name="Notes">
+                 <TabsContent value="notes" className="mt-0 h-full">
+                   <NotesTab />
+                 </TabsContent>
+               </ErrorBoundary>
 
-          {/* Study Materials Tab Content */}
-          <TabsContent value="study" className="mt-0">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {/* Study Materials Header */}
-              <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
-                  Study Materials
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Manage your exams, summaries, and flashcards
-                </p>
-              </div>
+               <ErrorBoundary name="Study Materials">
+                 <TabsContent value="study" className="mt-0 h-full">
+                   <StudyTab />
+                 </TabsContent>
+               </ErrorBoundary>
 
-              {/* Study Materials Sub-tabs */}
-              <div className="flex flex-col gap-6">
-                {/* Sub-navigation - Horizontal centered */}
-                <div className="flex justify-center gap-2 flex-wrap">
-                  <button
-                    onClick={() => setStudySubTab("exams")}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                      studySubTab === "exams"
-                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
-                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <FileQuestion className="w-4 h-4" />
-                    <span>Exams</span>
-                  </button>
-                  <button
-                    onClick={() => setStudySubTab("summaries")}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                      studySubTab === "summaries"
-                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
-                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <ScrollText className="w-4 h-4" />
-                    <span>Summaries</span>
-                  </button>
-                  <button
-                    onClick={() => setStudySubTab("flashcards")}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                      studySubTab === "flashcards"
-                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
-                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Layers className="w-4 h-4" />
-                    <span>Flashcards</span>
-                  </button>
-                </div>
+               <ErrorBoundary name="Schedule">
+                 <TabsContent value="schedule" className="mt-0 h-full">
+                   <ScheduleTab initialSchedule={initialSchedule || []} />
+                 </TabsContent>
+               </ErrorBoundary>
 
-                {/* Study Materials Content Area */}
-                <div className="w-full">
-                  {studySubTab === "exams" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                        <div>
-                          <h3 className="text-lg font-semibold">Your Exams</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Create, take, and review your practice exams
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRefresh("exams")}
-                            disabled={isRefreshing}
-                            className="gap-2"
-                          >
-                            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                            <span className="hidden sm:inline">Refresh</span>
-                          </Button>
-                          <AddExamSheet />
-                        </div>
-                      </div>
-                      <ExamsList />
-                    </motion.div>
-                  )}
+               <ErrorBoundary name="Analytics">
+                 <TabsContent value="analytics" className="mt-0 h-full">
+                   <PerformanceDashboard />
+                 </TabsContent>
+               </ErrorBoundary>
 
-                  {studySubTab === "summaries" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                        <div>
-                          <h3 className="text-lg font-semibold">Your Summaries</h3>
-                          <p className="text-sm text-muted-foreground">
-                            AI-generated summaries from your study materials
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRefresh("summaries")}
-                            disabled={isRefreshing}
-                            className="gap-2"
-                          >
-                            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                            <span className="hidden sm:inline">Refresh</span>
-                          </Button>
-                          <AddSummarySheet />
-                        </div>
-                      </div>
-                      <SummariesList />
-                    </motion.div>
-                  )}
-
-                  {studySubTab === "flashcards" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                        <div>
-                          <h3 className="text-lg font-semibold">Your Flashcard Decks</h3>
-                          <p className="text-sm text-muted-foreground">
-                            Create and study flashcards with spaced repetition
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleRefresh("flashcard-decks")}
-                            disabled={isRefreshing}
-                            className="gap-2"
-                          >
-                            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                            <span className="hidden sm:inline">Refresh</span>
-                          </Button>
-                          <Dialog open={isNewDeckDialogOpen} onOpenChange={setIsNewDeckDialogOpen}>
-                            <DialogTrigger asChild>
-                              <Button className="gap-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600">
-                                <Plus className="w-4 h-4" />
-                                New Deck
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>Create Flashcard Deck</DialogTitle>
-                                <DialogDescription>
-                                  Create a new deck to organize your flashcards
-                                </DialogDescription>
-                              </DialogHeader>
-                              <FlashcardDeckForm onSuccess={() => setIsNewDeckDialogOpen(false)} />
-                            </DialogContent>
-                          </Dialog>
-                        </div>
-                      </div>
-                      <FlashcardDeckList />
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </TabsContent>
-
-          {/* Schedule Tab Content */}
-          <TabsContent value="schedule" className="mt-0">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-6"
-            >
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
-                Class Schedule
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Weekly class timetable and review sessions
-              </p>
-            </motion.div>
-            <ClassSchedule initialSchedule={initialSchedule} />
-          </TabsContent>
-
-          {/* Calendar Tab Content */}
-          <TabsContent value="calendar" className="mt-0">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-6"
-            >
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
-                Calendar
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                View your tasks and study sessions on a calendar
-              </p>
-            </motion.div>
-            <CalendarView />
-          </TabsContent>
-
-          {/* Analytics Tab Content */}
-          <TabsContent value="analytics" className="mt-0">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-              className="mb-6"
-            >
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
-                Analytics
-              </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Track your study performance and progress over time
-              </p>
-            </motion.div>
-            <PerformanceDashboard />
-          </TabsContent>
-
-          {/* Tools Tab Content */}
-          <TabsContent value="tools" className="mt-0">
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {/* Tools Header */}
-              <div className="mb-6">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
-                  Specialized Tools
-                </h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Advanced tools for Accounting and Law mastery
-                </p>
-              </div>
-
-              {/* Tools Sub-tabs */}
-              <div className="flex flex-col gap-6">
-                <div className="flex justify-center gap-2">
-                  <button
-                    onClick={() => setToolsSubTab("drills")}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                      toolsSubTab === "drills"
-                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
-                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Calculator className="w-4 h-4" />
-                    <span>Drills</span>
-                  </button>
-                  <button
-                    onClick={() => setToolsSubTab("law")}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-full text-sm font-medium transition-all ${
-                      toolsSubTab === "law"
-                        ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25"
-                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground"
-                    }`}
-                  >
-                    <Gavel className="w-4 h-4" />
-                    <span>Law Engine</span>
-                  </button>
-                </div>
-
-                <div className="w-full">
-                  {toolsSubTab === "drills" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <DrillMode />
-                    </motion.div>
-                  )}
-
-                  {toolsSubTab === "law" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <LawTools />
-                    </motion.div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </TabsContent>
-        </Tabs>
-      </div>
+               <ErrorBoundary name="Tools">
+                 <TabsContent value="tools" className="mt-0 h-full">
+                   <ToolsTab />
+                 </TabsContent>
+               </ErrorBoundary>
+            </Tabs>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
 
-export default DashboardContent;
+export default function DashboardContentWrapper(props: any) {
+  return (
+    <Suspense fallback={
+       <div className="flex h-screen items-center justify-center">
+         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+       </div>
+    }>
+      <DashboardContent {...props} />
+    </Suspense>
+  );
+}

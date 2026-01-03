@@ -7,6 +7,7 @@ import ReduxProvider from "@/components/providers/ReduxProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { RouteProgressBar } from "@/components/RouteProgressBar";
 import { Suspense } from "react";
+import { NuqsAdapter } from "nuqs/adapters/next/app";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -167,10 +168,12 @@ export default function RootLayout({
           />
           <main className="min-h-screen w-full relative">
             <ReduxProvider>
-              <TanstackProvider>
-                {children}
-                <Toaster />
-              </TanstackProvider>
+              <NuqsAdapter>
+                <TanstackProvider>
+                  {children}
+                  <Toaster />
+                </TanstackProvider>
+              </NuqsAdapter>
             </ReduxProvider>
           </main>
         </ThemeProvider>
