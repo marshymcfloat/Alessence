@@ -9,10 +9,8 @@ export const metadata: Metadata = {
 };
 
 const page = async ({ params }: { params: Promise<{ id: string }> }) => {
-  // Await params in Next.js 16
   const { id } = await params;
 
-  // Fetch data at the page level (Server Component)
   const [enrolledSubjectsResult, tasksResult, scheduleResult] = await Promise.all([
     getEnrolledSubject(),
     getAllTasks(),

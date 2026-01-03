@@ -90,7 +90,7 @@ const DashboardContent = ({
   }, [activeTab]);
 
   return (
-    <div className="flex h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-[calc(100vh-4rem)] bg-slate-50 dark:bg-slate-950">
       {/* Sidebar - Desktop */}
       <aside className="hidden md:flex w-64 flex-col border-r bg-white dark:bg-slate-900 z-20">
         <div className="p-6 flex items-center gap-2 border-b">
