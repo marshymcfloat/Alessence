@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Calculator, Scale, Receipt } from "lucide-react";
-import { useQueryState } from "nuqs";
+import { useQueryState } from "@/hooks/use-query-state";
 import DrillMode from "../DrillMode";
 import LawTools from "../LawTools";
 import TaxWizard from "../TaxWizard";

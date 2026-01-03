@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { useQueryState } from "nuqs";
+import { useQueryState } from "@/hooks/use-query-state";
 import ExamsList from "../ExamsList";
 import SummariesList from "../SummariesList";
 import { FlashcardDeckList } from "../FlashcardDeckList";

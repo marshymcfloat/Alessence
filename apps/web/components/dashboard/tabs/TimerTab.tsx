@@ -17,7 +17,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { useQueryState } from "nuqs";
+import { useQueryState } from "@/hooks/use-query-state";
 
 export function TimerTab() {
   const [timerSubTab, setTimerSubTab] = useQueryState("timerView", {

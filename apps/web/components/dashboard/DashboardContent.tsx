@@ -36,9 +36,9 @@ import { StudyTab } from "./tabs/StudyTab";
 import { ScheduleTab } from "./tabs/ScheduleTab";
 import { ToolsTab } from "./tabs/ToolsTab";
 
-import { useQueryState } from "nuqs";
 import { NotesTab } from "./tabs/NotesTab";
 import { SubjectsOverview } from "./SubjectsOverview";
+import { useQueryState } from "@/hooks/use-query-state";
 
 const DashboardContent = ({
   initialTasks,
@@ -54,7 +54,7 @@ const DashboardContent = ({
   const [activeTab, setActiveTab] = useQueryState("tab", {
     defaultValue: "timer",
   });
-  
+
   const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -82,9 +82,15 @@ const DashboardContent = ({
 
   useEffect(() => {
     if (scrollContainerRef.current) {
-      const activeElement = scrollContainerRef.current.querySelector('[data-active="true"]');
+      const activeElement = scrollContainerRef.current.querySelector(
+        '[data-active="true"]'
+      );
       if (activeElement) {
-        activeElement.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        activeElement.scrollIntoView({
+          behavior: "smooth",
+          inline: "center",
+          block: "nearest",
+        });
       }
     }
   }, [activeTab]);
@@ -126,21 +132,29 @@ const DashboardContent = ({
         </div>
 
         <div className="p-4 border-t space-y-2">
-          <Button variant="ghost" className="w-full justify-start gap-3" size="sm">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3"
+            size="sm"
+          >
             <Settings className="w-4 h-4" />
             Settings
           </Button>
           <div className="flex items-center gap-3 px-2 py-2">
-             <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-gradient-to-br from-pink-500 to-purple-600 text-white text-xs">U</AvatarFallback>
-             </Avatar>
-             <div className="flex-1 min-w-0">
-               <p className="text-sm font-medium truncate">User</p>
-               <p className="text-xs text-muted-foreground truncate">student@alessence.com</p>
-             </div>
-             <Button variant="ghost" size="icon" className="h-8 w-8">
-               <LogOut className="w-4 h-4 ml-1" />
-             </Button>
+            <Avatar className="h-8 w-8">
+              <AvatarFallback className="bg-gradient-to-br from-pink-500 to-purple-600 text-white text-xs">
+                U
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">User</p>
+              <p className="text-xs text-muted-foreground truncate">
+                student@alessence.com
+              </p>
+            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8">
+              <LogOut className="w-4 h-4 ml-1" />
+            </Button>
           </div>
         </div>
       </aside>
@@ -149,7 +163,7 @@ const DashboardContent = ({
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Mobile Navigation - Horizontal Scroll */}
         <div className="md:hidden border-b bg-white dark:bg-slate-900 z-20 shrink-0">
-          <div 
+          <div
             ref={scrollContainerRef}
             className="flex items-center gap-2 overflow-x-auto py-3 px-4 no-scrollbar scroll-smooth"
           >
@@ -171,13 +185,19 @@ const DashboardContent = ({
                       layoutId="activeTab-mobile"
                       className="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full"
                       initial={false}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 30,
+                      }}
                     />
                   )}
                   <div className="relative z-10 flex items-center gap-2">
                     <item.icon
                       className={`w-4 h-4 ${
-                         isActive ? "text-white" : "text-gray-500 dark:text-gray-400"
+                        isActive
+                          ? "text-white"
+                          : "text-gray-500 dark:text-gray-400"
                       }`}
                     />
                     {item.label}
@@ -190,8 +210,8 @@ const DashboardContent = ({
 
         {/* Dynamic Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-           <div className="absolute -top-[20%] -right-[10%] w-[70%] h-[70%] bg-purple-200/20 dark:bg-purple-900/10 blur-[100px] rounded-full mix-blend-multiply dark:mix-blend-screen animate-blob" />
-           <div className="absolute top-[20%] -left-[10%] w-[50%] h-[50%] bg-pink-200/20 dark:bg-pink-900/10 blur-[100px] rounded-full mix-blend-multiply dark:mix-blend-screen animate-blob animation-delay-2000" />
+          <div className="absolute -top-[20%] -right-[10%] w-[70%] h-[70%] bg-purple-200/20 dark:bg-purple-900/10 blur-[100px] rounded-full mix-blend-multiply dark:mix-blend-screen animate-blob" />
+          <div className="absolute top-[20%] -left-[10%] w-[50%] h-[50%] bg-pink-200/20 dark:bg-pink-900/10 blur-[100px] rounded-full mix-blend-multiply dark:mix-blend-screen animate-blob animation-delay-2000" />
         </div>
 
         {/* Scrollable Content */}
@@ -199,64 +219,67 @@ const DashboardContent = ({
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-end mb-4">
               <Button
-                 variant="ghost"
-                 size="sm"
-                 onClick={handleRefresh}
-                 disabled={isRefreshing}
-                 className={isRefreshing ? "opacity-50" : ""}
-               >
-                 {isRefreshing ? "Refreshing..." : "Refresh Data"}
-               </Button>
+                variant="ghost"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className={isRefreshing ? "opacity-50" : ""}
+              >
+                {isRefreshing ? "Refreshing..." : "Refresh Data"}
+              </Button>
             </div>
 
-            <Tabs value={activeTab || "timer"} className="space-y-0 text-foreground">
-               <ErrorBoundary name="Focus Timer">
-                 <TabsContent value="timer" className="mt-0">
-                   <TimerTab />
-                 </TabsContent>
-               </ErrorBoundary>
+            <Tabs
+              value={activeTab || "timer"}
+              className="space-y-0 text-foreground"
+            >
+              <ErrorBoundary name="Focus Timer">
+                <TabsContent value="timer" className="mt-0">
+                  <TimerTab />
+                </TabsContent>
+              </ErrorBoundary>
 
-               <ErrorBoundary name="Tasks">
-                 <TabsContent value="tasks" className="mt-0">
-                   <TasksTab initialTasks={initialTasks} />
-                 </TabsContent>
-               </ErrorBoundary>
+              <ErrorBoundary name="Tasks">
+                <TabsContent value="tasks" className="mt-0">
+                  <TasksTab initialTasks={initialTasks} />
+                </TabsContent>
+              </ErrorBoundary>
 
-               <ErrorBoundary name="Subjects">
-                 <TabsContent value="subjects" className="mt-0">
-                   <SubjectsOverview initialSubjects={subjects || []} />
-                 </TabsContent>
-               </ErrorBoundary>
+              <ErrorBoundary name="Subjects">
+                <TabsContent value="subjects" className="mt-0">
+                  <SubjectsOverview initialSubjects={subjects || []} />
+                </TabsContent>
+              </ErrorBoundary>
 
-               <ErrorBoundary name="Notes">
-                 <TabsContent value="notes" className="mt-0">
-                   <NotesTab />
-                 </TabsContent>
-               </ErrorBoundary>
+              <ErrorBoundary name="Notes">
+                <TabsContent value="notes" className="mt-0">
+                  <NotesTab />
+                </TabsContent>
+              </ErrorBoundary>
 
-               <ErrorBoundary name="Study Materials">
-                 <TabsContent value="study" className="mt-0">
-                   <StudyTab />
-                 </TabsContent>
-               </ErrorBoundary>
+              <ErrorBoundary name="Study Materials">
+                <TabsContent value="study" className="mt-0">
+                  <StudyTab />
+                </TabsContent>
+              </ErrorBoundary>
 
-               <ErrorBoundary name="Schedule">
-                 <TabsContent value="schedule" className="mt-0">
-                   <ScheduleTab initialSchedule={initialSchedule || []} />
-                 </TabsContent>
-               </ErrorBoundary>
+              <ErrorBoundary name="Schedule">
+                <TabsContent value="schedule" className="mt-0">
+                  <ScheduleTab initialSchedule={initialSchedule || []} />
+                </TabsContent>
+              </ErrorBoundary>
 
-               <ErrorBoundary name="Analytics">
-                 <TabsContent value="analytics" className="mt-0">
-                   <PerformanceDashboard />
-                 </TabsContent>
-               </ErrorBoundary>
+              <ErrorBoundary name="Analytics">
+                <TabsContent value="analytics" className="mt-0">
+                  <PerformanceDashboard />
+                </TabsContent>
+              </ErrorBoundary>
 
-               <ErrorBoundary name="Tools">
-                 <TabsContent value="tools" className="mt-0">
-                   <ToolsTab />
-                 </TabsContent>
-               </ErrorBoundary>
+              <ErrorBoundary name="Tools">
+                <TabsContent value="tools" className="mt-0">
+                  <ToolsTab />
+                </TabsContent>
+              </ErrorBoundary>
             </Tabs>
           </div>
         </div>
@@ -267,11 +290,13 @@ const DashboardContent = ({
 
 export default function DashboardContentWrapper(props: any) {
   return (
-    <Suspense fallback={
-       <div className="flex h-screen items-center justify-center">
-         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-       </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      }
+    >
       <DashboardContent {...props} />
     </Suspense>
   );
