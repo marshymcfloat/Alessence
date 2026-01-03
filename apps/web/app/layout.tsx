@@ -7,7 +7,7 @@ import ReduxProvider from "@/components/providers/ReduxProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { RouteProgressBar } from "@/components/RouteProgressBar";
 import { Suspense } from "react";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { NuqsAdapter } from "nuqs/adapters/next";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",

@@ -23,20 +23,13 @@ import { Button } from "@/components/ui/button";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SubjectWithTaskProgress } from "@repo/types";
 import { Task } from "@repo/db";
 import { PerformanceDashboard } from "./PerformanceDashboard";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 
-// Extracted Tab Components
 import { TimerTab } from "./tabs/TimerTab";
 import { TasksTab } from "./tabs/TasksTab";
 import { StudyTab } from "./tabs/StudyTab";
