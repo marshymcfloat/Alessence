@@ -52,15 +52,18 @@ import { SubjectWithTaskProgress } from "@repo/types";
 import AddExamSheet from "./AddExamSheet";
 import AddSummarySheet from "./AddSummarySheet";
 import FlashcardDeckForm from "./FlashcardDeckForm";
+import { ClassSchedule } from "./ClassSchedule";
 
 const DashboardContent = ({
   initialTasks,
   userId,
   subjects,
+  initialSchedule,
 }: {
   initialTasks: Task[];
   userId: string;
   subjects?: SubjectWithTaskProgress[];
+  initialSchedule?: any[];
 }) => {
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
   const [isGoalDialogOpen, setIsGoalDialogOpen] = useState(false);
@@ -135,6 +138,13 @@ const DashboardContent = ({
                 >
                   <Library className="w-4 h-4 shrink-0" />
                   <span className="hidden xs:inline">Study Materials</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="schedule" 
+                  className="gap-1.5 px-2 xs:px-3 py-2 text-xs sm:text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-purple-500 data-[state=active]:text-white"
+                >
+                  <Calendar className="w-4 h-4 shrink-0" />
+                  <span className="hidden xs:inline">Schedule</span>
                 </TabsTrigger>
                 <TabsTrigger 
                   value="calendar" 
@@ -510,6 +520,24 @@ const DashboardContent = ({
                 </div>
               </div>
             </motion.div>
+          </TabsContent>
+
+          {/* Schedule Tab Content */}
+          <TabsContent value="schedule" className="mt-0">
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mb-6"
+            >
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-pink-600 to-purple-600 dark:from-gray-100 dark:via-pink-400 dark:to-purple-400 bg-clip-text text-transparent mb-2">
+                Class Schedule
+              </h1>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Weekly class timetable and review sessions
+              </p>
+            </motion.div>
+            <ClassSchedule initialSchedule={initialSchedule} />
           </TabsContent>
 
           {/* Calendar Tab Content */}

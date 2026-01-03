@@ -26,6 +26,7 @@ import {
   deleteSubjectAction,
 } from "@/lib/actions/subjectActions";
 import { SubjectWithTaskProgress } from "@repo/types";
+import { SemesterEnum } from "@repo/db";
 import {
   Dialog,
   DialogContent,
@@ -78,6 +79,10 @@ export function SubjectsOverview({ initialSubjects }: SubjectsOverviewProps) {
   });
 
   const subjects = data?.data?.subjects || [];
+
+  // Group subjects by semester
+  const firstSemSubjects = subjects.filter(s => s.sem === SemesterEnum.FIRST);
+  const secondSemSubjects = subjects.filter(s => s.sem === SemesterEnum.SECOND);
 
   // Calculate totals
   const totals = subjects.reduce(
@@ -201,163 +206,60 @@ export function SubjectsOverview({ initialSubjects }: SubjectsOverviewProps) {
           </div>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <AnimatePresence>
-            {subjects.map((subject, index) => {
-              const color = getSubjectColor(index);
-              const { taskCounts } = subject;
-              const progress =
-                taskCounts.total > 0
-                  ? Math.round((taskCounts.done / taskCounts.total) * 100)
-                  : 0;
-              const isExpanded = expandedSubject === subject.id;
+        <div className="space-y-8">
+          {/* First Semester */}
+          {firstSemSubjects.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="px-3 py-1 bg-purple-50 dark:bg-purple-950/30 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300">
+                  First Semester
+                </Badge>
+                <div className="h-px bg-border flex-1" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <AnimatePresence>
+                  {firstSemSubjects.map((subject, index) => (
+                    <SubjectCard 
+                      key={subject.id} 
+                      subject={subject} 
+                      index={index} 
+                      expandedSubject={expandedSubject} 
+                      setExpandedSubject={setExpandedSubject} 
+                      confirm={confirm} 
+                      deleteMutation={deleteMutation} 
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
 
-              return (
-                <motion.div
-                  key={subject.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card
-                    className={`p-4 hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 ${color.border}`}
-                    onClick={() =>
-                      setExpandedSubject(isExpanded ? null : subject.id)
-                    }
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={`p-2 rounded-lg bg-gradient-to-br ${color.bg} shadow-md`}
-                        >
-                          <BookOpen className="w-4 h-4 text-white" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold line-clamp-1">
-                            {subject.title}
-                          </h4>
-                          <p className="text-xs text-muted-foreground">
-                            {taskCounts.total} task
-                            {taskCounts.total !== 1 ? "s" : ""}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            const confirmed = await confirm({
-                              title: "Delete Subject",
-                              description: `Are you sure you want to delete "${subject.title}"? All associated tasks will also be deleted.`,
-                              confirmText: "Delete",
-                              cancelText: "Cancel",
-                              variant: "destructive",
-                            });
-                            if (confirmed) {
-                              deleteMutation.mutate(subject.id);
-                            }
-                          }}
-                        >
-                          <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-500" />
-                        </Button>
-                        <ChevronRight
-                          className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-90" : ""}`}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Progress</span>
-                        <span className="font-medium">{progress}%</span>
-                      </div>
-                      <Progress value={progress} className="h-2" />
-                    </div>
-
-                    {/* Task Breakdown */}
-                    <div className="flex items-center gap-3 mt-3 text-xs">
-                      <div className={`flex items-center gap-1 ${color.text}`}>
-                        <CheckCircle2 className="w-3 h-3" />
-                        <span>{taskCounts.done} done</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-blue-600">
-                        <Clock className="w-3 h-3" />
-                        <span>{taskCounts.onProgress} active</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-gray-500">
-                        <Circle className="w-3 h-3" />
-                        <span>{taskCounts.planned} planned</span>
-                      </div>
-                    </div>
-
-                    {/* Expanded Details */}
-                    <AnimatePresence>
-                      {isExpanded && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: "auto" }}
-                          exit={{ opacity: 0, height: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="mt-4 pt-4 border-t"
-                        >
-                          <div className="space-y-3">
-                            {/* Status breakdown */}
-                            <div className="grid grid-cols-3 gap-2">
-                              <div
-                                className={`p-2 rounded-lg ${color.light} text-center`}
-                              >
-                                <div className="text-lg font-bold">
-                                  {taskCounts.done}
-                                </div>
-                                <div className="text-[10px] text-muted-foreground">
-                                  Done
-                                </div>
-                              </div>
-                              <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950 text-center">
-                                <div className="text-lg font-bold text-blue-600">
-                                  {taskCounts.onProgress}
-                                </div>
-                                <div className="text-[10px] text-muted-foreground">
-                                  In Progress
-                                </div>
-                              </div>
-                              <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-center">
-                                <div className="text-lg font-bold text-gray-600">
-                                  {taskCounts.planned}
-                                </div>
-                                <div className="text-[10px] text-muted-foreground">
-                                  Planned
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Completion message */}
-                            {progress === 100 && taskCounts.total > 0 && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-950 text-green-600 text-sm">
-                                <TrendingUp className="w-4 h-4" />
-                                <span>All tasks completed! 🎉</span>
-                              </div>
-                            )}
-                            {taskCounts.total === 0 && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-yellow-50 dark:bg-yellow-950 text-yellow-600 text-sm">
-                                <AlertCircle className="w-4 h-4" />
-                                <span>No tasks yet. Add some tasks!</span>
-                              </div>
-                            )}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
+          {/* Second Semester */}
+          {secondSemSubjects.length > 0 && (
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Badge variant="outline" className="px-3 py-1 bg-pink-50 dark:bg-pink-950/30 border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-300">
+                  Second Semester
+                </Badge>
+                <div className="h-px bg-border flex-1" />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <AnimatePresence>
+                  {secondSemSubjects.map((subject, index) => (
+                    <SubjectCard 
+                      key={subject.id} 
+                      subject={subject} 
+                      index={index} 
+                      expandedSubject={expandedSubject} 
+                      setExpandedSubject={setExpandedSubject} 
+                      confirm={confirm} 
+                      deleteMutation={deleteMutation} 
+                    />
+                  ))}
+                </AnimatePresence>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -367,3 +269,170 @@ export function SubjectsOverview({ initialSubjects }: SubjectsOverviewProps) {
   );
 }
 
+function SubjectCard({ 
+  subject, 
+  index, 
+  expandedSubject, 
+  setExpandedSubject, 
+  confirm, 
+  deleteMutation 
+}: { 
+  subject: SubjectWithTaskProgress, 
+  index: number, 
+  expandedSubject: number | null, 
+  setExpandedSubject: (id: number | null) => void, 
+  confirm: any, 
+  deleteMutation: any 
+}) {
+  const color = getSubjectColor(index);
+  const { taskCounts } = subject;
+  const progress =
+    taskCounts.total > 0
+      ? Math.round((taskCounts.done / taskCounts.total) * 100)
+      : 0;
+  const isExpanded = expandedSubject === subject.id;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ delay: index * 0.05 }}
+    >
+      <Card
+        className={`p-4 hover:shadow-lg transition-all duration-200 cursor-pointer border-l-4 ${color.border}`}
+        onClick={() =>
+          setExpandedSubject(isExpanded ? null : subject.id)
+        }
+      >
+        <div className="flex items-start justify-between mb-3">
+          <div className="flex items-center gap-3">
+            <div
+              className={`p-2 rounded-lg bg-gradient-to-br ${color.bg} shadow-md`}
+            >
+              <BookOpen className="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <h4 className="font-semibold line-clamp-1">
+                {subject.title}
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                {taskCounts.total} task
+                {taskCounts.total !== 1 ? "s" : ""}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={async (e) => {
+                e.stopPropagation();
+                const confirmed = await confirm({
+                  title: "Delete Subject",
+                  description: `Are you sure you want to delete "${subject.title}"? All associated tasks will also be deleted.`,
+                  confirmText: "Delete",
+                  cancelText: "Cancel",
+                  variant: "destructive",
+                });
+                if (confirmed) {
+                  deleteMutation.mutate(subject.id);
+                }
+              }}
+            >
+              <Trash2 className="w-4 h-4 text-muted-foreground hover:text-red-500" />
+            </Button>
+            <ChevronRight
+              className={`w-4 h-4 text-muted-foreground transition-transform ${isExpanded ? "rotate-90" : ""}`}
+            />
+          </div>
+        </div>
+
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Progress</span>
+            <span className="font-medium">{progress}%</span>
+          </div>
+          <Progress value={progress} className="h-2" />
+        </div>
+
+        {/* Task Breakdown */}
+        <div className="flex items-center gap-3 mt-3 text-xs">
+          <div className={`flex items-center gap-1 ${color.text}`}>
+            <CheckCircle2 className="w-3 h-3" />
+            <span>{taskCounts.done} done</span>
+          </div>
+          <div className="flex items-center gap-1 text-blue-600">
+            <Clock className="w-3 h-3" />
+            <span>{taskCounts.onProgress} active</span>
+          </div>
+          <div className="flex items-center gap-1 text-gray-500">
+            <Circle className="w-3 h-3" />
+            <span>{taskCounts.planned} planned</span>
+          </div>
+        </div>
+
+        {/* Expanded Details */}
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-4 pt-4 border-t"
+            >
+              <div className="space-y-3">
+                {/* Status breakdown */}
+                <div className="grid grid-cols-3 gap-2">
+                  <div
+                    className={`p-2 rounded-lg ${color.light} text-center`}
+                  >
+                    <div className="text-lg font-bold">
+                      {taskCounts.done}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      Done
+                    </div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950 text-center">
+                    <div className="text-lg font-bold text-blue-600">
+                      {taskCounts.onProgress}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      In Progress
+                    </div>
+                  </div>
+                  <div className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-center">
+                    <div className="text-lg font-bold text-gray-600">
+                      {taskCounts.planned}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      Planned
+                    </div>
+                  </div>
+                </div>
+
+                {/* Completion message */}
+                {progress === 100 && taskCounts.total > 0 && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-green-50 dark:bg-green-950 text-green-600 text-sm">
+                    <TrendingUp className="w-4 h-4" />
+                    <span>All tasks completed! 🎉</span>
+                  </div>
+                )}
+                {taskCounts.total === 0 && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-yellow-50 dark:bg-yellow-950 text-yellow-600 text-sm">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>No tasks yet. Add some tasks!</span>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Card>
+    </motion.div>
+  );
+}

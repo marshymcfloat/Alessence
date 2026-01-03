@@ -13,4 +13,6 @@ export {
   FriendshipStatusEnum,
   SharePermission,
   DocumentLinkType,
+  DayOfWeek,
+  ScheduleType,
 } from "@prisma/client";

@@ -164,6 +164,9 @@ export async function authLoginAction(values: AuthLoginTypes) {
   }
 }
 
+import { prisma } from "@repo/db/server";
+import { SemesterEnum, DayOfWeek, ScheduleType } from "@repo/db";
+
 export async function authRegisterAction(values: AuthRegisterTypes) {
   // Validate FETCH_BASE_URL is set
   if (!process.env.FETCH_BASE_URL) {
@@ -201,6 +204,67 @@ export async function authRegisterAction(values: AuthRegisterTypes) {
         error: data.message || "Registration failed. Please try again.",
       };
     }
+
+    // --- SEED SCHEDULE FOR NEW USER ---
+    if (data && data.user && data.user.id) {
+        try {
+            const scheduleData = [
+                // MONDAY
+                { day: DayOfWeek.MONDAY, startTime: '07:30', endTime: '10:30', subject: 'Intermediate Accounting 2 & 3', type: ScheduleType.CLASS },
+                { day: DayOfWeek.MONDAY, startTime: '10:30', endTime: '12:00', subject: 'Income Taxation', type: ScheduleType.CLASS },
+                { day: DayOfWeek.MONDAY, startTime: '13:30', endTime: '15:00', subject: 'Operations Management', type: ScheduleType.CLASS },
+                { day: DayOfWeek.MONDAY, startTime: '15:30', endTime: '17:30', subject: 'Physical Education 4', type: ScheduleType.CLASS },
+                // TUESDAY
+                { day: DayOfWeek.TUESDAY, startTime: '13:30', endTime: '15:00', subject: 'Financial Management', type: ScheduleType.CLASS },
+                { day: DayOfWeek.TUESDAY, startTime: '15:00', endTime: '16:30', subject: 'Economic Development', type: ScheduleType.CLASS },
+                { day: DayOfWeek.TUESDAY, startTime: '16:30', endTime: '18:00', subject: 'Business Laws & Regulations', type: ScheduleType.CLASS },
+                { day: DayOfWeek.TUESDAY, startTime: '18:00', endTime: '19:30', subject: 'Human Behavior in Organization', type: ScheduleType.CLASS },
+                // WEDNESDAY
+                { day: DayOfWeek.WEDNESDAY, startTime: '18:00', endTime: '21:00', subject: 'IT Application Tools in Business', type: ScheduleType.CLASS },
+                // THURSDAY
+                { day: DayOfWeek.THURSDAY, startTime: '07:30', endTime: '10:30', subject: 'Intermediate Accounting 2 & 3', type: ScheduleType.CLASS },
+                { day: DayOfWeek.THURSDAY, startTime: '10:30', endTime: '12:00', subject: 'Income Taxation', type: ScheduleType.CLASS },
+                { day: DayOfWeek.THURSDAY, startTime: '13:30', endTime: '15:00', subject: 'Operations Management', type: ScheduleType.CLASS },
+                // FRIDAY
+                { day: DayOfWeek.FRIDAY, startTime: '13:30', endTime: '15:00', subject: 'Financial Management', type: ScheduleType.CLASS },
+                { day: DayOfWeek.FRIDAY, startTime: '15:00', endTime: '16:30', subject: 'Economic Development', type: ScheduleType.CLASS },
+                { day: DayOfWeek.FRIDAY, startTime: '16:30', endTime: '18:00', subject: 'Business Laws & Regulations', type: ScheduleType.CLASS },
+                { day: DayOfWeek.FRIDAY, startTime: '18:00', endTime: '19:30', subject: 'Human Behavior in Organization', type: ScheduleType.CLASS },
+                // REVIEW SESSIONS
+                { day: DayOfWeek.MONDAY, startTime: '18:00', endTime: '20:00', subject: null, type: ScheduleType.REVIEW_SESSION },
+                { day: DayOfWeek.TUESDAY, startTime: '10:30', endTime: '12:30', subject: null, type: ScheduleType.REVIEW_SESSION },
+                { day: DayOfWeek.WEDNESDAY, startTime: '15:00', endTime: '17:00', subject: null, type: ScheduleType.REVIEW_SESSION },
+                { day: DayOfWeek.THURSDAY, startTime: '15:30', endTime: '17:30', subject: null, type: ScheduleType.REVIEW_SESSION },
+                { day: DayOfWeek.FRIDAY, startTime: '10:30', endTime: '12:30', subject: null, type: ScheduleType.REVIEW_SESSION },
+            ];
+
+            for (const item of scheduleData) {
+                let subjectId: number | null = null;
+                if (item.subject) {
+                    const sub = await prisma.subject.findFirst({
+                        where: { title: { contains: item.subject }, userId: null }
+                    });
+                    subjectId = sub?.id || null;
+                }
+
+                await prisma.classSchedule.create({
+                    data: {
+                        userId: data.user.id,
+                        subjectId: subjectId,
+                        dayOfWeek: item.day,
+                        startTime: item.startTime,
+                        endTime: item.endTime,
+                        type: item.type,
+                        room: item.type === ScheduleType.CLASS ? 'Room 301' : 'Library',
+                    }
+                });
+            }
+        } catch (seedError) {
+            console.error("Error seeding schedule for new user:", seedError);
+            // Don't fail registration if seeding fails
+        }
+    }
+    // -------------------------------------
 
     return {
       success: true,
