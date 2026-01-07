@@ -25,7 +25,7 @@ interface GeminiResponseWrapper {
   text?: string;
 }
 
-type GeminiResult =
+export type GeminiResult =
   | string
   | (GeminiResponseWrapper & {
       response?: { text?: string };
@@ -46,6 +46,17 @@ export class GeminiService {
     this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
   }
 
+  async onModuleInit() {
+    try {
+      this.logger.log('--- CHECKING AVAILABLE GEMINI MODELS ---');
+      const response = await this.genAI.models.list();
+      this.logger.log(JSON.stringify(response, null, 2));
+      this.logger.log('----------------------------------------');
+    } catch (error) {
+      this.logger.error('Failed to list models:', error);
+    }
+  }
+
   async generateExamQuestions(
     context: string,
     description: string,
@@ -59,16 +70,17 @@ export class GeminiService {
       questionTypes,
     );
 
-    const weakTopicsInstruction = weakTopics.length > 0
-      ? `
+    const weakTopicsInstruction =
+      weakTopics.length > 0
+        ? `
       PRIORITY TOPICS (Student Weaknesses):
       The student has struggled with the following topics. If the SOURCE MATERIAL covers these, you MUST prioritize generating questions about them to help the student improve:
-      ${weakTopics.map(t => `- ${t}`).join('\n')}
+      ${weakTopics.map((t) => `- ${t}`).join('\n')}
       `
-      : '';
+        : '';
 
     const prompt = `
-      You are an expert professor from top Philippine universities (like UP, Ateneo, La Salle, Jose Rizal University), specializing in BOTH Accountancy and Law. Your task is to create a comprehensive and challenging practice exam with ${itemCount} questions based ONLY on the provided context.
+      You are an expert professor specializing in Accountancy and Law (especially Philippine laws). Your task is to create a comprehensive and challenging practice exam with ${itemCount} questions based ONLY on the provided context.
 
       EXAM CONTEXT:
       The user has described the exam as follows: "${description}". Use this description to focus the questions on the most relevant topics within the context.
@@ -149,7 +161,7 @@ export class GeminiService {
 
     try {
       const result = (await this.genAI.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'models/gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
@@ -261,7 +273,7 @@ export class GeminiService {
     cardCount: number,
   ): Promise<Array<{ front: string; back: string }>> {
     const prompt = `
-      You are an expert study assistant specializing in Accountancy and Law (especially Philippine laws). Your task is to generate ${cardCount} flashcards based ONLY on the provided context.
+      You are an expert Philippine study assistant specializing in Accountancy and Law. Your task is to generate ${cardCount} flashcards based ONLY on the provided context.
 
       SOURCE MATERIAL:
       ---
@@ -269,54 +281,29 @@ export class GeminiService {
       ---
 
       CRITICAL REQUIREMENTS FOR FLASHCARDS:
-      1. All flashcards must be derived directly from the provided SOURCE MATERIAL. Do not use any external knowledge.
+      1. All flashcards must be derived directly from the provided SOURCE MATERIAL. Cross-reference with current Philippine professional standards (PFRS, PAS, TRAIN Law, Philippine Jurisprudence) where applicable.
       2. Generate exactly ${cardCount} flashcards.
       3. Intelligently detect the subject matter and create appropriate flashcards:
 
-         FOR ACCOUNTING/FINANCE CONTENT:
-         - Key accounting definitions and concepts
-         - Important formulas and calculations
-         - Accounting standards (PAS, PFRS, GAAP)
-         - Auditing procedures and terminology
-         - Tax computation rules
+          FOR ACCOUNTING/FINANCE CONTENT:
+          - Focus on Philippine-specific standards (PAS/PFRS) and BIR tax rules.
+          - Key accounting definitions, formulas, and terminology.
+          
+          FOR LAW/LEGAL CONTENT:
+          - Focus on Philippine statutory law and jurisprudence (Civil Code, RPC, Corp Code, etc.).
+          - Elements of crimes, civil obligations, and landmark cases.
 
-         FOR LAW/LEGAL CONTENT:
-         - Legal definitions and terminology
-         - Key provisions from Philippine laws (Civil Code, RPC, Tax Code, Corporation Code, Labor Code, etc.)
-         - Elements of crimes or civil obligations
-         - Important jurisprudence and case doctrines
-         - Legal maxims and principles
-         - Statutory requirements and procedures
-
-      4. Each flashcard should be:
-         - Simple and focused (one concept per card)
-         - Clear and concise
-         - Suitable for spaced repetition learning
-         - Helpful for CPA/Bar exam preparation
-      5. Front side (question) should be:
-         - A clear question or prompt
-         - Brief and direct
-         - Examples: "What is X?", "Define Y", "Under Article ___, what are the elements of...?"
-      6. Back side (answer) should be:
-         - A clear, concise answer
-         - Direct and factual
-         - Complete enough to understand the concept
-         - Include article numbers or references when relevant
+      4. Each flashcard should be professional, concise, and suitable for CPALE or Bar exam preparation.
+      5. Front side (question) should be a clear prompt.
+      6. Back side (answer) should be a factual, legally/technically accurate explanation.
 
       RESPONSE FORMAT:
-      Your response MUST be a valid JSON array of objects. Do not include any text before or after the JSON array. Each object must have the following structure:
-
-      {
-        "front": "The question or prompt for the front of the card",
-        "back": "The answer or explanation for the back of the card"
-      }
-
-      IMPORTANT: Ensure flashcards are clear, concise, and suitable for effective memorization and professional exam preparation.
+      Your response MUST be a valid JSON array of objects. Do not include any text before or after the JSON array.
     `;
 
     try {
       const result = (await this.genAI.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'models/gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
@@ -479,15 +466,17 @@ export class GeminiService {
     const isShortAnswer = userWords <= 2 && correctWords <= 2;
 
     if (isShortAnswer) {
-      const isCorrect = normalizedUserAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase();
-      return { 
-        isCorrect, 
-        reason: isCorrect ? 'Exact match.' : `Expected "${correctAnswer}".` 
+      const isCorrect =
+        normalizedUserAnswer.toLowerCase() ===
+        normalizedCorrectAnswer.toLowerCase();
+      return {
+        isCorrect,
+        reason: isCorrect ? 'Exact match.' : `Expected "${correctAnswer}".`,
       };
     }
 
     try {
-      const prompt = `You are an expert professor specializing in Accountancy and Philippine Law, evaluating exam answers. Determine if the student's answer is semantically equivalent to the correct answer.
+      const prompt = `You are a Senior Professor specializing in Accountancy (CPA) and Philippine Law, evaluating exam answers for accuracy based on CPALE and Philippine Bar Exam standards. Determine if the student's answer is semantically equivalent to the correct answer.
 
 QUESTION: ${questionText}
 
@@ -512,7 +501,7 @@ Respond with ONLY a JSON object in this exact format:
 Do not include any text before or after the JSON object.`;
 
       const result = (await this.genAI.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'models/gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
@@ -561,7 +550,9 @@ Do not include any text before or after the JSON object.`;
         this.logger.warn(
           'Failed to extract response from Gemini for answer evaluation. Falling back to case-insensitive comparison.',
         );
-        const isCorrect = normalizedUserAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase();
+        const isCorrect =
+          normalizedUserAnswer.toLowerCase() ===
+          normalizedCorrectAnswer.toLowerCase();
         return { isCorrect, reason: 'AI evaluation failed, used exact match.' };
       }
 
@@ -583,20 +574,26 @@ Do not include any text before or after the JSON object.`;
         this.logger.warn(
           'Invalid response format from Gemini for answer evaluation. Falling back to case-insensitive comparison.',
         );
-         const isCorrect = normalizedUserAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase();
+        const isCorrect =
+          normalizedUserAnswer.toLowerCase() ===
+          normalizedCorrectAnswer.toLowerCase();
         return { isCorrect, reason: 'AI returned invalid format.' };
       }
 
       return {
         isCorrect: parsedResponse.isCorrect,
-        reason: parsedResponse.reason || (parsedResponse.isCorrect ? 'Correct.' : 'Incorrect.'),
+        reason:
+          parsedResponse.reason ||
+          (parsedResponse.isCorrect ? 'Correct.' : 'Incorrect.'),
       };
     } catch (error) {
       this.logger.error(
         `Error evaluating answer with AI: ${error instanceof Error ? error.message : String(error)}. Falling back to case-insensitive comparison.`,
       );
 
-      const isCorrect = normalizedUserAnswer.toLowerCase() === normalizedCorrectAnswer.toLowerCase();
+      const isCorrect =
+        normalizedUserAnswer.toLowerCase() ===
+        normalizedCorrectAnswer.toLowerCase();
       return { isCorrect, reason: 'AI evaluation error.' };
     }
   }
@@ -648,11 +645,11 @@ Do not include any text before or after the JSON object.`;
       - Important distinctions and classifications
 
       FOR LAW/LEGAL:
-      - Elements and requisites
-      - Article/section references
-      - Key definitions
-      - Landmark cases and doctrines
-      - Legal maxims with explanations
+      - Elements and requisites based on Philippine Statutes
+      - Article/section references (e.g., Civil Code Art. 1156)
+      - Key definitions from Philippine Law
+      - Philippine landmark cases and doctrines
+      - Legal maxims with local context
 
       STRUCTURE:
       - Clear headings and subheadings
@@ -668,7 +665,7 @@ Do not include any text before or after the JSON object.`;
 
     try {
       const result = (await this.genAI.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'models/gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
@@ -745,7 +742,7 @@ Do not include any text before or after the JSON object.`;
   async generateContent(prompt: string): Promise<string> {
     try {
       const result = (await this.genAI.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'models/gemini-3-flash-preview',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       })) as GeminiResult;
 
@@ -853,7 +850,7 @@ Do not include any text before or after the JSON object.`;
 
     try {
       const responseText = await this.generateContent(prompt);
-      
+
       let cleanedText = responseText.trim();
       if (cleanedText.startsWith('```json')) {
         cleanedText = cleanedText
@@ -864,7 +861,7 @@ Do not include any text before or after the JSON object.`;
       }
 
       const parsed = JSON.parse(cleanedText);
-      
+
       return {
         problem: parsed.problem,
         solution: parsed.solution,
@@ -978,10 +975,12 @@ Do not include any text before or after the JSON.
 
     try {
       const responseText = await this.generateContent(prompt);
-      
+
       let cleanedText = responseText.trim();
       if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        cleanedText = cleanedText
+          .replace(/^```json\s*/, '')
+          .replace(/\s*```$/, '');
       } else if (cleanedText.startsWith('```')) {
         cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
@@ -989,7 +988,9 @@ Do not include any text before or after the JSON.
       return JSON.parse(cleanedText);
     } catch (error) {
       this.logger.error('Error generating case digest:', error);
-      throw new Error('Failed to generate case digest. Please ensure the text is a valid legal case.');
+      throw new Error(
+        'Failed to generate case digest. Please ensure the text is a valid legal case.',
+      );
     }
   }
 
@@ -1040,10 +1041,12 @@ Do not include any text before or after the JSON.
 
     try {
       const responseText = await this.generateContent(prompt);
-      
+
       let cleanedText = responseText.trim();
       if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        cleanedText = cleanedText
+          .replace(/^```json\s*/, '')
+          .replace(/\s*```$/, '');
       } else if (cleanedText.startsWith('```')) {
         cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
@@ -1051,7 +1054,9 @@ Do not include any text before or after the JSON.
       return JSON.parse(cleanedText);
     } catch (error) {
       this.logger.error('Error generating codal flashcards:', error);
-      throw new Error('Failed to generate flashcards from the legal provision.');
+      throw new Error(
+        'Failed to generate flashcards from the legal provision.',
+      );
     }
   }
 
@@ -1065,7 +1070,12 @@ Do not include any text before or after the JSON.
   ): Promise<{
     problem: string;
     given: string[];
-    steps: Array<{ step: number; description: string; computation: string; result: string }>;
+    steps: Array<{
+      step: number;
+      description: string;
+      computation: string;
+      result: string;
+    }>;
     finalAnswer: string;
     auditNote: string;
     relatedStandards: string[];
@@ -1117,10 +1127,12 @@ Do not include any text before or after the JSON.
 
     try {
       const responseText = await this.generateContent(prompt);
-      
+
       let cleanedText = responseText.trim();
       if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        cleanedText = cleanedText
+          .replace(/^```json\s*/, '')
+          .replace(/\s*```$/, '');
       } else if (cleanedText.startsWith('```')) {
         cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
@@ -1175,10 +1187,12 @@ Do not include any text before or after the JSON.
 
     try {
       const responseText = await this.generateContent(prompt);
-      
+
       let cleanedText = responseText.trim();
       if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        cleanedText = cleanedText
+          .replace(/^```json\s*/, '')
+          .replace(/\s*```$/, '');
       } else if (cleanedText.startsWith('```')) {
         cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
@@ -1209,18 +1223,22 @@ Do not include any text before or after the JSON.
 
     try {
       const result = await this.generateContent(prompt);
-      
+
       // Attempt to parse JSON
       const jsonMatch = result.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         return JSON.parse(jsonMatch[0]);
       }
-      
+
       // Fallback: split by newlines if JSON parsing fails
-      return result.split('\n')
-        .map(line => line.trim())
-        .filter(line => line.length > 0 && !line.startsWith('[') && !line.startsWith(']'))
-        .map(line => line.replace(/^[-*•\d\.]+\s+/, '')); // Remove bullets/numbers
+      return result
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(
+          (line) =>
+            line.length > 0 && !line.startsWith('[') && !line.startsWith(']'),
+        )
+        .map((line) => line.replace(/^[-*•\d\.]+\s+/, '')); // Remove bullets/numbers
     } catch (error) {
       this.logger.error('Failed to generate sub-topics', error);
       return [];
@@ -1265,10 +1283,12 @@ Do not include any text before or after the JSON.
 
     try {
       const responseText = await this.generateContent(prompt);
-      
+
       let cleanedText = responseText.trim();
       if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText.replace(/^```json\s*/, '').replace(/\s*```$/, '');
+        cleanedText = cleanedText
+          .replace(/^```json\s*/, '')
+          .replace(/\s*```$/, '');
       } else if (cleanedText.startsWith('```')) {
         cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }

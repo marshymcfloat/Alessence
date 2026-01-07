@@ -16,6 +16,9 @@ import ExamsList from "../ExamsList";
 import SummariesList from "../SummariesList";
 import { FlashcardDeckList } from "../FlashcardDeckList";
 import FlashcardDeckForm from "../FlashcardDeckForm";
+import AddExamSheet from "../AddExamSheet";
+import AddSummarySheet from "../AddSummarySheet";
+import CreateMockExamSheet from "../CreateMockExamSheet";
 
 export function StudyTab() {
   const [studySubTab, setStudySubTab] = useQueryState("studyView", {
@@ -43,13 +46,13 @@ export function StudyTab() {
       <div className="flex flex-col gap-6">
         {/* Sub-navigation */}
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex gap-2 p-1 bg-muted/50 rounded-full">
+          <div className="flex gap-2 p-1 bg-muted/50 rounded-full shadow-inner">
             <button
               onClick={() => setStudySubTab("exams")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
                 studySubTab === "exams"
-                  ? "bg-white dark:bg-slate-800 text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25 scale-105"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
               <GraduationCap className="w-4 h-4" />
@@ -57,10 +60,10 @@ export function StudyTab() {
             </button>
             <button
               onClick={() => setStudySubTab("summaries")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
                 studySubTab === "summaries"
-                  ? "bg-white dark:bg-slate-800 text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25 scale-105"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
               <FileText className="w-4 h-4" />
@@ -68,10 +71,10 @@ export function StudyTab() {
             </button>
             <button
               onClick={() => setStudySubTab("flashcards")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
                 studySubTab === "flashcards"
-                  ? "bg-white dark:bg-slate-800 text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25 scale-105"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
               }`}
             >
               <Layers className="w-4 h-4" />
@@ -98,6 +101,10 @@ export function StudyTab() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
             >
+              <div className="flex justify-between items-center mb-4 gap-2">
+                <AddExamSheet />
+                <CreateMockExamSheet />
+              </div>
               <ExamsList />
             </motion.div>
           )}
@@ -108,6 +115,9 @@ export function StudyTab() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2 }}
             >
+              <div className="flex justify-between items-center mb-4">
+                <AddSummarySheet />
+              </div>
               <SummariesList />
             </motion.div>
           )}

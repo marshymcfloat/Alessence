@@ -2,7 +2,11 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getAllExams, deleteExam, getExamById } from "@/lib/actions/examActionts";
+import {
+  getAllExams,
+  deleteExam,
+  getExamById,
+} from "@/lib/actions/examActionts";
 import {
   startExamAttempt,
   submitExamAttempt,
@@ -74,25 +78,34 @@ type QuestionType = {
 
 export default function ExamsList() {
   const queryClient = useQueryClient();
-  
+
   // React Query for fetching exams
-  const { data: examsData, isLoading: loading, refetch } = useQuery({
+  const {
+    data: examsData,
+    isLoading: loading,
+    refetch,
+  } = useQuery({
     queryKey: ["exams"],
     queryFn: () => getAllExams(),
   });
-  
-  const exams = examsData?.success ? (examsData.data?.exams as ExamWithCount[]) || [] : [];
-  
+
+  const exams = examsData?.success
+    ? (examsData.data?.exams as ExamWithCount[]) || []
+    : [];
+
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   // Exam taking state
   const [isExamDialogOpen, setIsExamDialogOpen] = useState(false);
   const [currentExam, setCurrentExam] = useState<ExamWithCount | null>(null);
-  const [currentAttempt, setCurrentAttempt] = useState<StartAttemptResult | null>(null);
+  const [currentAttempt, setCurrentAttempt] =
+    useState<StartAttemptResult | null>(null);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [examResult, setExamResult] = useState<SubmitAttemptResult | null>(null);
+  const [examResult, setExamResult] = useState<SubmitAttemptResult | null>(
+    null
+  );
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   // History dialog state
@@ -137,12 +150,13 @@ export default function ExamsList() {
     e.stopPropagation();
     const confirmed = await confirm({
       title: "Delete Exam",
-      description: "Are you sure you want to delete this exam? This action cannot be undone.",
+      description:
+        "Are you sure you want to delete this exam? This action cannot be undone.",
       confirmText: "Delete",
       cancelText: "Cancel",
       variant: "destructive",
     });
-    
+
     if (!confirmed) return;
 
     setDeletingId(id);
@@ -204,7 +218,7 @@ export default function ExamsList() {
         cancelText: "Continue Exam",
         variant: "default",
       });
-      
+
       if (!confirmed) {
         return;
       }
@@ -242,12 +256,13 @@ export default function ExamsList() {
     if (currentAttempt && !examResult) {
       const confirmed = await confirm({
         title: "Abandon Exam",
-        description: "You have an exam in progress. Are you sure you want to abandon it?",
+        description:
+          "You have an exam in progress. Are you sure you want to abandon it?",
         confirmText: "Abandon",
         cancelText: "Continue Exam",
         variant: "destructive",
       });
-      
+
       if (confirmed) {
         await abandonExamAttempt(currentAttempt.attemptId);
       } else {
@@ -497,7 +512,8 @@ export default function ExamsList() {
                       {currentExam.description}
                     </h2>
                     <p className="text-sm text-muted-foreground">
-                      {currentExam.subject.title} • {currentAttempt.questions.length} questions
+                      {currentExam.subject.title} •{" "}
+                      {currentAttempt.questions.length} questions
                     </p>
                   </div>
 
@@ -514,7 +530,9 @@ export default function ExamsList() {
                       )}
                     >
                       <Clock className="size-5" />
-                      {timeRemaining !== null ? formatTime(timeRemaining) : "--:--"}
+                      {timeRemaining !== null
+                        ? formatTime(timeRemaining)
+                        : "--:--"}
                     </div>
                   )}
 
@@ -522,11 +540,14 @@ export default function ExamsList() {
                   {!examResult && (
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-muted-foreground whitespace-nowrap">
-                        {Object.keys(answers).length}/{currentAttempt.questions.length} answered
+                        {Object.keys(answers).length}/
+                        {currentAttempt.questions.length} answered
                       </span>
                       <Progress
                         value={
-                          (Object.keys(answers).length / currentAttempt.questions.length) * 100
+                          (Object.keys(answers).length /
+                            currentAttempt.questions.length) *
+                          100
                         }
                         className="w-24 h-2"
                       />
@@ -535,16 +556,18 @@ export default function ExamsList() {
                 </div>
 
                 {/* Time warning */}
-                {timeRemaining !== null && timeRemaining <= 60 && !examResult && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-2 mt-3 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400 text-sm"
-                  >
-                    <AlertTriangle className="size-4" />
-                    <span>Less than 1 minute remaining!</span>
-                  </motion.div>
-                )}
+                {timeRemaining !== null &&
+                  timeRemaining <= 60 &&
+                  !examResult && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2 mt-3 p-2 bg-red-50 dark:bg-red-900/20 rounded-lg text-red-600 dark:text-red-400 text-sm"
+                    >
+                      <AlertTriangle className="size-4" />
+                      <span>Less than 1 minute remaining!</span>
+                    </motion.div>
+                  )}
               </div>
 
               {/* Scrollable Content */}
@@ -562,18 +585,29 @@ export default function ExamsList() {
                       >
                         <div className="text-center">
                           <Award
-                            className={cn("size-10 mx-auto mb-1", getScoreColor(examResult.score))}
+                            className={cn(
+                              "size-10 mx-auto mb-1",
+                              getScoreColor(examResult.score)
+                            )}
                           />
-                          <span className={cn("text-3xl font-bold", getScoreColor(examResult.score))}>
+                          <span
+                            className={cn(
+                              "text-3xl font-bold",
+                              getScoreColor(examResult.score)
+                            )}
+                          >
                             {examResult.score.toFixed(0)}%
                           </span>
                         </div>
                       </div>
-                      <h3 className="text-xl font-semibold mb-2">Exam Complete!</h3>
+                      <h3 className="text-xl font-semibold mb-2">
+                        Exam Complete!
+                      </h3>
                       <p className="text-muted-foreground">
-                        You got {examResult.correctAnswers} out of {examResult.totalQuestions}{" "}
-                        questions correct in{" "}
-                        {Math.floor(examResult.timeTaken / 60)}m {examResult.timeTaken % 60}s
+                        You got {examResult.correctAnswers} out of{" "}
+                        {examResult.totalQuestions} questions correct in{" "}
+                        {Math.floor(examResult.timeTaken / 60)}m{" "}
+                        {examResult.timeTaken % 60}s
                       </p>
                     </div>
 
@@ -619,18 +653,21 @@ export default function ExamsList() {
                                     Your answer:{" "}
                                     <span
                                       className={
-                                        result?.isCorrect ? "text-green-600" : "text-red-600"
+                                        result?.isCorrect
+                                          ? "text-green-600"
+                                          : "text-red-600"
                                       }
                                     >
                                       {userAnswer}
                                     </span>
                                   </p>
                                 )}
-                                {!result?.isCorrect && result?.correctAnswer && (
-                                  <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                                    Correct: {result.correctAnswer}
-                                  </p>
-                                )}
+                                {!result?.isCorrect &&
+                                  result?.correctAnswer && (
+                                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                                      Correct: {result.correctAnswer}
+                                    </p>
+                                  )}
                               </div>
                             </div>
                           </Card>
@@ -638,13 +675,18 @@ export default function ExamsList() {
                       })}
                     </div>
                   </div>
+                ) : /* Questions View */
+                currentAttempt.questions.length === 0 ? (
+                  <div className="text-center p-8 text-muted-foreground">
+                    No questions available.
+                  </div>
                 ) : (
-                  /* Questions View */
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="!grid !grid-cols-1 md:!grid-cols-2 !gap-6 !w-full !max-w-5xl !mx-auto">
                     {currentAttempt.questions.map((question, index) => {
                       const options = (question.options as string[]) || [];
                       const userAnswer = answers[question.id];
-                      const isIdentification = question.type === "IDENTIFICATION";
+                      const isIdentification =
+                        question.type === "IDENTIFICATION";
                       const isTrueFalse = question.type === "TRUE_FALSE";
 
                       return (
@@ -682,7 +724,9 @@ export default function ExamsList() {
                             <input
                               type="text"
                               value={userAnswer || ""}
-                              onChange={(e) => handleAnswerChange(question.id, e.target.value)}
+                              onChange={(e) =>
+                                handleAnswerChange(question.id, e.target.value)
+                              }
                               placeholder="Type your answer..."
                               className="w-full p-3 border-2 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent dark:bg-slate-800 dark:border-gray-600"
                             />
@@ -691,7 +735,9 @@ export default function ExamsList() {
                               {options.map((option) => (
                                 <button
                                   key={option}
-                                  onClick={() => handleAnswerChange(question.id, option)}
+                                  onClick={() =>
+                                    handleAnswerChange(question.id, option)
+                                  }
                                   className={cn(
                                     "flex-1 px-4 py-3 rounded-lg font-medium transition-all border-2",
                                     userAnswer === option
@@ -708,7 +754,9 @@ export default function ExamsList() {
                               {options.map((option, optIndex) => (
                                 <button
                                   key={optIndex}
-                                  onClick={() => handleAnswerChange(question.id, option)}
+                                  onClick={() =>
+                                    handleAnswerChange(question.id, option)
+                                  }
                                   className={cn(
                                     "w-full text-left px-4 py-3 rounded-lg text-sm transition-all border-2",
                                     userAnswer === option
@@ -741,7 +789,9 @@ export default function ExamsList() {
                   {!examResult && (
                     <Button
                       onClick={() => handleSubmit()}
-                      disabled={isSubmitting || Object.keys(answers).length === 0}
+                      disabled={
+                        isSubmitting || Object.keys(answers).length === 0
+                      }
                       className="gap-2"
                     >
                       {isSubmitting ? (
@@ -759,7 +809,10 @@ export default function ExamsList() {
                   )}
 
                   {examResult && currentExam.isPracticeMode && (
-                    <Button onClick={() => handleStartExam(currentExam)} className="gap-2">
+                    <Button
+                      onClick={() => handleStartExam(currentExam)}
+                      className="gap-2"
+                    >
                       <Repeat className="size-4" />
                       Retake Exam
                     </Button>
@@ -776,7 +829,7 @@ export default function ExamsList() {
         open={viewingHistory !== null}
         onOpenChange={(open) => !open && setViewingHistory(null)}
       >
-        <DialogContent 
+        <DialogContent
           className="overflow-y-auto"
           style={{ maxWidth: "90vw", width: "1200px", maxHeight: "90vh" }}
         >

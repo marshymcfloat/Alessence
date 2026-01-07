@@ -24,7 +24,7 @@ export async function createExam(
     formData.append("items", String(values.items));
     formData.append("subjectId", String(values.subjectId));
     formData.append("isPracticeMode", String(values.isPracticeMode));
-    
+
     // Only append timeLimit if it has a value (not null/undefined)
     if (values.timeLimit != null) {
       formData.append("timeLimit", String(values.timeLimit));
@@ -171,7 +171,8 @@ export async function getExamById(
 }
 
 export async function createMockExam(
-  subjectId: number
+  subjectId: number,
+  title?: string
 ): Promise<ActionReturnType<{ examId: number }>> {
   try {
     const cookie = await cookies();
@@ -190,7 +191,7 @@ export async function createMockExam(
         "Content-Type": "application/json",
         Cookie: `${token.name}=${token.value}`,
       },
-      body: JSON.stringify({ subjectId }),
+      body: JSON.stringify({ subjectId, title }),
     });
 
     if (!response.ok) {
@@ -259,7 +260,9 @@ export async function deleteExam(id: number): Promise<ActionReturnType<null>> {
 export async function evaluateAnswers(
   answers: Array<{ questionId: number; userAnswer: string }>
 ): Promise<
-  ActionReturnType<Array<{ questionId: number; isCorrect: boolean; feedback?: string }>>
+  ActionReturnType<
+    Array<{ questionId: number; isCorrect: boolean; feedback?: string }>
+  >
 > {
   try {
     const cookie = await cookies();

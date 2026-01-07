@@ -145,6 +145,7 @@ export default function ExamForm({ onSuccess }: ExamFormProps) {
                       <SelectItem value="10">10 items</SelectItem>
                       <SelectItem value="25">25 items</SelectItem>
                       <SelectItem value="50">50 items</SelectItem>
+                      <SelectItem value="70">70 items (Mock Board)</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

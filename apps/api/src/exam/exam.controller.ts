@@ -12,6 +12,8 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { ExamService } from './exam.service';
+import { StandardExamService } from './standard-exam.service';
+import { MockExamService } from './mock-exam.service';
 import { ExamHistoryService } from './exam-history.service';
 import { ExamAttemptService } from './exam-attempt.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -26,15 +28,18 @@ export class ExamController {
     private readonly examService: ExamService,
     private readonly examHistoryService: ExamHistoryService,
     private readonly examAttemptService: ExamAttemptService,
+    private readonly standardExamService: StandardExamService,
+    private readonly mockExamService: MockExamService,
   ) {}
 
   @Post('mock')
   @UseGuards(AuthGuard('jwt'))
   createMockExam(
     @Body('subjectId', ParseIntPipe) subjectId: number,
+    @Body('title') title: string | undefined, // Optional title
     @GetUser() user: AuthenticatedUser,
   ) {
-    return this.examService.createMockExam(user.userId, subjectId);
+    return this.mockExamService.createMockExam(user.userId, subjectId, title);
   }
 
   @Post()
@@ -45,7 +50,7 @@ export class ExamController {
     @UploadedFiles() files: Array<Express.Multer.File>,
     @GetUser() user: AuthenticatedUser,
   ) {
-    return this.examService.create(createExamDto, files, user);
+    return this.standardExamService.create(createExamDto, files, user);
   }
 
   @Get()
@@ -100,7 +105,11 @@ export class ExamController {
   @UseGuards(AuthGuard('jwt'))
   submitAttempt(
     @Param('id', ParseIntPipe) examId: number,
-    @Body() body: { attemptId: number; answers: Array<{ questionId: number; userAnswer: string }> },
+    @Body()
+    body: {
+      attemptId: number;
+      answers: Array<{ questionId: number; userAnswer: string }>;
+    },
     @GetUser() user: AuthenticatedUser,
   ) {
     return this.examAttemptService.submitAttempt(

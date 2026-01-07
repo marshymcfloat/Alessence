@@ -186,6 +186,7 @@ model Exam {
   updatedAt      DateTime           @updatedAt
   questionTypes  QuestionTypeEnum[]
   isPracticeMode Boolean            @default(false)
+  isMock         Boolean            @default(false)
   timeLimit      Int?
   userId         String?
   subject        Subject            @relation(fields: [subjectId], references: [id])

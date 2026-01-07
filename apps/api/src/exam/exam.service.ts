@@ -2,9 +2,9 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { FileService } from 'src/file/file.service';
 import { GeminiService } from 'src/gemini/gemini.service';
+import { MockExamGeminiService } from 'src/gemini/mock-exam.service';
 import { ExamStatusEnum, QuestionTypeEnum } from '@repo/db';
 import { AuthenticatedUser } from 'src/auth/decorator/get-user.decorator';
-import { CreateExamDto } from '@repo/types/nest';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import type { Exam, File, Prisma, Question } from '@repo/db';
 type MulterFile = Express.Multer.File;
@@ -18,124 +18,13 @@ export class ExamService {
     private readonly fileService: FileService,
     private readonly eventEmitter: EventEmitter2,
     private readonly geminiService: GeminiService,
+    private readonly mockExamGeminiService: MockExamGeminiService,
   ) {}
-
-  async create(
-    dto: CreateExamDto,
-    newFiles: MulterFile[],
-    user: AuthenticatedUser,
-  ): Promise<Exam> {
-    if (!user?.userId) {
-      throw new Error('User authentication is required');
-    }
-
-    let newFileIds: number[] = [];
-
-    if (newFiles && newFiles.length > 0) {
-      const createdFiles =
-        await this.fileService.createMultipleFilesWithEmbeddings(newFiles, user.userId);
-      newFileIds = createdFiles.map((file) => file.id);
-    }
-
-    // Validate that all existing file IDs belong to the user OR are shared with them
-    if (dto.existingFileIds && dto.existingFileIds.length > 0) {
-      const requestedFileIds = dto.existingFileIds.map((id) => +id);
-      
-      const existingFiles = await this.dbService.file.findMany({
-        where: {
-          id: { in: requestedFileIds },
-        },
-        select: {
-          id: true,
-          userId: true,
-        },
-      });
-
-      // Check if all files exist
-      const fileIdsSet = new Set(existingFiles.map((f) => f.id));
-      const requestedFileIdsSet = new Set(requestedFileIds);
-
-      if (fileIdsSet.size !== requestedFileIdsSet.size) {
-        throw new Error('One or more requested files do not exist');
-      }
-
-      // Check which files don't belong to the user (need to check if shared)
-      const notOwnedFileIds = existingFiles
-        .filter((file) => file.userId !== user.userId)
-        .map((file) => file.id);
-
-      if (notOwnedFileIds.length > 0) {
-        // Check if these files are shared with the user
-        const sharedFiles = await this.dbService.sharedFile.findMany({
-          where: {
-            fileId: { in: notOwnedFileIds },
-            recipientId: user.userId,
-          },
-          select: {
-            fileId: true,
-          },
-        });
-
-        const sharedFileIds = new Set(sharedFiles.map((sf) => sf.fileId));
-        const unauthorizedFiles = notOwnedFileIds.filter(
-          (id) => !sharedFileIds.has(id),
-        );
-
-        if (unauthorizedFiles.length > 0) {
-          throw new Error(
-            'You do not have permission to use one or more of the selected files',
-          );
-        }
-      }
-    }
-
-    const allSourceFileIds = [...(dto.existingFileIds || []), ...newFileIds];
-
-    if (allSourceFileIds.length === 0) {
-      throw new Error('An exam must have at least one source file.');
-    }
-
-    // Validate that the subject belongs to the user
-    const subject = await this.dbService.subject.findFirst({
-      where: {
-        id: +dto.subjectId,
-        userId: user.userId,
-      },
-    });
-
-    if (!subject) {
-      throw new Error('Subject not found or you do not have permission to use it');
-    }
-
-    const exam = await this.dbService.exam.create({
-      data: {
-        description: dto.describe,
-        requestedItems: +dto.items,
-        status: ExamStatusEnum.GENERATING,
-        subjectId: +dto.subjectId,
-        questionTypes: dto.questionTypes as QuestionTypeEnum[],
-        isPracticeMode: dto.isPracticeMode === true || (dto.isPracticeMode as unknown) === 'true',
-        timeLimit: dto.timeLimit ? +dto.timeLimit : null,
-        userId: user.userId, // Set user ownership
-        sourceFiles: {
-          connect: allSourceFileIds.map((id) => ({ id: +id })),
-        },
-      },
-    });
-
-    this.eventEmitter.emit('exam.created', exam);
-
-    this.logger.log(
-      `Exam [ID: ${exam.id}] created. Emitting 'exam.created' event.`,
-    );
-
-    return exam;
-  }
 
   async findAll(userId: string, subjectId?: number): Promise<any[]> {
     const exams = await this.dbService.exam.findMany({
       where: {
-        userId: userId, // Only return exams owned by this user
+        userId: userId,
         ...(subjectId ? { subjectId } : {}),
       },
       include: {
@@ -183,7 +72,7 @@ export class ExamService {
 
   async findOne(id: number, userId: string): Promise<Exam | null> {
     return this.dbService.exam.findFirst({
-      where: { 
+      where: {
         id,
         userId: userId, // Verify ownership
       },
@@ -216,7 +105,9 @@ export class ExamService {
     });
 
     if (!exam) {
-      throw new Error('Exam not found or you do not have permission to delete it.');
+      throw new Error(
+        'Exam not found or you do not have permission to delete it.',
+      );
     }
 
     await this.dbService.exam.delete({
@@ -239,19 +130,34 @@ export class ExamService {
         .map((file) => file.contentText)
         .join('\n\n---\n\n');
 
-      if (!context.trim()) {
-        throw new Error('Source files contain no text content.');
-      }
-
+      // Allowing empty context for AI-only knowledge generation
       this.logger.log(
-        `Generating ${exam.requestedItems} questions for Exam [ID: ${exam.id}]...`,
+        `Generating ${exam.requestedItems} questions for Exam [ID: ${exam.id}] ${context.trim() ? 'using source files' : 'from internal knowledge'}...`,
       );
-      const generatedQuestions = await this.geminiService.generateExamQuestions(
-        context,
-        examWithFiles.description,
-        examWithFiles.requestedItems,
-        examWithFiles.questionTypes,
-      );
+      // Append instructions for standard exams (not mock)
+      const standardExamInstructions = `
+      IMPORTANT INSTRUCTION: 
+      The generated questions MUST be strictly aligned with the content of the provided source files. 
+      Ensure that the questions test critical requirements and deepen understanding of the specific topics covered in the files.
+      Avoid generic questions; focus on the specific details, definitions, and concepts found in the context.`;
+
+      const promptDescription = (exam as any).isMock
+        ? examWithFiles.description
+        : `${examWithFiles.description}\n${standardExamInstructions}`;
+
+      const generatedQuestions = (exam as any).isMock
+        ? await this.mockExamGeminiService.generateMockFinalsExam(
+            context,
+            promptDescription, // Use promptDescription (though for mock it's just description, mock service handles its own prompting mostly)
+            examWithFiles.requestedItems,
+            examWithFiles.questionTypes,
+          )
+        : await this.geminiService.generateExamQuestions(
+            context,
+            promptDescription,
+            examWithFiles.requestedItems,
+            examWithFiles.questionTypes,
+          );
 
       if (!generatedQuestions || generatedQuestions.length === 0) {
         throw new Error(
@@ -411,48 +317,5 @@ export class ExamService {
     );
 
     return evaluations;
-  }
-
-  async createMockExam(userId: string, subjectId: number): Promise<Exam> {
-    // 1. Fetch all files for this subject that the user has access to
-    const files = await this.dbService.file.findMany({
-      where: {
-        userId,
-        subjectId,
-      },
-    });
-
-    if (files.length === 0) {
-      throw new Error(
-        'No source files found for this subject. Cannot generate mock exam.',
-      );
-    }
-
-    // 2. Create the exam record
-    const subject = await this.dbService.subject.findUnique({
-      where: { id: subjectId },
-      select: { title: true },
-    });
-
-    const exam = await this.dbService.exam.create({
-      data: {
-        description: `Mock Board Exam: ${subject?.title || 'Subject'}`,
-        requestedItems: 70, // Standard board exam size
-        status: ExamStatusEnum.GENERATING,
-        subjectId: subjectId,
-        questionTypes: [QuestionTypeEnum.MULTIPLE_CHOICE], // Standard board exam format
-        isPracticeMode: false, // It's a "mock exam" so it counts
-        timeLimit: 180, // 3 hours
-        userId: userId,
-        sourceFiles: {
-          connect: files.map((f) => ({ id: f.id })),
-        },
-      },
-    });
-
-    // 3. Trigger generation
-    this.eventEmitter.emit('exam.created', exam);
-
-    return exam;
   }
 }
