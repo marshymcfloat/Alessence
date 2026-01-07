@@ -6,7 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
-import { Save, X, FileText, BookOpen, Link as LinkIcon, Tags } from "lucide-react";
+import {
+  Save,
+  X,
+  FileText,
+  BookOpen,
+  Link as LinkIcon,
+  Tags,
+} from "lucide-react";
 import { CreateNoteTypes, UpdateNoteTypes } from "@repo/types";
 import SubjectSelectInput from "./SubjectSelectInput";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +28,7 @@ import {
 } from "@/components/ui/select";
 import type { Note } from "@repo/db";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface NoteEditorProps {
   note?: Note | null;
@@ -38,9 +46,9 @@ export function NoteEditor({
   const [title, setTitle] = useState(note?.title || "");
   const [content, setContent] = useState(note?.content || "");
   const [isMarkdown, setIsMarkdown] = useState(note?.isMarkdown || false);
-  const [selectedSubjectId, setSelectedSubjectId] = useState<number | undefined>(
-    note?.subjectId || undefined
-  );
+  const [selectedSubjectId, setSelectedSubjectId] = useState<
+    number | undefined
+  >(note?.subjectId || undefined);
   const [selectedFileId, setSelectedFileId] = useState<number | undefined>(
     note?.fileId || undefined
   );
@@ -128,7 +136,10 @@ export function NoteEditor({
           <div className="flex items-center justify-between mb-2">
             <Label htmlFor="note-content">Content</Label>
             <div className="flex items-center gap-2">
-              <Label htmlFor="markdown-toggle" className="text-sm font-normal cursor-pointer">
+              <Label
+                htmlFor="markdown-toggle"
+                className="text-sm font-normal cursor-pointer"
+              >
                 <input
                   id="markdown-toggle"
                   type="checkbox"
@@ -142,7 +153,9 @@ export function NoteEditor({
           </div>
           {previewMode && isMarkdown ? (
             <div className="min-h-[400px] p-4 border rounded-md bg-muted/50 prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown>{content}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {content}
+              </ReactMarkdown>
             </div>
           ) : (
             <Textarea
@@ -155,7 +168,8 @@ export function NoteEditor({
           )}
           {isMarkdown && (
             <p className="text-xs text-muted-foreground mt-2">
-              Tip: Use Markdown syntax for formatting (e.g., **bold**, *italic*, # heading)
+              Tip: Use Markdown syntax for formatting (e.g., **bold**, *italic*,
+              # heading)
             </p>
           )}
         </div>
@@ -227,4 +241,3 @@ export function NoteEditor({
     </Card>
   );
 }
-

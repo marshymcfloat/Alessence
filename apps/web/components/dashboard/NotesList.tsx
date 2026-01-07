@@ -2,7 +2,10 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAllNotes, deleteNoteAction } from "@/lib/actions/noteActions";
-import { getNotesSharedWithMe, type SharedNoteItem } from "@/lib/actions/sharingActions";
+import {
+  getNotesSharedWithMe,
+  type SharedNoteItem,
+} from "@/lib/actions/sharingActions";
 import type { Note } from "@repo/db";
 
 type NoteWithRelations = Note & {
@@ -14,6 +17,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { useState } from "react";
+import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import {
   FileText,
@@ -24,11 +30,13 @@ import {
   Link as LinkIcon,
   Calendar,
   Users,
+  MoreVertical,
+  Plus,
+  Clock,
+  Filter,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { formatDistanceToNow } from "date-fns";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { toast } from "sonner";
 import { useConfirmDialog } from "@/components/ui/confirm-dialog";
 
@@ -67,12 +75,13 @@ export function NotesList({ onEditNote, onCreateNote }: NotesListProps) {
   const handleDelete = async (id: number) => {
     const confirmed = await confirm({
       title: "Delete Note",
-      description: "Are you sure you want to delete this note? This action cannot be undone.",
+      description:
+        "Are you sure you want to delete this note? This action cannot be undone.",
       confirmText: "Delete",
       cancelText: "Cancel",
       variant: "destructive",
     });
-    
+
     if (confirmed) {
       await deleteMutation.mutateAsync(id);
     }
@@ -126,17 +135,14 @@ export function NotesList({ onEditNote, onCreateNote }: NotesListProps) {
             className="h-full"
           >
             <Card className="p-4 h-full flex flex-col hover:shadow-lg transition-shadow cursor-pointer group">
-              <div
-                className="flex-1"
-                onClick={() => onEditNote(note)}
-              >
+              <div className="flex-1" onClick={() => onEditNote(note)}>
                 <h3 className="font-semibold text-lg mb-2 line-clamp-2">
                   {note.title}
                 </h3>
                 <div className="text-sm text-muted-foreground mb-3 line-clamp-3">
                   {note.isMarkdown ? (
                     <div className="prose prose-sm dark:prose-invert max-w-none">
-                      <ReactMarkdown>
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {note.content.substring(0, 150) +
                           (note.content.length > 150 ? "..." : "")}
                       </ReactMarkdown>
@@ -269,13 +275,18 @@ export function NotesList({ onEditNote, onCreateNote }: NotesListProps) {
                     <Users className="w-3 h-3" />
                     {item.owner.name}
                   </Badge>
-                  <Badge variant={item.permission === "COPY" ? "default" : "secondary"}>
+                  <Badge
+                    variant={
+                      item.permission === "COPY" ? "default" : "secondary"
+                    }
+                  >
                     {item.permission === "COPY" ? "Can Copy" : "View Only"}
                   </Badge>
                 </div>
                 <div className="flex items-center gap-1 text-xs text-muted-foreground">
                   <Calendar className="w-3 h-3" />
-                  Shared {formatDistanceToNow(new Date(item.createdAt), {
+                  Shared{" "}
+                  {formatDistanceToNow(new Date(item.createdAt), {
                     addSuffix: true,
                   })}
                 </div>
@@ -333,4 +344,3 @@ export function NotesList({ onEditNote, onCreateNote }: NotesListProps) {
     </div>
   );
 }
-

@@ -44,7 +44,10 @@ export class FileService {
     return createdDbFiles;
   }
 
-  async createFileWithEmbedding(file: MulterFile, userId: string): Promise<File> {
+  async createFileWithEmbedding(
+    file: MulterFile,
+    userId: string,
+  ): Promise<File> {
     if (!file) {
       throw new BadRequestException('A file object is required.');
     }
@@ -57,9 +60,14 @@ export class FileService {
       });
 
       if (existingFile) {
-        throw new ConflictException(
-          `A file with the name "${file.originalname}" already exists.`,
-        );
+        const randomSuffix = Math.floor(Math.random() * 100000);
+        const nameParts = file.originalname.split('.');
+        if (nameParts.length > 1) {
+          const ext = nameParts.pop();
+          file.originalname = `${nameParts.join('.')}-${randomSuffix}.${ext}`;
+        } else {
+          file.originalname = `${file.originalname}-${randomSuffix}`;
+        }
       }
 
       const blob = await put(file.originalname, file.buffer, {
@@ -215,9 +223,9 @@ export class FileService {
 
       // Combine all existing items for linking
       const existingTopics = [
-        ...topics.map(t => `Topic: ${t.title}`),
-        ...notes.map(n => `Note: ${n.title}`),
-        ...otherFiles.map(f => `File: ${f.name}`),
+        ...topics.map((t) => `Topic: ${t.title}`),
+        ...notes.map((n) => `Note: ${n.title}`),
+        ...otherFiles.map((f) => `File: ${f.name}`),
       ];
 
       if (existingTopics.length === 0) {
@@ -237,19 +245,19 @@ export class FileService {
 
         if (item.topic.startsWith('Topic: ')) {
           const topicTitle = item.topic.replace('Topic: ', '');
-          const topic = topics.find(t => t.title === topicTitle);
+          const topic = topics.find((t) => t.title === topicTitle);
           if (!topic) continue;
           targetType = DocumentLinkType.TOPIC;
           targetId = topic.id;
         } else if (item.topic.startsWith('Note: ')) {
           const noteTitle = item.topic.replace('Note: ', '');
-          const note = notes.find(n => n.title === noteTitle);
+          const note = notes.find((n) => n.title === noteTitle);
           if (!note) continue;
           targetType = DocumentLinkType.NOTE;
           targetId = note.id;
         } else if (item.topic.startsWith('File: ')) {
           const fileName = item.topic.replace('File: ', '');
-          const otherFile = otherFiles.find(f => f.name === fileName);
+          const otherFile = otherFiles.find((f) => f.name === fileName);
           if (!otherFile) continue;
           targetType = DocumentLinkType.FILE;
           targetId = otherFile.id;
@@ -283,7 +291,9 @@ export class FileService {
         });
       }
 
-      this.logger.log(`Created ${relatedItems.length} document links for file ${fileId}`);
+      this.logger.log(
+        `Created ${relatedItems.length} document links for file ${fileId}`,
+      );
     } catch (error) {
       this.logger.error('Error creating document links:', error);
       // Don't throw - linking is not critical
@@ -308,22 +318,29 @@ export class FileService {
     // Enrich links with target names
     const enrichedLinks = await Promise.all(
       links.map(async (link) => {
-        const isSource = link.sourceType === DocumentLinkType.FILE && link.sourceId === fileId;
+        const isSource =
+          link.sourceType === DocumentLinkType.FILE && link.sourceId === fileId;
         const linkedType = isSource ? link.targetType : link.sourceType;
         const linkedId = isSource ? link.targetId : link.sourceId;
 
         let linkedName = '';
         switch (linkedType) {
           case DocumentLinkType.FILE:
-            const file = await this.dbService.file.findUnique({ where: { id: linkedId } });
+            const file = await this.dbService.file.findUnique({
+              where: { id: linkedId },
+            });
             linkedName = file?.name || 'Unknown File';
             break;
           case DocumentLinkType.NOTE:
-            const note = await this.dbService.note.findUnique({ where: { id: linkedId } });
+            const note = await this.dbService.note.findUnique({
+              where: { id: linkedId },
+            });
             linkedName = note?.title || 'Unknown Note';
             break;
           case DocumentLinkType.TOPIC:
-            const topic = await this.dbService.topic.findUnique({ where: { id: linkedId } });
+            const topic = await this.dbService.topic.findUnique({
+              where: { id: linkedId },
+            });
             linkedName = topic?.title || 'Unknown Topic';
             break;
           default:

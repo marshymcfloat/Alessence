@@ -1,15 +1,23 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GoogleGenAI } from '@google/genai';
+import { ConfigService } from '@nestjs/config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { QuestionTypeEnum } from '@repo/db';
-import { GeneratedQuestion, GeminiResult } from './gemini.service';
+import { GeneratedQuestion } from './gemini.service';
 
 @Injectable()
 export class MockExamGeminiService {
   private readonly logger = new Logger(MockExamGeminiService.name);
-  private readonly genAI: GoogleGenAI;
+  private readonly genAI: GoogleGenerativeAI;
+  private model: any;
 
-  constructor() {
-    this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+  constructor(private configService: ConfigService) {
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+    if (!apiKey) {
+      this.logger.error('GEMINI_API_KEY not found in environment variables');
+      throw new Error('GEMINI_API_KEY not found');
+    }
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   }
 
   async generateMockFinalsExam(
@@ -25,7 +33,7 @@ export class MockExamGeminiService {
     const prompt = `
       ROLE:
       You are a distinguished Senior Professor from a premier Philippine university (e.g., UP, Ateneo, De La Salle, UST, SJR-C) and a seasoned professional with dual qualifications: a Certified Public Accountant (CPA) and a Member of the Philippine Bar. 
-
+      
       TASK:
       Create a rigorous, expert-level ${itemCount}-item practice exam that strictly follows the standards of Philippine Accountancy and Law.
 
@@ -84,36 +92,18 @@ export class MockExamGeminiService {
     `;
 
     try {
-      const result = (await this.genAI.models.generateContent({
-        model: 'models/gemini-3-flash-preview',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      })) as GeminiResult;
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
 
-      let responseText: string | undefined;
+      if (!text) throw new Error('Empty response from Gemini');
 
-      if (typeof result === 'string') {
-        responseText = result;
-      } else if (result && typeof result === 'object') {
-        if ('text' in result && typeof result.text === 'string') {
-          responseText = result.text;
-        } else if (
-          'response' in result &&
-          result.response &&
-          typeof result.response === 'object' &&
-          'text' in result.response
-        ) {
-          responseText = result.response.text as string;
-        }
-      }
-
-      if (!responseText) throw new Error('Empty response from Gemini');
-
-      let cleanedText = responseText.trim();
+      let cleanedText = text.trim();
       const jsonMatch = cleanedText.match(/\[[\s\S]*\]/);
       if (jsonMatch) {
         cleanedText = jsonMatch[0];
       } else {
-        // Fallback cleaning if no array found (though regex should catch it)
+        // Fallback cleaning
         if (cleanedText.startsWith('```json')) {
           cleanedText = cleanedText
             .replace(/^```json\s*/, '')

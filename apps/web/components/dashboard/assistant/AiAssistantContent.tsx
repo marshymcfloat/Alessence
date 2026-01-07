@@ -47,6 +47,7 @@ import {
   type ConversationSummary,
 } from "@/lib/actions/aiChatActions";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -404,7 +405,7 @@ export default function AiAssistantContent() {
           <div className="sm:hidden flex items-center justify-center size-8 rounded-lg border bg-white/60 text-slate-800 shadow-sm dark:bg-slate-900/40 dark:text-slate-100 shrink-0">
             <Bot className="size-4" />
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <h1 className="text-sm sm:text-lg font-bold tracking-tight text-slate-900 dark:text-white truncate">
               AI Study Assistant
@@ -434,7 +435,10 @@ export default function AiAssistantContent() {
         </div>
 
         {/* Chat Scroll Area - Takes remaining height */}
-        <ScrollArea ref={scrollRef} className="flex-1 p-2 sm:p-4 overflow-y-auto">
+        <ScrollArea
+          ref={scrollRef}
+          className="flex-1 p-2 sm:p-4 overflow-y-auto"
+        >
           <div className="mx-auto max-w-3xl space-y-4 sm:space-y-6 pb-20 sm:pb-4">
             {messages.length === 0 ? (
               <div className="py-12">
@@ -513,10 +517,14 @@ export default function AiAssistantContent() {
                     >
                       {message.role === "assistant" ? (
                         <div className="prose prose-sm dark:prose-invert max-w-none">
-                          <ReactMarkdown>{message.content}</ReactMarkdown>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {message.content}
+                          </ReactMarkdown>
                         </div>
                       ) : (
-                        <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                        <p className="text-sm whitespace-pre-wrap">
+                          {message.content}
+                        </p>
                       )}
                     </div>
                   </div>

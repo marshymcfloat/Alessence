@@ -1,6 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { GoogleGenAI } from '@google/genai';
+import { ConfigService } from '@nestjs/config';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { Question, QuestionTypeEnum } from '@repo/db';
+import {
+  PHILIPPINE_ACADEMIC_PERSONA,
+  HALLUCINATION_GUARDRAIL,
+  LOCAL_CONTEXT_INJECTOR,
+} from '../common/prompt-constants';
 
 interface RawQuestionJson {
   text: string;
@@ -9,29 +15,6 @@ interface RawQuestionJson {
   correctAnswer: string;
 }
 
-interface GeminiPart {
-  text?: string;
-}
-
-interface GeminiContent {
-  parts?: GeminiPart[];
-}
-
-interface GeminiCandidate {
-  content?: GeminiContent;
-}
-
-interface GeminiResponseWrapper {
-  text?: string;
-}
-
-export type GeminiResult =
-  | string
-  | (GeminiResponseWrapper & {
-      response?: { text?: string };
-      candidates?: GeminiCandidate[];
-    });
-
 export type GeneratedQuestion = Omit<
   Question,
   'id' | 'examId' | 'createdAt' | 'updatedAt' | 'userAnswers'
@@ -39,21 +22,45 @@ export type GeneratedQuestion = Omit<
 
 @Injectable()
 export class GeminiService {
+  private genAI: GoogleGenerativeAI;
+  private model: any;
+  private visionModel: any;
   private readonly logger = new Logger(GeminiService.name);
-  private readonly genAI: GoogleGenAI;
 
-  constructor() {
-    this.genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+  constructor(private configService: ConfigService) {
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+    if (!apiKey) {
+      this.logger.error('GEMINI_API_KEY not found in environment variables');
+      throw new Error('GEMINI_API_KEY not found');
+    }
+    this.genAI = new GoogleGenerativeAI(apiKey);
+    this.model = this.genAI.getGenerativeModel({
+      model: 'gemini-3-flash-preview',
+    });
+    this.visionModel = this.genAI.getGenerativeModel({
+      model: 'gemini-3-flash-preview',
+    });
   }
 
-  async onModuleInit() {
+  /**
+   * Centralized method to interact with the Gemini Model
+   * Handles text generation and extraction
+   */
+  public async generateContent(prompt: string): Promise<string> {
     try {
-      this.logger.log('--- CHECKING AVAILABLE GEMINI MODELS ---');
-      const response = await this.genAI.models.list();
-      this.logger.log(JSON.stringify(response, null, 2));
-      this.logger.log('----------------------------------------');
+      const result = await this.model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+
+      if (!text) {
+        throw new Error('Received empty response from Gemini');
+      }
+
+      return text.trim();
     } catch (error) {
-      this.logger.error('Failed to list models:', error);
+      this.logger.error(`Gemini generation failed: ${error}. Retrying...`);
+      // Simple retry logic or rethrow could go here
+      throw error;
     }
   }
 
@@ -61,31 +68,31 @@ export class GeminiService {
     context: string,
     description: string,
     itemCount: number,
-    questionTypes: QuestionTypeEnum[],
-    weakTopics: string[] = [],
-  ): Promise<GeneratedQuestion[]> {
-    const typeCounts = this.distributeQuestionTypes(itemCount, questionTypes);
-    const typeInstructions = this.buildQuestionTypeInstructions(
-      typeCounts,
-      questionTypes,
-    );
-
+    types: QuestionTypeEnum[],
+    weakTopics?: string[],
+  ): Promise<any[]> {
     const weakTopicsInstruction =
-      weakTopics.length > 0
-        ? `
-      PRIORITY TOPICS (Student Weaknesses):
-      The student has struggled with the following topics. If the SOURCE MATERIAL covers these, you MUST prioritize generating questions about them to help the student improve:
-      ${weakTopics.map((t) => `- ${t}`).join('\n')}
-      `
+      weakTopics && weakTopics.length > 0
+        ? `PRIORITY TOPICS (Focus 40% of questions here): ${weakTopics.join(', ')}`
         : '';
 
+    const typeCounts = this.distributeQuestionTypes(itemCount, types);
+    const typeInstructions = this.buildQuestionTypeInstructions(
+      typeCounts,
+      types,
+    );
+
     const prompt = `
-      You are an expert professor specializing in Accountancy and Law (especially Philippine laws). Your task is to create a comprehensive and challenging practice exam with ${itemCount} questions based ONLY on the provided context.
+      ${PHILIPPINE_ACADEMIC_PERSONA}
+
+      Your task is to create a comprehensive and challenging practice exam with ${itemCount} questions based ONLY on the provided context.
 
       EXAM CONTEXT:
       The user has described the exam as follows: "${description}". Use this description to focus the questions on the most relevant topics within the context.
 
       ${weakTopicsInstruction}
+
+      ${LOCAL_CONTEXT_INJECTOR}
 
       SOURCE MATERIAL:
       ---
@@ -160,70 +167,8 @@ export class GeminiService {
     `;
 
     try {
-      const result = (await this.genAI.models.generateContent({
-        model: 'models/gemini-3-flash-preview',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      })) as GeminiResult;
-
-      let responseText: string | undefined;
-
-      if (typeof result === 'string') {
-        responseText = result;
-      } else if (result && typeof result === 'object') {
-        if ('text' in result && typeof result.text === 'string') {
-          responseText = result.text;
-        } else if (
-          'response' in result &&
-          result.response &&
-          typeof result.response === 'object' &&
-          'text' in result.response
-        ) {
-          responseText = result.response.text as string;
-        } else if (
-          'candidates' in result &&
-          Array.isArray(result.candidates) &&
-          result.candidates.length > 0
-        ) {
-          const candidate = result.candidates[0];
-          if (
-            candidate &&
-            typeof candidate === 'object' &&
-            'content' in candidate
-          ) {
-            const content = candidate.content;
-            if (
-              content &&
-              'parts' in content &&
-              Array.isArray(content.parts) &&
-              content.parts.length > 0
-            ) {
-              const part = content.parts[0];
-              if (part && 'text' in part && typeof part.text === 'string') {
-                responseText = part.text;
-              }
-            }
-          }
-        }
-      }
-
-      if (!responseText) {
-        this.logger.error(
-          'Received an empty or unexpected response from Gemini. Response structure:',
-          JSON.stringify(result, null, 2),
-        );
-        throw new Error(
-          'Received an empty or unexpected response from Gemini.',
-        );
-      }
-
-      let cleanedText = responseText.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText
-          .replace(/^```json\s*/, '')
-          .replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
+      const responseText = await this.generateContent(prompt);
+      const cleanedText = this.cleanJson(responseText);
 
       const parsedResponse = JSON.parse(cleanedText) as RawQuestionJson[];
 
@@ -250,21 +195,8 @@ export class GeminiService {
     } catch (error) {
       this.logger.error(
         `Error generating exam questions: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error.stack : undefined,
       );
-
-      if (typeof error === 'object' && error !== null && 'response' in error) {
-        const apiError = error as { response?: { text: string } };
-        this.logger.error('Original response text:', apiError.response?.text);
-      }
-
-      if (error instanceof Error) {
-        throw error;
-      }
-
-      throw new Error(
-        `Failed to generate or parse exam questions from Gemini: ${String(error)}`,
-      );
+      throw error;
     }
   }
 
@@ -273,98 +205,40 @@ export class GeminiService {
     cardCount: number,
   ): Promise<Array<{ front: string; back: string }>> {
     const prompt = `
-      You are an expert Philippine study assistant specializing in Accountancy and Law. Your task is to generate ${cardCount} flashcards based ONLY on the provided context.
+      ${PHILIPPINE_ACADEMIC_PERSONA}
+
+      Your task is to create ${cardCount} high-quality flashcards based on the provided content.
 
       SOURCE MATERIAL:
       ---
       ${context}
       ---
 
-      CRITICAL REQUIREMENTS FOR FLASHCARDS:
-      1. All flashcards must be derived directly from the provided SOURCE MATERIAL. Cross-reference with current Philippine professional standards (PFRS, PAS, TRAIN Law, Philippine Jurisprudence) where applicable.
-      2. Generate exactly ${cardCount} flashcards.
-      3. Intelligently detect the subject matter and create appropriate flashcards:
+      ${HALLUCINATION_GUARDRAIL}
 
-          FOR ACCOUNTING/FINANCE CONTENT:
-          - Focus on Philippine-specific standards (PAS/PFRS) and BIR tax rules.
-          - Key accounting definitions, formulas, and terminology.
-          
-          FOR LAW/LEGAL CONTENT:
-          - Focus on Philippine statutory law and jurisprudence (Civil Code, RPC, Corp Code, etc.).
-          - Elements of crimes, civil obligations, and landmark cases.
+      RULES:
+      1. **Focus**: Extract key concepts, definitions, enumerations, and distinctions suitable for board exam review.
+      2. **Cross-Reference**: If the content touches on Accounting or Law, you may briefly cross-reference current Philippine professional standards (PFRS, PAS, TRAIN Law, Philippine Jurisprudence) where applicable to add value, BUT restrict yourself to the source material's primary topic.
+      3. **Clarity**: Questions (front) should be precise. Answers (back) should be comprehensive but concise.
 
-      4. Each flashcard should be professional, concise, and suitable for CPALE or Bar exam preparation.
-      5. Front side (question) should be a clear prompt.
-      6. Back side (answer) should be a factual, legally/technically accurate explanation.
+      INTELLIGENT CONTENT FILTER:
+      - For ACCOUNTING: Focus on formulas, standard definitions (PAS/PFRS), and pro-forma entries.
+      - For LAW: Focus on elements of crimes/contracts, requisites, prescriptive periods, and distinctions (e.g., Void vs Voidable).
+      - For TAXATION: Focus on rates, exemptions, and deadlines (use BIR Tax Code / TRAIN / CREATE).
 
       RESPONSE FORMAT:
       Your response MUST be a valid JSON array of objects. Do not include any text before or after the JSON array.
+      [
+        {
+          "front": "Question or Term",
+          "back": "Answer or Definition"
+        }
+      ]
     `;
 
     try {
-      const result = (await this.genAI.models.generateContent({
-        model: 'models/gemini-3-flash-preview',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      })) as GeminiResult;
-
-      let responseText: string | undefined;
-
-      if (typeof result === 'string') {
-        responseText = result;
-      } else if (result && typeof result === 'object') {
-        if ('text' in result && typeof result.text === 'string') {
-          responseText = result.text;
-        } else if (
-          'response' in result &&
-          result.response &&
-          typeof result.response === 'object' &&
-          'text' in result.response
-        ) {
-          responseText = result.response.text as string;
-        } else if (
-          'candidates' in result &&
-          Array.isArray(result.candidates) &&
-          result.candidates.length > 0
-        ) {
-          const candidate = result.candidates[0];
-          if (
-            candidate &&
-            typeof candidate === 'object' &&
-            'content' in candidate
-          ) {
-            const content = candidate.content;
-            if (
-              content &&
-              'parts' in content &&
-              Array.isArray(content.parts) &&
-              content.parts.length > 0
-            ) {
-              const part = content.parts[0];
-              if (part && 'text' in part && typeof part.text === 'string') {
-                responseText = part.text;
-              }
-            }
-          }
-        }
-      }
-
-      if (!responseText) {
-        this.logger.error(
-          'Received an empty or unexpected response from Gemini for flashcard generation.',
-        );
-        throw new Error(
-          'Received an empty or unexpected response from Gemini.',
-        );
-      }
-
-      let cleanedText = responseText.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText
-          .replace(/^```json\s*/, '')
-          .replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
+      const responseText = await this.generateContent(prompt);
+      const cleanedText = this.cleanJson(responseText);
 
       const parsed = JSON.parse(cleanedText) as Array<{
         front: string;
@@ -375,78 +249,11 @@ export class GeminiService {
         throw new Error('Response is not an array of flashcards.');
       }
 
-      if (parsed.length === 0) {
-        throw new Error('No flashcards were generated.');
-      }
-
-      // Validate structure
-      for (const card of parsed) {
-        if (!card.front || !card.back) {
-          throw new Error(
-            'Invalid flashcard structure: missing front or back.',
-          );
-        }
-      }
-
       return parsed;
     } catch (error) {
       this.logger.error('Error generating flashcards:', error);
-
-      if (error instanceof Error) {
-        throw error;
-      }
-
-      throw new Error(
-        `Failed to generate or parse flashcards from Gemini: ${String(error)}`,
-      );
+      throw error;
     }
-  }
-
-  private distributeQuestionTypes(
-    totalCount: number,
-    types: QuestionTypeEnum[],
-  ): Map<QuestionTypeEnum, number> {
-    const distribution = new Map<QuestionTypeEnum, number>();
-    const baseCount = Math.floor(totalCount / types.length);
-    const remainder = totalCount % types.length;
-
-    types.forEach((type, index) => {
-      distribution.set(type, baseCount + (index < remainder ? 1 : 0));
-    });
-
-    return distribution;
-  }
-
-  private buildQuestionTypeInstructions(
-    typeCounts: Map<QuestionTypeEnum, number>,
-    types: QuestionTypeEnum[],
-  ): string {
-    const instructions: string[] = [];
-
-    types.forEach((type) => {
-      const count = typeCounts.get(type) || 0;
-      if (count > 0) {
-        switch (type) {
-          case QuestionTypeEnum.MULTIPLE_CHOICE:
-            instructions.push(
-              `- ${count} MULTIPLE_CHOICE questions: Each must have exactly 4 options (A, B, C, D). Make distractors plausible and challenging.`,
-            );
-            break;
-          case QuestionTypeEnum.TRUE_FALSE:
-            instructions.push(
-              `- ${count} TRUE_FALSE questions: Present statements that require deep understanding to evaluate correctly. Avoid obvious statements.`,
-            );
-            break;
-          case QuestionTypeEnum.IDENTIFICATION:
-            instructions.push(
-              `- ${count} IDENTIFICATION questions: Ask for specific terms, principles, legal provisions, or concepts. Provide the exact expected answer (e.g., accounting terms, article numbers, legal doctrines).`,
-            );
-            break;
-        }
-      }
-    });
-
-    return instructions.join('\n');
   }
 
   async evaluateAnswer(
@@ -476,7 +283,10 @@ export class GeminiService {
     }
 
     try {
-      const prompt = `You are a Senior Professor specializing in Accountancy (CPA) and Philippine Law, evaluating exam answers for accuracy based on CPALE and Philippine Bar Exam standards. Determine if the student's answer is semantically equivalent to the correct answer.
+      const prompt = `
+${PHILIPPINE_ACADEMIC_PERSONA}
+
+You are evaluating exam answers for accuracy based on CPALE and Philippine Bar Exam standards. Determine if the student's answer is semantically equivalent to the correct answer.
 
 QUESTION: ${questionText}
 
@@ -500,85 +310,13 @@ Respond with ONLY a JSON object in this exact format:
 
 Do not include any text before or after the JSON object.`;
 
-      const result = (await this.genAI.models.generateContent({
-        model: 'models/gemini-3-flash-preview',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      })) as GeminiResult;
-
-      let responseText: string | undefined;
-
-      if (typeof result === 'string') {
-        responseText = result;
-      } else if (result && typeof result === 'object') {
-        if ('text' in result && typeof result.text === 'string') {
-          responseText = result.text;
-        } else if (
-          'response' in result &&
-          result.response &&
-          typeof result.response === 'object' &&
-          'text' in result.response
-        ) {
-          responseText = result.response.text as string;
-        } else if (
-          'candidates' in result &&
-          Array.isArray(result.candidates) &&
-          result.candidates.length > 0
-        ) {
-          const candidate = result.candidates[0];
-          if (
-            candidate &&
-            typeof candidate === 'object' &&
-            'content' in candidate
-          ) {
-            const content = candidate.content;
-            if (
-              content &&
-              'parts' in content &&
-              Array.isArray(content.parts) &&
-              content.parts.length > 0
-            ) {
-              const part = content.parts[0];
-              if (part && 'text' in part && typeof part.text === 'string') {
-                responseText = part.text;
-              }
-            }
-          }
-        }
-      }
-
-      if (!responseText) {
-        this.logger.warn(
-          'Failed to extract response from Gemini for answer evaluation. Falling back to case-insensitive comparison.',
-        );
-        const isCorrect =
-          normalizedUserAnswer.toLowerCase() ===
-          normalizedCorrectAnswer.toLowerCase();
-        return { isCorrect, reason: 'AI evaluation failed, used exact match.' };
-      }
-
-      let cleanedText = responseText.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText
-          .replace(/^```json\s*/, '')
-          .replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
+      const responseText = await this.generateContent(prompt);
+      const cleanedText = this.cleanJson(responseText);
 
       const parsedResponse = JSON.parse(cleanedText) as {
         isCorrect: boolean;
         reason?: string;
       };
-
-      if (typeof parsedResponse.isCorrect !== 'boolean') {
-        this.logger.warn(
-          'Invalid response format from Gemini for answer evaluation. Falling back to case-insensitive comparison.',
-        );
-        const isCorrect =
-          normalizedUserAnswer.toLowerCase() ===
-          normalizedCorrectAnswer.toLowerCase();
-        return { isCorrect, reason: 'AI returned invalid format.' };
-      }
 
       return {
         isCorrect: parsedResponse.isCorrect,
@@ -664,152 +402,10 @@ Do not include any text before or after the JSON object.`;
     `;
 
     try {
-      const result = (await this.genAI.models.generateContent({
-        model: 'models/gemini-3-flash-preview',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      })) as GeminiResult;
-
-      let responseText: string | undefined;
-
-      if (typeof result === 'string') {
-        responseText = result;
-      } else if (result && typeof result === 'object') {
-        if ('text' in result && typeof result.text === 'string') {
-          responseText = result.text;
-        } else if (
-          'response' in result &&
-          result.response &&
-          typeof result.response === 'object' &&
-          'text' in result.response
-        ) {
-          responseText = result.response.text as string;
-        } else if (
-          'candidates' in result &&
-          Array.isArray(result.candidates) &&
-          result.candidates.length > 0
-        ) {
-          const candidate = result.candidates[0];
-          if (
-            candidate &&
-            typeof candidate === 'object' &&
-            'content' in candidate
-          ) {
-            const content = candidate.content;
-            if (
-              content &&
-              'parts' in content &&
-              Array.isArray(content.parts) &&
-              content.parts.length > 0
-            ) {
-              const part = content.parts[0];
-              if (part && 'text' in part && typeof part.text === 'string') {
-                responseText = part.text;
-              }
-            }
-          }
-        }
-      }
-
-      if (!responseText) {
-        this.logger.error(
-          'Received an empty or unexpected response from Gemini for summary generation.',
-        );
-        throw new Error(
-          'Received an empty or unexpected response from Gemini.',
-        );
-      }
-
-      return responseText.trim();
+      return await this.generateContent(prompt);
     } catch (error) {
-      this.logger.error(
-        `Error generating summary: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error.stack : undefined,
-      );
-
-      if (error instanceof Error) {
-        throw error;
-      }
-
-      throw new Error(
-        `Failed to generate summary from Gemini: ${String(error)}`,
-      );
-    }
-  }
-
-  /**
-   * Generic method to generate content from a prompt
-   */
-  async generateContent(prompt: string): Promise<string> {
-    try {
-      const result = (await this.genAI.models.generateContent({
-        model: 'models/gemini-3-flash-preview',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      })) as GeminiResult;
-
-      let responseText: string | undefined;
-
-      if (typeof result === 'string') {
-        responseText = result;
-      } else if (result && typeof result === 'object') {
-        if ('text' in result && typeof result.text === 'string') {
-          responseText = result.text;
-        } else if (
-          'response' in result &&
-          result.response &&
-          typeof result.response === 'object' &&
-          'text' in result.response
-        ) {
-          responseText = result.response.text as string;
-        } else if (
-          'candidates' in result &&
-          Array.isArray(result.candidates) &&
-          result.candidates.length > 0
-        ) {
-          const candidate = result.candidates[0];
-          if (
-            candidate &&
-            typeof candidate === 'object' &&
-            'content' in candidate
-          ) {
-            const content = candidate.content;
-            if (
-              content &&
-              'parts' in content &&
-              Array.isArray(content.parts) &&
-              content.parts.length > 0
-            ) {
-              const part = content.parts[0];
-              if (part && 'text' in part && typeof part.text === 'string') {
-                responseText = part.text;
-              }
-            }
-          }
-        }
-      }
-
-      if (!responseText) {
-        this.logger.error(
-          'Received an empty or unexpected response from Gemini.',
-        );
-        throw new Error(
-          'Received an empty or unexpected response from Gemini.',
-        );
-      }
-
-      return responseText.trim();
-    } catch (error) {
-      this.logger.error(
-        `Error generating content: ${error instanceof Error ? error.message : String(error)}`,
-        error instanceof Error ? error.stack : undefined,
-      );
-
-      if (error instanceof Error) {
-        throw error;
-      }
-
-      throw new Error(
-        `Failed to generate content from Gemini: ${String(error)}`,
-      );
+      this.logger.error('Error generating summary:', error);
+      throw error;
     }
   }
 
@@ -824,11 +420,15 @@ Do not include any text before or after the JSON object.`;
     explanation: string;
   }> {
     const prompt = `
-      You are an expert accounting and law professor. Create a **unique, variable-based computational problem** for the topic: "${topic}".
+      ${PHILIPPINE_ACADEMIC_PERSONA}
+      
+      Create a **unique, variable-based computational problem** for the topic: "${topic}".
       
       ${context ? `CONTEXT/SOURCE MATERIAL:\n${context}\n` : ''}
 
       DIFFICULTY: ${difficulty}
+
+      ${LOCAL_CONTEXT_INJECTOR}
 
       REQUIREMENTS:
       1. **Scenario-Based:** Create a realistic scenario (e.g., "ABC Corp.", "Mr. Cruz").
@@ -850,16 +450,7 @@ Do not include any text before or after the JSON object.`;
 
     try {
       const responseText = await this.generateContent(prompt);
-
-      let cleanedText = responseText.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText
-          .replace(/^```json\s*/, '')
-          .replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
-
+      const cleanedText = this.cleanJson(responseText);
       const parsed = JSON.parse(cleanedText);
 
       return {
@@ -872,6 +463,401 @@ Do not include any text before or after the JSON object.`;
       this.logger.error('Error generating math problem:', error);
       throw new Error('Failed to generate math problem.');
     }
+  }
+
+  async generateCaseDigest(caseText: string): Promise<{
+    title: string;
+    citation: string;
+    facts: string;
+    issues: string[];
+    ruling: string;
+    ratio: string;
+    doctrine: string;
+  }> {
+    const prompt = `
+${PHILIPPINE_ACADEMIC_PERSONA}
+
+Specialization: Legal Research and Case Analysis.
+
+Generate a comprehensive CASE DIGEST from the following case text. Follow the standard Philippine law school format.
+
+CASE TEXT:
+---
+${caseText}
+---
+
+${HALLUCINATION_GUARDRAIL}
+
+RESPONSE FORMAT:
+Return ONLY a JSON object with this exact structure:
+{
+  "title": "Case Name (e.g., People of the Philippines v. Juan Dela Cruz)",
+  "citation": "G.R. No. XXXXX, Date, Ponente (e.g., G.R. No. 123456, January 1, 2024, J. Santos)",
+  "facts": "Concise summary of material facts in paragraph form. Include: parties, relevant dates, transactions, and procedural history.",
+  "issues": ["Issue 1: Whether...", "Issue 2: Whether..."],
+  "ruling": "The Supreme Court GRANTED/DENIED the petition. [Summary of disposition]",
+  "ratio": "The reasoning of the Court. Explain the legal analysis and how the Court applied the law to the facts.",
+  "doctrine": "The legal principle established or reiterated. This is the quotable holding that can be cited in future cases."
+}
+
+GUIDELINES:
+1. **Facts**: Be concise but complete. Include only material facts that affect the legal issues.
+2. **Issues**: Frame as questions starting with "Whether..." 
+3. **Ruling**: State the disposition clearly (granted, denied, affirmed, reversed, etc.)
+4. **Ratio**: The "why" behind the ruling - the Court's legal reasoning
+5. **Doctrine**: The abstract legal principle - suitable for citation in briefs
+
+Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      const cleanedText = this.cleanJson(responseText);
+      return JSON.parse(cleanedText);
+    } catch (error) {
+      this.logger.error('Error generating case digest:', error);
+      throw new Error('Failed to generate case digest.');
+    }
+  }
+
+  async generateCodalFlashcards(
+    articleText: string,
+    lawName?: string,
+  ): Promise<Array<{ front: string; back: string; category: string }>> {
+    const prompt = `
+${PHILIPPINE_ACADEMIC_PERSONA}
+
+Generate comprehensive flashcards from this legal provision.
+
+${lawName ? `LAW: ${lawName}` : ''}
+ARTICLE/PROVISION TEXT:
+---
+${articleText}
+---
+
+${HALLUCINATION_GUARDRAIL}
+
+FLASHCARD GENERATION RULES:
+1. **Elements Cards**: If the provision has elements (e.g., elements of a crime, requisites of a contract), create one card per element
+2. **Definition Cards**: Key terms must have their own definition cards
+3. **Enumeration Cards**: Lists/enumerations should be broken into individual cards
+4. **Exception Cards**: Any exceptions or qualifications get their own cards
+5. **Penalty Cards**: If penalties are mentioned, create penalty-specific cards
+6. **Comparison Cards**: If the provision distinguishes between concepts, create comparison cards
+
+RESPONSE FORMAT:
+Return ONLY a JSON array:
+[
+  {
+    "front": "What are the elements of [concept]?",
+    "back": "1. Element one\\n2. Element two\\n3. Element three",
+    "category": "ELEMENTS"
+  },
+  {
+    "front": "Define [term] under Article ___",
+    "back": "[Definition from the provision]",
+    "category": "DEFINITION"
+  }
+]
+
+CATEGORIES: ELEMENTS, DEFINITION, REQUISITES, EXCEPTION, PENALTY, ENUMERATION, PROCEDURE, COMPARISON, GENERAL
+
+Generate 5-15 flashcards depending on the complexity of the provision.
+Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      const cleanedText = this.cleanJson(responseText);
+      return JSON.parse(cleanedText);
+    } catch (error) {
+      this.logger.error('Error generating codal flashcards:', error);
+      throw new Error(
+        'Failed to generate flashcards from the legal provision.',
+      );
+    }
+  }
+
+  async generateAuditProblem(
+    topic: string,
+    context?: string,
+    difficulty: 'EASY' | 'MEDIUM' | 'HARD' = 'MEDIUM',
+  ): Promise<{
+    problem: string;
+    given: string[];
+    steps: Array<{
+      step: number;
+      description: string;
+      computation: string;
+      result: string;
+    }>;
+    finalAnswer: string;
+    auditNote: string;
+    relatedStandards: string[];
+  }> {
+    const prompt = `
+${PHILIPPINE_ACADEMIC_PERSONA}
+
+Create a STEP-BY-STEP AUDIT/COMPUTATION problem that mimics a professor's whiteboard solution.
+
+TOPIC: ${topic}
+DIFFICULTY: ${difficulty}
+${context ? `CONTEXT:\n${context}` : ''}
+
+${LOCAL_CONTEXT_INJECTOR}
+
+REQUIREMENTS:
+1. **Realistic Scenario**: Use a Philippine company name and realistic amounts (avoid round numbers like 100,000)
+2. **Given Data**: List all provided information clearly
+3. **Computation Trace**: Show EVERY step as a professor would on a whiteboard
+4. **Audit Notes**: Include relevant audit procedures or considerations
+5. **Standards Reference**: Cite applicable PAS/PFRS/PSA standards
+
+RESPONSE FORMAT:
+Return ONLY a JSON object:
+{
+  "problem": "Full problem statement with the scenario and what is being asked",
+  "given": [
+    "Sales revenue: ₱2,456,789",
+    "Cost of goods sold: ₱1,234,567",
+    "..."
+  ],
+  "steps": [
+    {
+      "step": 1,
+      "description": "Calculate Gross Profit",
+      "computation": "₱2,456,789 - ₱1,234,567",
+      "result": "₱1,222,222"
+    },
+    {
+      "step": 2,
+      "description": "...",
+      "computation": "...",
+      "result": "..."
+    }
+  ],
+  "finalAnswer": "The [answer] is ₱X,XXX,XXX",
+  "auditNote": "Key audit considerations: [relevant audit procedures, assertions to test, common errors]",
+  "relatedStandards": ["PAS 1, paragraph 82", "PFRS 15, paragraphs 31-34"]
+}
+
+Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      const cleanedText = this.cleanJson(responseText);
+      return JSON.parse(cleanedText);
+    } catch (error) {
+      this.logger.error('Error generating audit problem:', error);
+      throw new Error('Failed to generate audit problem.');
+    }
+  }
+
+  async findRelatedTopics(
+    content: string,
+    existingTopics: string[],
+  ): Promise<Array<{ topic: string; relevance: number; reason: string }>> {
+    if (existingTopics.length === 0) {
+      return [];
+    }
+
+    const prompt = `
+Analyze the following content and identify which existing topics it relates to.
+
+NEW CONTENT:
+---
+${content.substring(0, 3000)}
+---
+
+EXISTING TOPICS:
+${existingTopics.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+
+For each related topic, provide:
+1. The topic name (exactly as listed)
+2. Relevance score (0-100, where 100 is highly relevant)
+3. Brief reason for the connection
+
+RESPONSE FORMAT:
+Return ONLY a JSON array:
+[
+  {
+    "topic": "Exact topic name from the list",
+    "relevance": 85,
+    "reason": "Both discuss tax computation under CREATE Law"
+  }
+]
+
+Only include topics with relevance >= 50. Return empty array [] if no significant connections.
+Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      const cleanedText = this.cleanJson(responseText);
+      const results = JSON.parse(cleanedText);
+      return results.filter((r: { relevance: number }) => r.relevance >= 50);
+    } catch (error) {
+      this.logger.error('Error finding related topics:', error);
+      return [];
+    }
+  }
+
+  async generateSubTopics(
+    parentTopic: string,
+    subjectTitle: string,
+  ): Promise<string[]> {
+    const prompt = `
+      You are an expert curriculum developer for the Philippine CPA Licensure Examination (CPALE).
+      
+      Generate a list of 3-7 distinct sub-topics for the topic "${parentTopic}" under the subject "${subjectTitle}".
+      
+      Requirements:
+      - The sub-topics must be specific and relevant to the Philippine board exam syllabus (TOS).
+      - Return ONLY the list of sub-topics as a valid JSON array of strings.
+      - Do not include numbering or bullets in the strings.
+      - Example output: ["Sub-topic 1", "Sub-topic 2", "Sub-topic 3"]
+    `;
+
+    try {
+      const result = await this.generateContent(prompt);
+      const cleanedText = this.cleanJson(result);
+
+      // Attempt to parse JSON
+      const jsonMatch = cleanedText.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[0]);
+      }
+
+      // Fallback: split by newlines if JSON parsing fails
+      return result
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(
+          (line) =>
+            line.length > 0 && !line.startsWith('[') && !line.startsWith(']'),
+        )
+        .map((line) => line.replace(/^[-*•\d\.]+\s+/, '')); // Remove bullets/numbers
+    } catch (error) {
+      this.logger.error('Failed to generate sub-topics', error);
+      return [];
+    }
+  }
+
+  async generateTaxAdvice(query: string): Promise<{
+    answer: string;
+    citations: string[];
+    disclaimer: string;
+  }> {
+    const prompt = `
+      ${PHILIPPINE_ACADEMIC_PERSONA}
+
+      You are acting as the "Bar Topnotcher" and "CPA Board Topnotcher" - the ultimate expert on Philippine Taxation Law.
+      Your task is to answer the user's inquiry with **absolute precision, conservatism, and statutory basis.**
+
+      USER INQUIRY: "${query}"
+
+      ROLE & PERSONA:
+      - You are formal, professional, and authoritative.
+      - You DO NOT guess. If a tax rule is ambiguous, you state the ambiguity and cite relevant BIR Rulings or Supreme Court decisions that clarify or conflict.
+      - You prioritize the **National Internal Revenue Code (Tax Code) as amended by TRAIN / CREATE / EOPT (Ease of Paying Taxes Act)**.
+      
+      ${HALLUCINATION_GUARDRAIL}
+      
+      COMPUTATION INSTRUCTIONS (CRITICAL):
+      - If the query involves calculation (e.g., estate tax, income tax), you MUST perform a **Step-by-Step Chain of Thought** computation.
+      - Show the formula used.
+      - Show the substitution of values.
+      - Show the final result in Philippine Pesos (₱).
+
+      RESPONSE FORMAT:
+      Return ONLY a JSON object with this exact structure:
+      {
+        "answer": "Direct, clear, and comprehensive answer. Use Markdown formatting. If computation is needed, include the step-by-step table or list here.",
+        "citations": ["List specific legal bases here. Example: 'NIRC Sec. 32', 'RR 2-98'"],
+        "disclaimer": "Standard professional disclaimer: 'Computed based on current laws as of 2024 (including EOPT Act). Consult a tax practitioner for specific filings.'"
+      }
+
+      GUIDELINES FOR ACCURACY:
+      1. **Latest Laws**: Assume the EOPT (Ease of Paying Taxes) Act and latest RR are in effect.
+      2. **Specifics**: Do not say "it depends" without explaining exactly WHAT it depends on.
+      3. **Rates**: Verify tax rates (e.g., 8% optional rate vs graduated rates) mentally before generating.
+      4. **Clarity**: Explain simple terms for students, but use technical terms for precision.
+
+      Do not include any text before or after the JSON.
+    `;
+
+    try {
+      const responseText = await this.generateContent(prompt);
+      const cleanedText = this.cleanJson(responseText);
+      return JSON.parse(cleanedText);
+    } catch (error) {
+      this.logger.error('Error generating tax advice:', error);
+      throw new Error('Failed to generate tax advice.');
+    }
+  }
+
+  // --- Helper Methods ---
+
+  private cleanJson(text: string): string {
+    let cleanedText = text.trim();
+    if (cleanedText.startsWith('```json')) {
+      cleanedText = cleanedText
+        .replace(/^```json\s*/, '')
+        .replace(/\s*```$/, '');
+    } else if (cleanedText.startsWith('```')) {
+      cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
+    }
+    return cleanedText;
+  }
+
+  private distributeQuestionTypes(
+    totalCount: number,
+    types: QuestionTypeEnum[],
+  ): Map<QuestionTypeEnum, number> {
+    const distribution = new Map<QuestionTypeEnum, number>();
+    if (types.length === 0) return distribution;
+
+    const baseCount = Math.floor(totalCount / types.length);
+    const remainder = totalCount % types.length;
+
+    types.forEach((type, index) => {
+      distribution.set(type, baseCount + (index < remainder ? 1 : 0));
+    });
+
+    return distribution;
+  }
+
+  private buildQuestionTypeInstructions(
+    typeCounts: Map<QuestionTypeEnum, number>,
+    types: QuestionTypeEnum[],
+  ): string {
+    const instructions: string[] = [];
+
+    types.forEach((type) => {
+      const count = typeCounts.get(type) || 0;
+      if (count > 0) {
+        switch (type) {
+          case QuestionTypeEnum.MULTIPLE_CHOICE:
+            instructions.push(
+              `- ${count} MULTIPLE_CHOICE questions: Each must have exactly 4 options (A, B, C, D). Make distractors plausible and challenging.`,
+            );
+            break;
+          case QuestionTypeEnum.TRUE_FALSE:
+            instructions.push(
+              `- ${count} TRUE_FALSE questions: Present statements that require deep understanding to evaluate correctly. Avoid obvious statements.`,
+            );
+            break;
+          case QuestionTypeEnum.IDENTIFICATION:
+            instructions.push(
+              `- ${count} IDENTIFICATION questions: Ask for specific terms, principles, legal provisions, or concepts. Provide the exact expected answer (e.g., accounting terms, article numbers, legal doctrines).`,
+            );
+            break;
+        }
+      }
+    });
+
+    return instructions.join('\n');
   }
 
   private getSummaryTemplateInstructions(template: string): string {
@@ -926,377 +912,6 @@ Do not include any text before or after the JSON object.`;
           - Include examples and practical applications
           - Maintain thorough coverage of the source material
         `;
-    }
-  }
-
-  /**
-   * Generate a structured Case Digest from full case text
-   */
-  async generateCaseDigest(caseText: string): Promise<{
-    title: string;
-    citation: string;
-    facts: string;
-    issues: string[];
-    ruling: string;
-    ratio: string;
-    doctrine: string;
-  }> {
-    const prompt = `
-You are an expert Philippine law professor specializing in legal research and case analysis.
-
-Generate a comprehensive CASE DIGEST from the following case text. Follow the standard Philippine law school format.
-
-CASE TEXT:
----
-${caseText}
----
-
-RESPONSE FORMAT:
-Return ONLY a JSON object with this exact structure:
-{
-  "title": "Case Name (e.g., People of the Philippines v. Juan Dela Cruz)",
-  "citation": "G.R. No. XXXXX, Date, Ponente (e.g., G.R. No. 123456, January 1, 2024, J. Santos)",
-  "facts": "Concise summary of material facts in paragraph form. Include: parties, relevant dates, transactions, and procedural history.",
-  "issues": ["Issue 1: Whether...", "Issue 2: Whether..."],
-  "ruling": "The Supreme Court GRANTED/DENIED the petition. [Summary of disposition]",
-  "ratio": "The reasoning of the Court. Explain the legal analysis and how the Court applied the law to the facts.",
-  "doctrine": "The legal principle established or reiterated. This is the quotable holding that can be cited in future cases."
-}
-
-GUIDELINES:
-1. **Facts**: Be concise but complete. Include only material facts that affect the legal issues.
-2. **Issues**: Frame as questions starting with "Whether..." 
-3. **Ruling**: State the disposition clearly (granted, denied, affirmed, reversed, etc.)
-4. **Ratio**: The "why" behind the ruling - the Court's legal reasoning
-5. **Doctrine**: The abstract legal principle - suitable for citation in briefs
-
-Do not include any text before or after the JSON.
-    `;
-
-    try {
-      const responseText = await this.generateContent(prompt);
-
-      let cleanedText = responseText.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText
-          .replace(/^```json\s*/, '')
-          .replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
-
-      return JSON.parse(cleanedText);
-    } catch (error) {
-      this.logger.error('Error generating case digest:', error);
-      throw new Error(
-        'Failed to generate case digest. Please ensure the text is a valid legal case.',
-      );
-    }
-  }
-
-  /**
-   * Generate flashcards from a legal codal article/provision
-   */
-  async generateCodalFlashcards(
-    articleText: string,
-    lawName?: string,
-  ): Promise<Array<{ front: string; back: string; category: string }>> {
-    const prompt = `
-You are an expert Philippine law professor. Generate comprehensive flashcards from this legal provision.
-
-${lawName ? `LAW: ${lawName}` : ''}
-ARTICLE/PROVISION TEXT:
----
-${articleText}
----
-
-FLASHCARD GENERATION RULES:
-1. **Elements Cards**: If the provision has elements (e.g., elements of a crime, requisites of a contract), create one card per element
-2. **Definition Cards**: Key terms must have their own definition cards
-3. **Enumeration Cards**: Lists/enumerations should be broken into individual cards
-4. **Exception Cards**: Any exceptions or qualifications get their own cards
-5. **Penalty Cards**: If penalties are mentioned, create penalty-specific cards
-6. **Comparison Cards**: If the provision distinguishes between concepts, create comparison cards
-
-RESPONSE FORMAT:
-Return ONLY a JSON array:
-[
-  {
-    "front": "What are the elements of [concept]?",
-    "back": "1. Element one\\n2. Element two\\n3. Element three",
-    "category": "ELEMENTS"
-  },
-  {
-    "front": "Define [term] under Article ___",
-    "back": "[Definition from the provision]",
-    "category": "DEFINITION"
-  }
-]
-
-CATEGORIES: ELEMENTS, DEFINITION, REQUISITES, EXCEPTION, PENALTY, ENUMERATION, PROCEDURE, COMPARISON, GENERAL
-
-Generate 5-15 flashcards depending on the complexity of the provision.
-Do not include any text before or after the JSON.
-    `;
-
-    try {
-      const responseText = await this.generateContent(prompt);
-
-      let cleanedText = responseText.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText
-          .replace(/^```json\s*/, '')
-          .replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
-
-      return JSON.parse(cleanedText);
-    } catch (error) {
-      this.logger.error('Error generating codal flashcards:', error);
-      throw new Error(
-        'Failed to generate flashcards from the legal provision.',
-      );
-    }
-  }
-
-  /**
-   * Generate a step-by-step audit/computation problem with detailed trace
-   */
-  async generateAuditProblem(
-    topic: string,
-    context?: string,
-    difficulty: 'EASY' | 'MEDIUM' | 'HARD' = 'MEDIUM',
-  ): Promise<{
-    problem: string;
-    given: string[];
-    steps: Array<{
-      step: number;
-      description: string;
-      computation: string;
-      result: string;
-    }>;
-    finalAnswer: string;
-    auditNote: string;
-    relatedStandards: string[];
-  }> {
-    const prompt = `
-You are an expert CPA and accounting professor. Create a STEP-BY-STEP AUDIT/COMPUTATION problem that mimics a professor's whiteboard solution.
-
-TOPIC: ${topic}
-DIFFICULTY: ${difficulty}
-${context ? `CONTEXT:\n${context}` : ''}
-
-REQUIREMENTS:
-1. **Realistic Scenario**: Use a Philippine company name and realistic amounts (avoid round numbers like 100,000)
-2. **Given Data**: List all provided information clearly
-3. **Computation Trace**: Show EVERY step as a professor would on a whiteboard
-4. **Audit Notes**: Include relevant audit procedures or considerations
-5. **Standards Reference**: Cite applicable PAS/PFRS/PSA standards
-
-RESPONSE FORMAT:
-Return ONLY a JSON object:
-{
-  "problem": "Full problem statement with the scenario and what is being asked",
-  "given": [
-    "Sales revenue: ₱2,456,789",
-    "Cost of goods sold: ₱1,234,567",
-    "..."
-  ],
-  "steps": [
-    {
-      "step": 1,
-      "description": "Calculate Gross Profit",
-      "computation": "₱2,456,789 - ₱1,234,567",
-      "result": "₱1,222,222"
-    },
-    {
-      "step": 2,
-      "description": "...",
-      "computation": "...",
-      "result": "..."
-    }
-  ],
-  "finalAnswer": "The [answer] is ₱X,XXX,XXX",
-  "auditNote": "Key audit considerations: [relevant audit procedures, assertions to test, common errors]",
-  "relatedStandards": ["PAS 1, paragraph 82", "PFRS 15, paragraphs 31-34"]
-}
-
-Do not include any text before or after the JSON.
-    `;
-
-    try {
-      const responseText = await this.generateContent(prompt);
-
-      let cleanedText = responseText.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText
-          .replace(/^```json\s*/, '')
-          .replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
-
-      return JSON.parse(cleanedText);
-    } catch (error) {
-      this.logger.error('Error generating audit problem:', error);
-      throw new Error('Failed to generate audit problem.');
-    }
-  }
-
-  /**
-   * Find related topics/documents for cross-document linking
-   */
-  async findRelatedTopics(
-    content: string,
-    existingTopics: string[],
-  ): Promise<Array<{ topic: string; relevance: number; reason: string }>> {
-    if (existingTopics.length === 0) {
-      return [];
-    }
-
-    const prompt = `
-Analyze the following content and identify which existing topics it relates to.
-
-NEW CONTENT:
----
-${content.substring(0, 3000)}
----
-
-EXISTING TOPICS:
-${existingTopics.map((t, i) => `${i + 1}. ${t}`).join('\n')}
-
-For each related topic, provide:
-1. The topic name (exactly as listed)
-2. Relevance score (0-100, where 100 is highly relevant)
-3. Brief reason for the connection
-
-RESPONSE FORMAT:
-Return ONLY a JSON array:
-[
-  {
-    "topic": "Exact topic name from the list",
-    "relevance": 85,
-    "reason": "Both discuss tax computation under CREATE Law"
-  }
-]
-
-Only include topics with relevance >= 50. Return empty array [] if no significant connections.
-Do not include any text before or after the JSON.
-    `;
-
-    try {
-      const responseText = await this.generateContent(prompt);
-
-      let cleanedText = responseText.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText
-          .replace(/^```json\s*/, '')
-          .replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
-
-      const results = JSON.parse(cleanedText);
-      return results.filter((r: { relevance: number }) => r.relevance >= 50);
-    } catch (error) {
-      this.logger.error('Error finding related topics:', error);
-      return [];
-    }
-  }
-
-  async generateSubTopics(
-    parentTopic: string,
-    subjectTitle: string,
-  ): Promise<string[]> {
-    const prompt = `
-      You are an expert curriculum developer for the Philippine CPA Licensure Examination (CPALE).
-      
-      Generate a list of 3-7 distinct sub-topics for the topic "${parentTopic}" under the subject "${subjectTitle}".
-      
-      Requirements:
-      - The sub-topics must be specific and relevant to the Philippine board exam syllabus (TOS).
-      - Return ONLY the list of sub-topics as a valid JSON array of strings.
-      - Do not include numbering or bullets in the strings.
-      - Example output: ["Sub-topic 1", "Sub-topic 2", "Sub-topic 3"]
-    `;
-
-    try {
-      const result = await this.generateContent(prompt);
-
-      // Attempt to parse JSON
-      const jsonMatch = result.match(/\[[\s\S]*\]/);
-      if (jsonMatch) {
-        return JSON.parse(jsonMatch[0]);
-      }
-
-      // Fallback: split by newlines if JSON parsing fails
-      return result
-        .split('\n')
-        .map((line) => line.trim())
-        .filter(
-          (line) =>
-            line.length > 0 && !line.startsWith('[') && !line.startsWith(']'),
-        )
-        .map((line) => line.replace(/^[-*•\d\.]+\s+/, '')); // Remove bullets/numbers
-    } catch (error) {
-      this.logger.error('Failed to generate sub-topics', error);
-      return [];
-    }
-  }
-
-  /**
-   * Generate expert tax advice with citations
-   */
-  async generateTaxAdvice(query: string): Promise<{
-    answer: string;
-    citations: string[];
-    disclaimer: string;
-  }> {
-    const prompt = `
-      You are the "Bar Topnotcher" and "CPA Board Topnotcher" - the ultimate expert on Philippine Taxation Law.
-      Your task is to answer the user's inquiry with **absolute precision, conservatism, and statutory basis.**
-
-      USER INQUIRY: "${query}"
-
-      ROLE & PERSONA:
-      - You are formal, professional, and authoritative.
-      - You DO NOT guess. If a tax rule is ambiguous, you state the ambiguity and cite relevant BIR Rulings or Supreme Court decisions that clarify or conflict.
-      - You prioritize the **National Internal Revenue Code (Tax Code) as amended by TRAIN / CREATE / EOPT (Ease of Paying Taxes Act)**.
-      
-      RESPONSE FORMAT:
-      Return ONLY a JSON object with this exact structure:
-      {
-        "answer": "Direct, clear, and comprehensive answer to the question. Use professional formatting (paragraphs, bullets). Explain the 'General Rule' first, then 'Exceptions'.",
-        "citations": ["List specific legal bases here, e.g., 'NIRC Sec. 32(B)(7)(e)', 'RR 2-98 as amended', 'TRAIN Law Sec. 5'"],
-        "disclaimer": "Standard professional disclaimer (e.g., 'Computed based on current laws as of [Year]. Consult a tax practitioner for specific filings.')."
-      }
-
-      GUIDELINES FOR ACCURACY:
-      1. **Latest Laws**: Assume the EOPT (Ease of Paying Taxes) Act and latest RR are in effect unless asked otherwise.
-      2. **Specifics**: Do not say "it depends" without explaining exactly WHAT it depends on (e.g., "It depends on whether you are VAT-registered or Non-VAT").
-      3. **Rates**: Verify tax rates (e.g., 8% optional rate vs graduated rates) mentally before generating.
-      4. **Clarity**: Explain simple terms for students, but use technical terms for precision.
-
-      Do not include any text before or after the JSON.
-    `;
-
-    try {
-      const responseText = await this.generateContent(prompt);
-
-      let cleanedText = responseText.trim();
-      if (cleanedText.startsWith('```json')) {
-        cleanedText = cleanedText
-          .replace(/^```json\s*/, '')
-          .replace(/\s*```$/, '');
-      } else if (cleanedText.startsWith('```')) {
-        cleanedText = cleanedText.replace(/^```\s*/, '').replace(/\s*```$/, '');
-      }
-
-      return JSON.parse(cleanedText);
-    } catch (error) {
-      this.logger.error('Error generating tax advice:', error);
-      throw new Error('Failed to generate tax advice.');
     }
   }
 }

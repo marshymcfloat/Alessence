@@ -10,6 +10,7 @@ import {
 import type { Summary } from "@repo/db";
 import { SummaryStatusEnum } from "@repo/db/client-types";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Document,
   Packer,
@@ -62,15 +63,21 @@ type SummaryWithSubject = Summary & {
 
 export default function SummariesList() {
   const queryClient = useQueryClient();
-  
+
   // React Query for fetching summaries
-  const { data: summariesData, isLoading: loading, refetch } = useQuery({
+  const {
+    data: summariesData,
+    isLoading: loading,
+    refetch,
+  } = useQuery({
     queryKey: ["summaries"],
     queryFn: () => getAllSummaries(),
   });
-  
-  const summaries = summariesData?.success ? (summariesData.data?.summaries as SummaryWithSubject[]) || [] : [];
-  
+
+  const summaries = summariesData?.success
+    ? (summariesData.data?.summaries as SummaryWithSubject[]) || []
+    : [];
+
   const [selectedSummary, setSelectedSummary] =
     useState<SummaryWithSubject | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -91,12 +98,13 @@ export default function SummariesList() {
     e.stopPropagation();
     const confirmed = await confirm({
       title: "Delete Summary",
-      description: "Are you sure you want to delete this summary? This action cannot be undone.",
+      description:
+        "Are you sure you want to delete this summary? This action cannot be undone.",
       confirmText: "Delete",
       cancelText: "Cancel",
       variant: "destructive",
     });
-    
+
     if (!confirmed) return;
 
     setDeletingId(id);
@@ -852,7 +860,9 @@ export default function SummariesList() {
               prose-hr:my-10 prose-hr:border-gray-300 dark:prose-hr:border-gray-600
               prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:underline hover:prose-a:text-blue-800 dark:hover:prose-a:text-blue-300"
             >
-              <ReactMarkdown>{selectedSummary?.content || ""}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {selectedSummary?.content || ""}
+              </ReactMarkdown>
             </div>
           </div>
 
