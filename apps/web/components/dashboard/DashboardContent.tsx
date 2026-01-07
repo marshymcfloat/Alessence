@@ -22,7 +22,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { motion } from "framer-motion";
 
-
 import { SubjectWithTaskProgress } from "@repo/types";
 import { Task } from "@repo/db";
 import { PerformanceDashboard } from "./PerformanceDashboard";
@@ -34,7 +33,6 @@ import { StudyTab } from "./tabs/StudyTab";
 import { ScheduleTab } from "./tabs/ScheduleTab";
 import { ToolsTab } from "./tabs/ToolsTab";
 
-import { NotesTab } from "./tabs/NotesTab";
 import { SubjectsOverview } from "./SubjectsOverview";
 import { useQueryState } from "@/hooks/use-query-state";
 
@@ -50,7 +48,7 @@ const DashboardContent = ({
   initialSchedule?: any[];
 }) => {
   const [activeTab, setActiveTab] = useQueryState("tab", {
-    defaultValue: "timer",
+    defaultValue: "schedule",
   });
 
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -65,14 +63,13 @@ const DashboardContent = ({
   };
 
   const navItems = [
-    { value: "timer", label: "Focus Timer", icon: Timer },
-    { value: "tasks", label: "Tasks", icon: CheckSquare },
-    { value: "subjects", label: "Subjects", icon: BookOpen },
-    { value: "notes", label: "Notes", icon: FileText },
-    { value: "study", label: "Study", icon: BookOpen },
     { value: "schedule", label: "Schedule", icon: Calendar },
-    { value: "analytics", label: "Analytics", icon: BarChart },
+    { value: "tasks", label: "Tasks", icon: CheckSquare },
+    { value: "study", label: "Study", icon: BookOpen },
     { value: "tools", label: "Tools", icon: PenTool },
+    { value: "timer", label: "Focus Timer", icon: Timer },
+    { value: "subjects", label: "Subjects", icon: BookOpen },
+    { value: "analytics", label: "Analytics", icon: BarChart },
   ];
 
   // Scroll to active tab on mobile
@@ -129,14 +126,15 @@ const DashboardContent = ({
           ))}
         </div>
 
-
         <div className="p-4 border-t">
           <Button
             variant="ghost"
             className="w-full justify-start gap-3 text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-950"
             size="sm"
             onClick={async () => {
-              const { logoutAction } = await import("@/lib/actions/authActions");
+              const { logoutAction } = await import(
+                "@/lib/actions/authActions"
+              );
               const result = await logoutAction();
               if (result.success) {
                 router.push("/");
@@ -239,12 +237,6 @@ const DashboardContent = ({
               <ErrorBoundary name="Subjects">
                 <TabsContent value="subjects" className="mt-0">
                   <SubjectsOverview initialSubjects={subjects || []} />
-                </TabsContent>
-              </ErrorBoundary>
-
-              <ErrorBoundary name="Notes">
-                <TabsContent value="notes" className="mt-0">
-                  <NotesTab />
                 </TabsContent>
               </ErrorBoundary>
 

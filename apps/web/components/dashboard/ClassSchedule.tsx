@@ -150,133 +150,135 @@ export function ClassSchedule({
               <Card
                 key={day}
                 className={cn(
-                  "overflow-hidden border-t-4 shadow-sm hover:shadow-md transition-all",
+                  "overflow-hidden border-none shadow-lg bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm",
                   day === currentDay
-                    ? "border-t-purple-600 ring-2 ring-purple-600/20"
-                    : "border-t-pink-500"
+                    ? "ring-2 ring-purple-500/50 dark:ring-purple-400/50"
+                    : ""
                 )}
               >
-                <CardHeader className="bg-slate-50 dark:bg-slate-900/50 py-3 border-b flex flex-row items-center justify-between">
+                <CardHeader
+                  className={cn(
+                    "py-4 border-b flex flex-row items-center justify-between",
+                    day === currentDay
+                      ? "bg-gradient-to-r from-purple-500/10 to-pink-500/10"
+                      : "bg-slate-50/50 dark:bg-slate-800/50"
+                  )}
+                >
                   <CardTitle
                     className={cn(
-                      "text-sm font-bold tracking-wider mx-auto",
+                      "text-sm font-bold tracking-widest mx-auto uppercase",
                       day === currentDay
-                        ? "text-purple-700 dark:text-purple-400"
-                        : "text-slate-600 dark:text-slate-300"
+                        ? "text-purple-700 dark:text-purple-300"
+                        : "text-slate-500 dark:text-slate-400"
                     )}
                   >
                     {day}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-0">
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {scheduleByDay[day]?.map((item) => {
-                      const active = isCurrentClass(item);
-                      return (
-                        <div
-                          key={item.id}
-                          className={cn(
-                            "group p-4 flex gap-4 transition-colors relative cursor-pointer",
-                            active
-                              ? "bg-purple-50 dark:bg-purple-900/20"
-                              : "hover:bg-slate-50 dark:hover:bg-slate-800/50",
-                            !active &&
-                              item.type === "REVIEW_SESSION" &&
-                              "bg-amber-50/50 dark:bg-amber-950/10"
-                          )}
-                          onClick={() => setEditingItem(item)}
-                        >
-                          {active && (
-                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-purple-600" />
-                          )}
-                          <div className="flex flex-col items-center justify-center min-w-18 text-xs font-medium text-slate-500">
-                            <span
+                <CardContent className="p-4 space-y-3">
+                  {scheduleByDay[day]?.map((item) => {
+                    const active = isCurrentClass(item);
+                    return (
+                      <div
+                        key={item.id}
+                        className={cn(
+                          "group relative flex gap-4 p-3 rounded-xl transition-all duration-200 border",
+                          "hover:shadow-md cursor-pointer",
+                          active
+                            ? "bg-white dark:bg-slate-800 border-purple-200 dark:border-purple-800 shadow-md ring-1 ring-purple-500/20"
+                            : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-800 hover:border-purple-200 dark:hover:border-purple-700/50",
+                          !active &&
+                            item.type === "REVIEW_SESSION" &&
+                            "bg-amber-50/30 dark:bg-amber-900/10 border-amber-100 dark:border-amber-800/30"
+                        )}
+                        onClick={() => setEditingItem(item)}
+                      >
+                        {active && (
+                          <div className="absolute left-0 top-3 bottom-3 w-1 bg-gradient-to-b from-purple-500 to-pink-500 rounded-r-full" />
+                        )}
+
+                        {/* Time Column */}
+                        <div className="flex flex-col items-center justify-center min-w-[4rem] text-xs font-medium text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-700/50 pr-3">
+                          <span
+                            className={cn(
+                              active &&
+                                "text-purple-700 dark:text-purple-300 font-bold"
+                            )}
+                          >
+                            {item.startTime}
+                          </span>
+                          <div
+                            className={cn(
+                              "w-0.5 h-6 my-1 rounded-full",
+                              active
+                                ? "bg-gradient-to-b from-purple-300 to-pink-300 dark:from-purple-700 dark:to-pink-700"
+                                : "bg-slate-100 dark:bg-slate-800"
+                            )}
+                          />
+                          <span
+                            className={cn(
+                              active &&
+                                "text-purple-700 dark:text-purple-300 font-bold"
+                            )}
+                          >
+                            {item.endTime}
+                          </span>
+                        </div>
+
+                        {/* Content Column */}
+                        <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4
                               className={cn(
-                                active &&
-                                  "text-purple-700 dark:text-purple-400 font-bold"
-                              )}
-                            >
-                              {item.startTime}
-                            </span>
-                            <div
-                              className={cn(
-                                "w-0.5 h-3 my-1 rounded-full",
+                                "font-bold text-sm leading-tight line-clamp-2",
                                 active
-                                  ? "bg-purple-300 dark:bg-purple-700"
-                                  : "bg-slate-200 dark:bg-slate-700"
-                              )}
-                            />
-                            <span
-                              className={cn(
-                                active &&
-                                  "text-purple-700 dark:text-purple-400 font-bold"
+                                  ? "text-purple-900 dark:text-purple-100"
+                                  : "text-slate-700 dark:text-slate-200 group-hover:text-purple-700 dark:group-hover:text-purple-300 transition-colors"
                               )}
                             >
-                              {item.endTime}
-                            </span>
+                              {item.subject?.title ||
+                                (item.type === "REVIEW_SESSION"
+                                  ? "Review Session"
+                                  : "Free Time")}
+                            </h4>
+
+                            {active && (
+                              <Badge className="bg-purple-600 shadow-sm shadow-purple-500/20 text-[10px] px-1.5 h-5 shrink-0 animate-pulse border-none">
+                                NOW
+                              </Badge>
+                            )}
+
+                            <Pencil className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover:opacity-100 transition-all hover:text-purple-600" />
                           </div>
 
-                          <div className="flex-1 space-y-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <h4
-                                className={cn(
-                                  "font-semibold text-sm line-clamp-2",
-                                  active
-                                    ? "text-purple-900 dark:text-purple-100"
-                                    : "text-slate-800 dark:text-slate-200"
-                                )}
-                              >
-                                {item.subject?.title ||
-                                  (item.type === "REVIEW_SESSION"
-                                    ? "Review Session"
-                                    : "Free Time")}
-                              </h4>
-                              {active && (
-                                <Badge className="bg-purple-600 hover:bg-purple-700 text-[10px] px-1.5 h-5 shrink-0 animate-pulse">
-                                  NOW
-                                </Badge>
+                          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                            <div
+                              className={cn(
+                                "flex items-center gap-1.5 transition-colors",
+                                !item.room && "opacity-50"
                               )}
-                              {!active && item.type !== "CLASS" && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px] px-1.5 h-5 shrink-0"
-                                >
-                                  {item.type.replace("_", " ")}
-                                </Badge>
-                              )}
-
-                              <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity absolute top-2 right-2" />
+                            >
+                              <MapPin className="w-3.5 h-3.5" />
+                              <span className="truncate max-w-[100px]">
+                                {item.room || "Set room"}
+                              </span>
                             </div>
-
-                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-500">
-                              {item.room ? (
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  <span>{item.room}</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1 text-muted-foreground/50">
-                                  <MapPin className="w-3 h-3" />
-                                  <span>Set room</span>
-                                </div>
+                            <div
+                              className={cn(
+                                "flex items-center gap-1.5 transition-colors",
+                                !item.instructor && "opacity-50"
                               )}
-                              {item.instructor ? (
-                                <div className="flex items-center gap-1">
-                                  <User className="w-3 h-3" />
-                                  <span>{item.instructor}</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1 text-muted-foreground/50">
-                                  <User className="w-3 h-3" />
-                                  <span>Set instructor</span>
-                                </div>
-                              )}
+                            >
+                              <User className="w-3.5 h-3.5" />
+                              <span className="truncate max-w-[100px]">
+                                {item.instructor || "Set instructor"}
+                              </span>
                             </div>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
+                    );
+                  })}
                 </CardContent>
               </Card>
             ))

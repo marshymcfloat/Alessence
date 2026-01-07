@@ -1,7 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { GraduationCap, FileText, Layers, Plus } from "lucide-react";
+import {
+  GraduationCap,
+  FileText,
+  Layers,
+  Plus,
+  StickyNote,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -19,13 +25,14 @@ import FlashcardDeckForm from "../FlashcardDeckForm";
 import AddExamSheet from "../AddExamSheet";
 import AddSummarySheet from "../AddSummarySheet";
 import CreateMockExamSheet from "../CreateMockExamSheet";
+import { NotesTab } from "./NotesTab";
 
 export function StudyTab() {
   const [studySubTab, setStudySubTab] = useQueryState("studyView", {
     defaultValue: "exams",
-    parse: (value) => value as "exams" | "summaries" | "flashcards",
+    parse: (value) => value as "exams" | "summaries" | "flashcards" | "notes",
   });
-  
+
   const [isNewDeckDialogOpen, setIsNewDeckDialogOpen] = useState(false);
 
   return (
@@ -80,6 +87,17 @@ export function StudyTab() {
               <Layers className="w-4 h-4" />
               <span>Flashcards</span>
             </button>
+            <button
+              onClick={() => setStudySubTab("notes")}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-semibold transition-all duration-300 ${
+                studySubTab === "notes"
+                  ? "bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25 scale-105"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted"
+              }`}
+            >
+              <StickyNote className="w-4 h-4" />
+              <span>Notes</span>
+            </button>
           </div>
 
           {studySubTab === "flashcards" && (
@@ -129,6 +147,16 @@ export function StudyTab() {
               transition={{ duration: 0.2 }}
             >
               <FlashcardDeckList />
+            </motion.div>
+          )}
+
+          {studySubTab === "notes" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <NotesTab />
             </motion.div>
           )}
         </div>
