@@ -109,8 +109,23 @@ export function ClassSchedule({
     {} as Record<string, ScheduleItem[]>
   );
 
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  const currentDayIndex = DAYS.indexOf(currentDay);
+  const orderedDays =
+    currentDayIndex !== -1
+      ? [...DAYS.slice(currentDayIndex), ...DAYS.slice(0, currentDayIndex)]
+      : DAYS;
+
+  // Use standard order during SSR/hydration to prevent mismatches
+  const displayDays = isMounted ? orderedDays : DAYS;
+
   // Filter out days with no schedule if you want a compact view, or keep them empty
-  const activeDays = DAYS.filter(
+  const activeDays = displayDays.filter(
     (day) => (scheduleByDay[day]?.length || 0) > 0
   );
 

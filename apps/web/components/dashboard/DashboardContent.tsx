@@ -13,6 +13,7 @@ import {
   FileText,
   BarChart,
   PenTool,
+  RefreshCcw,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -212,8 +213,15 @@ const DashboardContent = ({
                 size="sm"
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className={isRefreshing ? "opacity-50" : ""}
+                className={`text-xs text-muted-foreground hover:text-foreground transition-colors ${
+                  isRefreshing ? "opacity-50" : ""
+                }`}
               >
+                <RefreshCcw
+                  className={`mr-2 h-3.5 w-3.5 ${
+                    isRefreshing ? "animate-spin" : ""
+                  }`}
+                />
                 {isRefreshing ? "Refreshing..." : "Refresh Data"}
               </Button>
             </div>
