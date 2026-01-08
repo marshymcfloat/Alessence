@@ -5,7 +5,6 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 
 const Page = () => {
-  /* recommit*/
   return (
     <main className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">

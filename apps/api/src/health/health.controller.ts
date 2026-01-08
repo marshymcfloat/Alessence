@@ -5,6 +5,14 @@ import { DbService } from 'src/db/db.service';
 export class HealthController {
   constructor(private readonly dbService: DbService) {}
 
+  @Get('cron')
+  cron() {
+    return {
+      message: 'Cron job executed successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Get()
   async check() {
     try {

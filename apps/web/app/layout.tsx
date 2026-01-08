@@ -8,7 +8,6 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import { RouteProgressBar } from "@/components/RouteProgressBar";
 import { Suspense } from "react";
 
-
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -131,13 +130,14 @@ export default function RootLayout({
               __html: JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "WebSite",
-                "name": "Alessence",
-                "url": "https://alessence.vercel.app",
-                "potentialAction": {
+                name: "Alessence",
+                url: "https://alessence.vercel.app",
+                potentialAction: {
                   "@type": "SearchAction",
-                  "target": "https://alessence.vercel.app/search?q={search_term_string}",
-                  "query-input": "required name=search_term_string"
-                }
+                  target:
+                    "https://alessence.vercel.app/search?q={search_term_string}",
+                  "query-input": "required name=search_term_string",
+                },
               }),
             }}
           />
@@ -147,31 +147,32 @@ export default function RootLayout({
               __html: JSON.stringify({
                 "@context": "https://schema.org",
                 "@type": "WebApplication",
-                "name": "Alessence",
-                "applicationCategory": "EducationalApplication",
-                "operatingSystem": "Any",
-                "offers": {
+                name: "Alessence",
+                applicationCategory: "EducationalApplication",
+                operatingSystem: "Any",
+                offers: {
                   "@type": "Offer",
-                  "price": "0",
-                  "priceCurrency": "USD"
+                  price: "0",
+                  priceCurrency: "USD",
                 },
-                "description": "Your personal study space. Manage tasks, organize files, and generate AI-powered exams for accountancy and law studies.",
-                "image": "https://alessence.vercel.app/logo.png",
-                "url": "https://alessence.vercel.app",
-                "author": {
+                description:
+                  "Your personal study space. Manage tasks, organize files, and generate AI-powered exams for accountancy and law studies.",
+                image: "https://alessence.vercel.app/logo.png",
+                url: "https://alessence.vercel.app",
+                author: {
                   "@type": "Organization",
-                  "name": "Alessence Team",
-                  "url": "https://alessence.vercel.app"
-                }
+                  name: "Alessence Team",
+                  url: "https://alessence.vercel.app",
+                },
               }),
             }}
           />
           <main className="min-h-screen w-full relative">
             <ReduxProvider>
-                <TanstackProvider>
-                  {children}
-                  <Toaster />
-                </TanstackProvider>
+              <TanstackProvider>
+                {children}
+                <Toaster />
+              </TanstackProvider>
             </ReduxProvider>
           </main>
         </ThemeProvider>
