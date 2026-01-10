@@ -13,7 +13,7 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { LoaderCircle, LogIn } from "lucide-react";
+import { LoaderCircle, LogIn, Lock, Mail } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { authLoginAction } from "@/lib/actions/authActions";
 import { toast } from "sonner";
@@ -52,9 +52,9 @@ const AuthLoginForm = ({ onSuccess }: AuthLoginFormProps = {}) => {
       console.error("Mutation failed unexpectedly:", error);
 
       if (error instanceof Error) {
-        toast(`An unexpected error occurred: ${error.message}`);
+        toast.error(`An unexpected error occurred: ${error.message}`);
       } else {
-        toast(
+        toast.error(
           "An unexpected error occurred. Please check your connection and try again."
         );
       }
@@ -74,31 +74,56 @@ const AuthLoginForm = ({ onSuccess }: AuthLoginFormProps = {}) => {
       <form
         action=""
         onSubmit={form.handleSubmit(handleSubmission)}
-        className="space-y-4"
+        className="space-y-6"
       >
-        {formInputs.map((input) => (
-          <FormField
-            key={input}
-            control={form.control}
-            name={input}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="capitalize">{input}</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type={input === "email" ? "text" : "password"}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+        <div className="space-y-4">
+          {formInputs.map((input) => (
+            <FormField
+              key={input}
+              control={form.control}
+              name={input}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="capitalize text-slate-700 dark:text-slate-300 ml-1">
+                    {input}
+                  </FormLabel>
+                  <FormControl>
+                    <div className="relative group">
+                      <div className="absolute left-3 top-3 text-slate-400 dark:text-slate-500 group-focus-within:text-indigo-500 dark:group-focus-within:text-indigo-400 transition-colors">
+                        {input === "email" ? (
+                          <Mail className="h-5 w-5" />
+                        ) : (
+                          <Lock className="h-5 w-5" />
+                        )}
+                      </div>
+                      <Input
+                        {...field}
+                        type={input === "email" ? "text" : "password"}
+                        className="bg-slate-50 dark:bg-slate-900/50 border-slate-200 dark:border-slate-800 pl-10 h-12 rounded-xl text-slate-900 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 transition-all duration-300"
+                        placeholder={
+                          input === "email" ? "juan@gmail.com" : "••••••••"
+                        }
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage className="text-red-500 dark:text-red-400 ml-1" />
+                </FormItem>
+              )}
+            />
+          ))}
+        </div>
+
+        <div className="pt-2">
+          <Button
+            disabled={disabled}
+            className="w-full h-12 rounded-xl bg-indigo-600 hover:bg-indigo-700 transition-all duration-300 shadow-lg shadow-indigo-500/20 group"
+          >
+            {isPending ? (
+              <LoaderCircle className="animate-spin mr-2 h-5 w-5 text-white" />
+            ) : (
+              <LogIn className="mr-2 h-5 w-5 text-white group-hover:translate-x-1 transition-transform" />
             )}
-          />
-        ))}
-        <div className="flex mt-12">
-          <Button disabled={disabled} className=" ml-auto min-w-32">
-            {isPending && <LoaderCircle className="animate-spin" />}
-            <LogIn /> Sign in
+            <span className="text-white font-semibold text-lg">Sign in</span>
           </Button>
         </div>
       </form>

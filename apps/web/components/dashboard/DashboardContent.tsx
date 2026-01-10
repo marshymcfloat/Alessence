@@ -198,13 +198,11 @@ const DashboardContent = ({
           </div>
         </div>
 
-        {/* Dynamic Background */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           <div className="absolute -top-[20%] -right-[10%] w-[70%] h-[70%] bg-purple-200/20 dark:bg-purple-900/10 blur-[100px] rounded-full mix-blend-multiply dark:mix-blend-screen animate-blob" />
           <div className="absolute top-[20%] -left-[10%] w-[50%] h-[50%] bg-pink-200/20 dark:bg-pink-900/10 blur-[100px] rounded-full mix-blend-multiply dark:mix-blend-screen animate-blob animation-delay-2000" />
         </div>
 
-        {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 z-10 scroll-smooth">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-end mb-4">
