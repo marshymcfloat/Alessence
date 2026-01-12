@@ -133,6 +133,9 @@ export function ClassSchedule({
   const formatTo12Hour = (time: string) => {
     if (!time) return "";
     const [hours, minutes] = time.split(":").map(Number);
+
+    if (hours === undefined || minutes === undefined) return time;
+
     const period = hours >= 12 ? "PM" : "AM";
     const hours12 = hours % 12 || 12;
     return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
