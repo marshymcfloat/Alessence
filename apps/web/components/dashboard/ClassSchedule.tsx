@@ -129,6 +129,15 @@ export function ClassSchedule({
     (day) => (scheduleByDay[day]?.length || 0) > 0
   );
 
+  // Format time to 12-hour format
+  const formatTo12Hour = (time: string) => {
+    if (!time) return "";
+    const [hours, minutes] = time.split(":").map(Number);
+    const period = hours >= 12 ? "PM" : "AM";
+    const hours12 = hours % 12 || 12;
+    return `${hours12}:${minutes.toString().padStart(2, "0")} ${period}`;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -220,7 +229,7 @@ export function ClassSchedule({
                                 "text-purple-700 dark:text-purple-300 font-bold"
                             )}
                           >
-                            {item.startTime}
+                            {formatTo12Hour(item.startTime)}
                           </span>
                           <div
                             className={cn(
@@ -236,7 +245,7 @@ export function ClassSchedule({
                                 "text-purple-700 dark:text-purple-300 font-bold"
                             )}
                           >
-                            {item.endTime}
+                            {formatTo12Hour(item.endTime)}
                           </span>
                         </div>
 
@@ -362,7 +371,8 @@ export function ClassSchedule({
                                   "text-purple-700 dark:text-purple-300 font-bold"
                               )}
                             >
-                              {item.startTime} - {item.endTime}
+                              {formatTo12Hour(item.startTime)} -{" "}
+                              {formatTo12Hour(item.endTime)}
                             </span>
                           </div>
 
