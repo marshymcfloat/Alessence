@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, Suspense, useRef, useEffect } from "react";
+import { useState, Suspense, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -37,6 +37,18 @@ import { ToolsTab } from "./tabs/ToolsTab";
 import { SubjectsOverview } from "./SubjectsOverview";
 import { useQueryState } from "@/hooks/use-query-state";
 
+const TAB_OPTIONS = { defaultValue: "schedule" };
+
+const NAV_ITEMS = [
+  { value: "schedule", label: "Schedule", icon: Calendar },
+  { value: "tasks", label: "Tasks", icon: CheckSquare },
+  { value: "study", label: "Study", icon: BookOpen },
+  { value: "tools", label: "Tools", icon: PenTool },
+  { value: "timer", label: "Focus Timer", icon: Timer },
+  { value: "subjects", label: "Subjects", icon: BookOpen },
+  { value: "analytics", label: "Analytics", icon: BarChart },
+];
+
 const DashboardContent = ({
   initialTasks,
   userId,
@@ -48,30 +60,18 @@ const DashboardContent = ({
   subjects?: SubjectWithTaskProgress[];
   initialSchedule?: any[];
 }) => {
-  const [activeTab, setActiveTab] = useQueryState("tab", {
-    defaultValue: "schedule",
-  });
+  const [activeTab, setActiveTab] = useQueryState("tab", TAB_OPTIONS);
 
   const [isRefreshing, setIsRefreshing] = useState(false);
   const queryClient = useQueryClient();
   const router = useRouter();
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);
     await queryClient.invalidateQueries();
     router.refresh();
     setTimeout(() => setIsRefreshing(false), 1000);
-  };
-
-  const navItems = [
-    { value: "schedule", label: "Schedule", icon: Calendar },
-    { value: "tasks", label: "Tasks", icon: CheckSquare },
-    { value: "study", label: "Study", icon: BookOpen },
-    { value: "tools", label: "Tools", icon: PenTool },
-    { value: "timer", label: "Focus Timer", icon: Timer },
-    { value: "subjects", label: "Subjects", icon: BookOpen },
-    { value: "analytics", label: "Analytics", icon: BarChart },
-  ];
+  }, [queryClient, router]);
 
   // Scroll to active tab on mobile
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -105,7 +105,7 @@ const DashboardContent = ({
         </div>
 
         <div className="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-          {navItems.map((item) => (
+          {NAV_ITEMS.map((item) => (
             <button
               key={item.value}
               onClick={() => setActiveTab(item.value)}
@@ -157,7 +157,7 @@ const DashboardContent = ({
             ref={scrollContainerRef}
             className="flex items-center gap-2 overflow-x-auto py-3 px-4 no-scrollbar scroll-smooth"
           >
-            {navItems.map((item) => {
+            {NAV_ITEMS.map((item) => {
               const isActive = activeTab === item.value;
               return (
                 <button
@@ -242,7 +242,10 @@ const DashboardContent = ({
 
               <ErrorBoundary name="Subjects">
                 <TabsContent value="subjects" className="mt-0">
-                  <SubjectsOverview initialSubjects={subjects || []} />
+                  <SubjectsOverview
+                    initialSubjects={subjects || []}
+                    userId={userId}
+                  />
                 </TabsContent>
               </ErrorBoundary>
 
