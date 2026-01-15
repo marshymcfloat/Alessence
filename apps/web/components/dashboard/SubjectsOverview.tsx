@@ -53,9 +53,10 @@ function getSubjectColor(index: number) {
 
 interface SubjectsOverviewProps {
   initialSubjects?: SubjectWithTaskProgress[];
+  userId: string;
 }
 
-export function SubjectsOverview({ initialSubjects }: SubjectsOverviewProps) {
+export function SubjectsOverview({ initialSubjects, userId }: SubjectsOverviewProps) {
   const queryClient = useQueryClient();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<number | null>(null);
@@ -64,6 +65,16 @@ export function SubjectsOverview({ initialSubjects }: SubjectsOverviewProps) {
   const { data, isLoading } = useQuery({
     queryKey: ["enrolledSubjects"],
     queryFn: getEnrolledSubject,
+    initialData: initialSubjects
+      ? {
+          success: true,
+          data: {
+            subjects: initialSubjects,
+            userId,
+          },
+        }
+      : undefined,
+    staleTime: 5 * 60 * 1000,
   });
 
   const deleteMutation = useMutation({
