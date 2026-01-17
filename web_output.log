@@ -1,0 +1,20 @@
+
+> web@0.1.0 dev /app/apps/web
+> next dev --port 3000
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3000
+   - Network:       http://192.168.0.2:3000
+
+ ✓ Starting...
+ ✓ Ready in 1111ms
+ ○ Compiling / ...
+ GET / 200 in 6.9s (compile: 6.2s, proxy.ts: 5ms, render: 751ms)
+ GET / 200 in 102ms (compile: 9ms, proxy.ts: 7ms, render: 86ms)
+ ✓ Compiled in 143ms
+ GET /test-card 200 in 1248ms (compile: 1042ms, proxy.ts: 63ms, render: 143ms)
+ ✓ Compiled in 117ms
+/app/apps/web:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  web@0.1.0 dev: `next dev --port 3000`
+Command failed with signal "SIGTERM"
+[?25h
