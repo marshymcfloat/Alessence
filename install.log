@@ -1,0 +1,73 @@
+Scope: all 8 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +1210
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 1210, reused 0, downloaded 14, added 1
+Progress: resolved 1210, reused 0, downloaded 87, added 77
+Progress: resolved 1210, reused 0, downloaded 218, added 205
+Progress: resolved 1210, reused 0, downloaded 223, added 218
+Progress: resolved 1210, reused 0, downloaded 235, added 223
+Progress: resolved 1210, reused 0, downloaded 314, added 309
+Progress: resolved 1210, reused 0, downloaded 465, added 463
+Progress: resolved 1210, reused 0, downloaded 702, added 697
+Progress: resolved 1210, reused 0, downloaded 840, added 837
+Progress: resolved 1210, reused 0, downloaded 853, added 851
+Progress: resolved 1210, reused 0, downloaded 860, added 861
+Progress: resolved 1210, reused 0, downloaded 865, added 863
+Progress: resolved 1210, reused 0, downloaded 869, added 869
+Progress: resolved 1210, reused 0, downloaded 872, added 870
+Progress: resolved 1210, reused 0, downloaded 873, added 870
+Progress: resolved 1210, reused 0, downloaded 884, added 880
+Progress: resolved 1210, reused 0, downloaded 949, added 953
+Progress: resolved 1210, reused 0, downloaded 1026, added 1025
+Progress: resolved 1210, reused 0, downloaded 1135, added 1138
+Progress: resolved 1210, reused 0, downloaded 1200, added 1210, done
+.../core-js@3.47.0/node_modules/core-js postinstall$ node -e "try{require('./postinstall')}catch(e){}"
+.../node_modules/@prisma/engines postinstall$ node scripts/postinstall.js
+.../sharp@0.34.5/node_modules/sharp install$ node install/check.js || npm run build
+.../node_modules/unrs-resolver postinstall$ napi-postinstall unrs-resolver 1.11.1 check
+.../node_modules/@nestjs/core postinstall$ opencollective || exit 0
+.../core-js@3.47.0/node_modules/core-js postinstall: Thank you for using core-js ( https://github.com/zloirock/core-js ) for polyfilling JavaScript standard library!
+.../core-js@3.47.0/node_modules/core-js postinstall: The project needs your help! Please consider supporting core-js:
+.../core-js@3.47.0/node_modules/core-js postinstall: > https://opencollective.com/core-js
+.../core-js@3.47.0/node_modules/core-js postinstall: > https://patreon.com/zloirock
+.../core-js@3.47.0/node_modules/core-js postinstall: > https://boosty.to/zloirock
+.../core-js@3.47.0/node_modules/core-js postinstall: > bitcoin: bc1qlea7544qtsmj2rayg0lthvza9fau63ux0fstcz
+.../core-js@3.47.0/node_modules/core-js postinstall: I highly recommend reading this: https://github.com/zloirock/core-js/blob/master/docs/2023-02-14-so-whats-next.md
+.../core-js@3.47.0/node_modules/core-js postinstall: Done
+.../node_modules/unrs-resolver postinstall: Done
+.../esbuild@0.27.2/node_modules/esbuild postinstall$ node install.js
+.../esbuild@0.27.2/node_modules/esbuild postinstall: Done
+.../sharp@0.34.5/node_modules/sharp install: Done
+.../node_modules/@nestjs/core postinstall:                            Thanks for installing nest
+.../node_modules/@nestjs/core postinstall:                  Please consider donating to our open collective
+.../node_modules/@nestjs/core postinstall:                         to help us maintain this package.
+.../node_modules/@nestjs/core postinstall:
+.../node_modules/@nestjs/core postinstall:                             Number of contributors: 0
+.../node_modules/@nestjs/core postinstall:                              Number of backers: 1164
+.../node_modules/@nestjs/core postinstall:                              Annual budget: $129,664
+.../node_modules/@nestjs/core postinstall:                              Current balance: $6,447
+.../node_modules/@nestjs/core postinstall:
+.../node_modules/@nestjs/core postinstall:              Become a partner: https://opencollective.com/nest/donate
+.../node_modules/@nestjs/core postinstall:
+.../node_modules/@nestjs/core postinstall: Done
+.../node_modules/@prisma/engines postinstall: Done
+.../node_modules/prisma preinstall$ node scripts/preinstall-entry.js
+.../node_modules/prisma preinstall: Done
+.../node_modules/@prisma/client postinstall$ node scripts/postinstall.js
+.../node_modules/@prisma/client postinstall: prisma:warn We could not find your Prisma schema in the default locations (see: https://pris.ly/d/prisma-schema-location).
+.../node_modules/@prisma/client postinstall: If you have a Prisma schema file in a custom path, you will need to run
+.../node_modules/@prisma/client postinstall: `prisma generate --schema=./path/to/your/schema.prisma` to generate Prisma Client.
+.../node_modules/@prisma/client postinstall: If you do not have a Prisma schema file yet, you can ignore this message.
+.../node_modules/@prisma/client postinstall: Done
+
+dependencies:
++ recharts 3.6.0
+
+devDependencies:
++ prettier 3.6.2
++ turbo 2.5.8
++ typescript 5.9.2
+
+Done in 30.1s

@@ -12,6 +12,7 @@ import {
 import { getEnrolledSubject } from "@/lib/actions/subjectActions";
 import { useQuery } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
+import { memo } from "react";
 
 const SubjectSelectInput = ({
   onValueChange,
@@ -64,4 +65,5 @@ const SubjectSelectInput = ({
   );
 };
 
-export default SubjectSelectInput;
+// Memoized to prevent re-renders when parent timer updates
+export default memo(SubjectSelectInput);
