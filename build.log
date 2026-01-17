@@ -1,0 +1,46 @@
+
+> Alessence@ build /app
+> turbo run build
+
+
+Attention:
+Turborepo now collects completely anonymous telemetry regarding usage.
+This information is used to shape the Turborepo roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://turborepo.com/docs/telemetry
+
+turbo 2.5.8
+
+• Packages in scope: @repo/db, @repo/eslint-config, @repo/types, @repo/typescript-config, @repo/utils, api, web
+• Running build in 7 packages
+• Remote caching disabled
+@repo/db:db:generate: cache bypass, force executing 51b13ea0a4ecc770
+@repo/db:build: cache miss, executing 29542b9d862ec729
+@repo/utils:build: cache miss, executing e24ca4d7707d3877
+@repo/db:db:generate:
+@repo/db:db:generate: > @repo/db@ db:generate /app/packages/db
+@repo/db:db:generate: > prisma generate
+@repo/db:db:generate:
+@repo/db:build:
+@repo/db:build: > @repo/db@ build /app/packages/db
+@repo/db:build: > prisma generate && tsc
+@repo/db:build:
+@repo/utils:build:
+@repo/utils:build: > @repo/utils@0.0.1 build /app/packages/utils
+@repo/utils:build: > tsc
+@repo/utils:build:
+@repo/db:build: [dotenv@17.2.3] injecting env (0) from .env.example -- tip: ⚙️  override existing env vars with { override: true }
+@repo/db:build: Failed to load config file "/app/packages/db" as a TypeScript/JavaScript module. Error: PrismaConfigEnvError: Missing required environment variable: DATABASE_URL
+@repo/db:build:  ELIFECYCLE  Command failed with exit code 1.
+@repo/db:build: ERROR: command finished with error: command (/app/packages/db) /home/jules/.local/share/pnpm/.tools/pnpm/9.0.0/bin/pnpm run build exited (1)
+@repo/db:db:generate: [dotenv@17.2.3] injecting env (0) from .env.example -- tip: 📡 add observability to secrets: https://dotenvx.com/ops
+@repo/db:db:generate: Failed to load config file "/app/packages/db" as a TypeScript/JavaScript module. Error: PrismaConfigEnvError: Missing required environment variable: DATABASE_URL
+@repo/db#build: command (/app/packages/db) /home/jules/.local/share/pnpm/.tools/pnpm/9.0.0/bin/pnpm run build exited (1)
+
+ Tasks:    0 successful, 3 total
+Cached:    0 cached, 3 total
+  Time:    3.535s
+Failed:    @repo/db#build
+
+ ERROR  run failed: command  exited (1)
+ ELIFECYCLE  Command failed with exit code 1.

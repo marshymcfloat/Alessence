@@ -1,0 +1,189 @@
+
+> Alessence@ build /app
+> turbo run build
+
+turbo 2.5.8
+
+• Packages in scope: @repo/db, @repo/eslint-config, @repo/types, @repo/typescript-config, @repo/utils, api, web
+• Running build in 7 packages
+• Remote caching disabled
+@repo/db:db:generate: cache bypass, force executing b1656cf05062a6b3
+@repo/utils:build: cache miss, executing 5fd38fd28ef222a0
+@repo/db:build: cache miss, executing 30cba34cf605caf0
+@repo/db:db:generate:
+@repo/db:db:generate: > @repo/db@ db:generate /app/packages/db
+@repo/db:db:generate: > prisma generate
+@repo/db:db:generate:
+@repo/utils:build:
+@repo/utils:build: > @repo/utils@0.0.1 build /app/packages/utils
+@repo/utils:build: > tsc
+@repo/utils:build:
+@repo/db:build:
+@repo/db:build: > @repo/db@ build /app/packages/db
+@repo/db:build: > prisma generate && tsc
+@repo/db:build:
+@repo/db:db:generate: [dotenv@17.2.3] injecting env (0) from .env.example -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+@repo/db:db:generate: warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+@repo/db:db:generate: For more information, see: https://pris.ly/prisma-config
+@repo/db:db:generate:
+@repo/db:db:generate: Loaded Prisma config from prisma.config.ts.
+@repo/db:db:generate:
+@repo/db:db:generate: warn The Prisma config file in prisma.config.ts overrides the deprecated `package.json#prisma` property in package.json.
+@repo/db:db:generate:   For more information, see: https://pris.ly/prisma-config
+@repo/db:db:generate:
+@repo/db:build: [dotenv@17.2.3] injecting env (0) from .env.example -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+@repo/db:build: warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+@repo/db:build: For more information, see: https://pris.ly/prisma-config
+@repo/db:build:
+@repo/db:build: Loaded Prisma config from prisma.config.ts.
+@repo/db:build:
+@repo/db:build: warn The Prisma config file in prisma.config.ts overrides the deprecated `package.json#prisma` property in package.json.
+@repo/db:build:   For more information, see: https://pris.ly/prisma-config
+@repo/db:build:
+@repo/db:db:generate: Prisma config detected, skipping environment variable loading.
+@repo/db:db:generate: Prisma schema loaded from prisma/schema.prisma
+@repo/db:build: Prisma config detected, skipping environment variable loading.
+@repo/db:build: Prisma schema loaded from prisma/schema.prisma
+@repo/db:db:generate:
+@repo/db:db:generate: ✔ Generated Prisma Client (v6.18.0) to ./../../node_modules/.pnpm/@prisma+client@6.18.0_prisma@6.18.0_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client in 532ms
+@repo/db:db:generate:
+@repo/db:db:generate: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+@repo/db:db:generate:
+@repo/db:db:generate: Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+@repo/db:db:generate:
+@repo/db:build:
+@repo/db:build: ✔ Generated Prisma Client (v6.18.0) to ./../../node_modules/.pnpm/@prisma+client@6.18.0_prisma@6.18.0_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client in 530ms
+@repo/db:build:
+@repo/db:build: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+@repo/db:build:
+@repo/db:build: Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+@repo/db:build:
+@repo/types:build: cache miss, executing 4c19a940cc5db4ef
+@repo/types:build:
+@repo/types:build: > @repo/types@0.0.1 build /app/packages/types
+@repo/types:build: > tsc
+@repo/types:build:
+web:build: cache miss, executing 96f467153318278d
+api:build: cache miss, executing 3994d1d757b7ad28
+web:build:
+web:build: > web@0.1.0 build /app/apps/web
+web:build: > next build
+web:build:
+api:build:
+api:build: > api@0.0.1 prebuild /app/apps/api
+api:build: > cd ../.. && pnpm --filter @repo/db db:generate && pnpm --filter @repo/db build && pnpm --filter @repo/types build && (pnpm --filter @repo/utils build || echo 'Skipping @repo/utils build')
+api:build:
+api:build:
+api:build: > @repo/db@ db:generate /app/packages/db
+api:build: > prisma generate
+api:build:
+web:build:    ▲ Next.js 16.0.10 (Turbopack)
+web:build:
+web:build:    Creating an optimized production build ...
+api:build: [dotenv@17.2.3] injecting env (0) from .env.example -- tip: 🗂️ backup and recover secrets: https://dotenvx.com/ops
+api:build: warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+api:build: For more information, see: https://pris.ly/prisma-config
+api:build:
+api:build: Loaded Prisma config from prisma.config.ts.
+api:build:
+api:build: warn The Prisma config file in prisma.config.ts overrides the deprecated `package.json#prisma` property in package.json.
+api:build:   For more information, see: https://pris.ly/prisma-config
+api:build:
+api:build: Prisma config detected, skipping environment variable loading.
+api:build: Prisma schema loaded from prisma/schema.prisma
+api:build: ┌─────────────────────────────────────────────────────────┐
+api:build: │  Update available 6.18.0 -> 7.2.0                       │
+api:build: │                                                         │
+api:build: │  This is a major update - please follow the guide at    │
+api:build: │  https://pris.ly/d/major-version-upgrade                │
+api:build: │                                                         │
+api:build: │  Run the following to update                            │
+api:build: │    npm i --save-dev prisma@latest                       │
+api:build: │    npm i @prisma/client@latest                          │
+api:build: └─────────────────────────────────────────────────────────┘
+api:build:
+api:build: ✔ Generated Prisma Client (v6.18.0) to ./../../node_modules/.pnpm/@prisma+client@6.18.0_prisma@6.18.0_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client in 555ms
+api:build:
+api:build: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+api:build:
+api:build: Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+api:build:
+api:build:
+api:build: > @repo/db@ build /app/packages/db
+api:build: > prisma generate && tsc
+api:build:
+api:build: [dotenv@17.2.3] injecting env (0) from .env.example -- tip: ✅ audit secrets and track compliance: https://dotenvx.com/ops
+api:build: warn The configuration property `package.json#prisma` is deprecated and will be removed in Prisma 7. Please migrate to a Prisma config file (e.g., `prisma.config.ts`).
+api:build: For more information, see: https://pris.ly/prisma-config
+api:build:
+api:build: Loaded Prisma config from prisma.config.ts.
+api:build:
+api:build: warn The Prisma config file in prisma.config.ts overrides the deprecated `package.json#prisma` property in package.json.
+api:build:   For more information, see: https://pris.ly/prisma-config
+api:build:
+api:build: Prisma config detected, skipping environment variable loading.
+api:build: Prisma schema loaded from prisma/schema.prisma
+api:build:
+api:build: ✔ Generated Prisma Client (v6.18.0) to ./../../node_modules/.pnpm/@prisma+client@6.18.0_prisma@6.18.0_typescript@5.9.3__typescript@5.9.3/node_modules/@prisma/client in 812ms
+api:build:
+api:build: Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+api:build:
+api:build: Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+api:build:
+api:build:
+api:build: > @repo/types@0.0.1 build /app/packages/types
+api:build: > tsc
+api:build:
+api:build:
+api:build: > @repo/utils@0.0.1 build /app/packages/utils
+api:build: > tsc
+api:build:
+api:build:
+api:build: > api@0.0.1 build /app/apps/api
+api:build: > nest build
+api:build:
+web:build:  ✓ Compiled successfully in 21.6s
+web:build:    Running TypeScript ...
+api:build: webpack 5.100.2 compiled [1m[32msuccessfully[39m[22m in 8560 ms
+web:build:    Collecting page data using 3 workers ...
+web:build:    Generating static pages using 3 workers (0/7) ...
+web:build: Error [PrismaClientInitializationError]: Can't reach database server at `localhost:5432`
+web:build:
+web:build: Please make sure your database server is running at `localhost:5432`.
+web:build:     at a (.next/server/chunks/ssr/_56c63547._.js:59:2837) {
+web:build:   clientVersion: '6.18.0',
+web:build:   errorCode: 'P1001',
+web:build:   retryable: undefined
+web:build: }
+web:build:    Generating static pages using 3 workers (1/7)
+web:build:    Generating static pages using 3 workers (3/7)
+web:build:    Generating static pages using 3 workers (5/7)
+web:build:  ✓ Generating static pages using 3 workers (7/7) in 903.5ms
+web:build:    Finalizing page optimization ...
+web:build:
+web:build: Route (app)
+web:build: ┌ ○ /
+web:build: ├ ○ /_not-found
+web:build: ├ ƒ /[id]/assistant
+web:build: ├ ƒ /[id]/dashboard
+web:build: ├ ƒ /[id]/flashcard
+web:build: ├ ƒ /[id]/flashcard/deck/[deckId]
+web:build: ├ ƒ /[id]/friends
+web:build: ├ ƒ /[id]/profile
+web:build: ├ ƒ /[id]/search
+web:build: ├ ƒ /[id]/shared
+web:build: ├ ƒ /[id]/syllabus
+web:build: ├ ○ /manifest.webmanifest
+web:build: ├ ○ /robots.txt
+web:build: └ ○ /sitemap.xml
+web:build:
+web:build:
+web:build: ƒ Proxy (Middleware)
+web:build:
+web:build: ○  (Static)   prerendered as static content
+web:build: ƒ  (Dynamic)  server-rendered on demand
+web:build:
+
+ Tasks:    6 successful, 6 total
+Cached:    0 cached, 6 total
+  Time:    53.945s

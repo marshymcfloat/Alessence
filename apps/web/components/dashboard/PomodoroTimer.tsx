@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -17,7 +17,7 @@ import {
   Coffee,
   Maximize,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { SessionTypeEnum, SessionStatusEnum } from "@repo/db/client-types";
 import { CreateStudySessionTypes, UpdateStudySessionTypes } from "@repo/types";
 import {
@@ -113,11 +113,12 @@ export function PomodoroTimer({ onEnterFocusMode, minimal = false }: PomodoroTim
   };
 
   // Timer countdown effect
+  // Optimization: Interval persists and uses functional updates to avoid being recreated on every tick
   useEffect(() => {
-    if (isRunning && timeLeft > 0) {
+    if (isRunning) {
       intervalRef.current = setInterval(() => {
         setTimeLeft((prev) => {
-          if (prev <= 1) {
+          if (prev <= 0) {
             return 0;
           }
           return prev - 1;
@@ -135,7 +136,7 @@ export function PomodoroTimer({ onEnterFocusMode, minimal = false }: PomodoroTim
         clearInterval(intervalRef.current);
       }
     };
-  }, [isRunning, timeLeft]);
+  }, [isRunning]);
 
   // Handle timer completion in a separate effect to avoid state updates during render
   useEffect(() => {
