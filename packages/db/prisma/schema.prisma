@@ -8,20 +8,20 @@ datasource db {
 }
 
 model ClassSchedule {
-  id          Int          @id @default(autoincrement())
-  userId      String
-  subjectId   Int?
-  dayOfWeek   DayOfWeek
-  startTime   String
-  endTime     String
-  room        String?
-  instructor  String?
-  type        ScheduleType @default(CLASS)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id         Int          @id @default(autoincrement())
+  userId     String
+  subjectId  Int?
+  dayOfWeek  DayOfWeek
+  startTime  String
+  endTime    String
+  room       String?
+  instructor String?
+  type       ScheduleType @default(CLASS)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
 
-  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subject     Subject?     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([subjectId])
@@ -45,31 +45,31 @@ enum ScheduleType {
 }
 
 model User {
-  id                     String              @id @default(uuid())
-  email                  String              @unique
+  id                     String                @id @default(uuid())
+  email                  String                @unique
   hashedPassword         String
   name                   String
-  profilePicture         String?             // URL to profile picture
-  bio                    String?             // Short bio/description
-  createdAt              DateTime            @default(now())
-  updatedAt              DateTime            @updatedAt
+  profilePicture         String? // URL to profile picture
+  bio                    String? // Short bio/description
+  createdAt              DateTime              @default(now())
+  updatedAt              DateTime              @updatedAt
   exams                  Exam[]
   examAttempts           ExamAttempt[]
   files                  File[]
   flashcardDecks         FlashcardDeck[]
   flashcardReviews       FlashcardReview[]
-  friendshipsAsAddressee Friendship[]        @relation("FriendshipAddressee")
-  friendshipsAsRequester Friendship[]        @relation("FriendshipRequester")
+  friendshipsAsAddressee Friendship[]          @relation("FriendshipAddressee")
+  friendshipsAsRequester Friendship[]          @relation("FriendshipRequester")
   notes                  Note[]
   studyGoals             StudyGoal[]
   studySessions          StudySession[]
   subjects               Subject[]
   summaries              Summary[]
   tasks                  Task[]
-  sharedFilesOwned       SharedFile[]        @relation("SharedFileOwner")
-  sharedFilesReceived    SharedFile[]        @relation("SharedFileRecipient")
-  sharedNotesOwned       SharedNote[]        @relation("SharedNoteOwner")
-  sharedNotesReceived    SharedNote[]        @relation("SharedNoteRecipient")
+  sharedFilesOwned       SharedFile[]          @relation("SharedFileOwner")
+  sharedFilesReceived    SharedFile[]          @relation("SharedFileRecipient")
+  sharedNotesOwned       SharedNote[]          @relation("SharedNoteOwner")
+  sharedNotesReceived    SharedNote[]          @relation("SharedNoteRecipient")
   sharedDecksOwned       SharedFlashcardDeck[] @relation("SharedDeckOwner")
   sharedDecksReceived    SharedFlashcardDeck[] @relation("SharedDeckRecipient")
   chatConversations      ChatConversation[]
@@ -98,13 +98,13 @@ model SubjectMastery {
 }
 
 model Subject {
-  id             Int             @id @default(autoincrement())
+  id             Int              @id @default(autoincrement())
   title          String
   description    String?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  sem            SemesterEnum    @default(FIRST)
-  isEnrolled     Boolean?        @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  sem            SemesterEnum     @default(FIRST)
+  isEnrolled     Boolean?         @default(true)
   userId         String?
   exams          Exam[]
   files          File[]
@@ -112,7 +112,7 @@ model Subject {
   notes          Note[]
   studyGoals     StudyGoal[]
   studySessions  StudySession[]
-  user           User?           @relation(fields: [userId], references: [id])
+  user           User?            @relation(fields: [userId], references: [id])
   summaries      Summary[]
   tasks          Task[]
   masteryEntries SubjectMastery[]
@@ -121,16 +121,16 @@ model Subject {
 }
 
 model TopicMastery {
-  id             Int      @id @default(autoincrement())
+  id             Int       @id @default(autoincrement())
   userId         String
   topicId        Int
-  strength       Float    @default(0) // 0 to 100
+  strength       Float     @default(0) // 0 to 100
   nextReviewAt   DateTime?
-  lastReviewedAt DateTime @default(now())
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  topic          Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  lastReviewedAt DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic          Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   @@unique([userId, topicId])
   @@index([userId])
@@ -138,16 +138,16 @@ model TopicMastery {
 }
 
 model Topic {
-  id        Int      @id @default(autoincrement())
+  id        Int            @id @default(autoincrement())
   title     String
   subjectId Int
   parentId  Int?
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  subject   Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  parent    Topic?   @relation("TopicHierarchy", fields: [parentId], references: [id])
-  children  Topic[]  @relation("TopicHierarchy")
+  order     Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  subject   Subject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  parent    Topic?         @relation("TopicHierarchy", fields: [parentId], references: [id])
+  children  Topic[]        @relation("TopicHierarchy")
   questions Question[]
   mastery   TopicMastery[]
 
@@ -209,6 +209,9 @@ model Question {
   exam          Exam             @relation(fields: [examId], references: [id], onDelete: Cascade)
   topic         Topic?           @relation(fields: [topicId], references: [id])
   userAnswers   UserAnswer[]
+
+  @@index([examId])
+  @@index([topicId])
 }
 
 model ExamAttempt {
@@ -237,6 +240,7 @@ model UserAnswer {
   question       Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
   @@unique([examAttemptId, questionId])
+  @@index([questionId])
 }
 
 model Task {
@@ -342,6 +346,9 @@ model FlashcardDeck {
   subject      Subject?              @relation(fields: [subjectId], references: [id])
   user         User                  @relation(fields: [userId], references: [id])
   sharedWith   SharedFlashcardDeck[]
+
+  @@index([userId])
+  @@index([subjectId])
 }
 
 model Flashcard {
@@ -360,6 +367,8 @@ model Flashcard {
   updatedAt      DateTime          @updatedAt
   deck           FlashcardDeck     @relation(fields: [deckId], references: [id], onDelete: Cascade)
   reviewHistory  FlashcardReview[]
+
+  @@index([deckId])
 }
 
 model FlashcardReview {
@@ -372,6 +381,9 @@ model FlashcardReview {
   createdAt  DateTime  @default(now())
   card       Flashcard @relation(fields: [cardId], references: [id], onDelete: Cascade)
   user       User      @relation(fields: [userId], references: [id])
+
+  @@index([cardId])
+  @@index([userId])
 }
 
 model StudyGoal {
@@ -479,46 +491,46 @@ enum FriendshipStatusEnum {
 // Sharing Models
 
 model SharedFile {
-  id          Int              @id @default(autoincrement())
+  id          Int             @id @default(autoincrement())
   fileId      Int
   ownerId     String
   recipientId String
-  permission  SharePermission  @default(VIEW)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  file        File             @relation(fields: [fileId], references: [id], onDelete: Cascade)
-  owner       User             @relation("SharedFileOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  recipient   User             @relation("SharedFileRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  permission  SharePermission @default(VIEW)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  file        File            @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  owner       User            @relation("SharedFileOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  recipient   User            @relation("SharedFileRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@unique([fileId, recipientId])
 }
 
 model SharedNote {
-  id          Int              @id @default(autoincrement())
+  id          Int             @id @default(autoincrement())
   noteId      Int
   ownerId     String
   recipientId String
-  permission  SharePermission  @default(VIEW)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  note        Note             @relation(fields: [noteId], references: [id], onDelete: Cascade)
-  owner       User             @relation("SharedNoteOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  recipient   User             @relation("SharedNoteRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  permission  SharePermission @default(VIEW)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  note        Note            @relation(fields: [noteId], references: [id], onDelete: Cascade)
+  owner       User            @relation("SharedNoteOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  recipient   User            @relation("SharedNoteRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@unique([noteId, recipientId])
 }
 
 model SharedFlashcardDeck {
-  id          Int              @id @default(autoincrement())
+  id          Int             @id @default(autoincrement())
   deckId      Int
   ownerId     String
   recipientId String
-  permission  SharePermission  @default(VIEW)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  deck        FlashcardDeck    @relation(fields: [deckId], references: [id], onDelete: Cascade)
-  owner       User             @relation("SharedDeckOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  recipient   User             @relation("SharedDeckRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  permission  SharePermission @default(VIEW)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  deck        FlashcardDeck   @relation(fields: [deckId], references: [id], onDelete: Cascade)
+  owner       User            @relation("SharedDeckOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  recipient   User            @relation("SharedDeckRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@unique([deckId, recipientId])
 }
@@ -560,30 +572,30 @@ enum ChatRoleEnum {
 // Study Streaks & Gamification
 
 model StudyStreak {
-  id              Int       @id @default(autoincrement())
-  userId          String    @unique
-  currentStreak   Int       @default(0)
-  longestStreak   Int       @default(0)
-  lastStudyDate   DateTime?
-  totalStudyDays  Int       @default(0)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id             Int       @id @default(autoincrement())
+  userId         String    @unique
+  currentStreak  Int       @default(0)
+  longestStreak  Int       @default(0)
+  lastStudyDate  DateTime?
+  totalStudyDays Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
 model Achievement {
-  id          Int               @id @default(autoincrement())
-  code        String            @unique
-  name        String
-  description String
-  icon        String
-  category    AchievementCategory
-  requirement Int               // e.g., 7 for "7-day streak", 10 for "complete 10 exams"
-  xpReward    Int               @default(0)
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  id               Int                 @id @default(autoincrement())
+  code             String              @unique
+  name             String
+  description      String
+  icon             String
+  category         AchievementCategory
+  requirement      Int // e.g., 7 for "7-day streak", 10 for "complete 10 exams"
+  xpReward         Int                 @default(0)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
   userAchievements UserAchievement[]
 }
 
@@ -614,16 +626,16 @@ model UserXP {
 
 // Cross-document linking for knowledge graph
 model DocumentLink {
-  id            Int      @id @default(autoincrement())
-  sourceType    DocumentLinkType
-  sourceId      Int
-  targetType    DocumentLinkType
-  targetId      Int
-  relevance     Int      @default(50) // 0-100 relevance score
-  reason        String?  // Why these are linked
-  createdAt     DateTime @default(now())
-  userId        String
-  user          User     @relation(fields: [userId], references: [id])
+  id         Int              @id @default(autoincrement())
+  sourceType DocumentLinkType
+  sourceId   Int
+  targetType DocumentLinkType
+  targetId   Int
+  relevance  Int              @default(50) // 0-100 relevance score
+  reason     String? // Why these are linked
+  createdAt  DateTime         @default(now())
+  userId     String
+  user       User             @relation(fields: [userId], references: [id])
 
   @@unique([sourceType, sourceId, targetType, targetId])
   @@index([userId])

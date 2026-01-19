@@ -1,3 +1,0 @@
-## 2024-05-23 - [N+1 Query Pattern in Data Seeding]
-**Learning:** Found a classic N+1 query issue in the user registration flow where default schedule data is seeded. The code was iterating through a fixed list of 17 schedule items and performing a `findFirst` (read) and `create` (write) for EACH item sequentially. This resulted in ~34 database calls during a single user registration request.
-**Action:** When seeding data or performing bulk operations, always look for opportunities to batch reads (using `Promise.all` or `IN` clauses) and writes (using `createMany`). Even in "cold paths" like registration, excessive sequential DB calls can lead to timeouts or poor user experience.
