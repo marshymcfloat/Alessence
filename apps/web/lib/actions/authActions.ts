@@ -238,27 +238,44 @@ export async function authRegisterAction(values: AuthRegisterTypes) {
                 { day: DayOfWeek.FRIDAY, startTime: '10:30', endTime: '12:30', subject: null, type: ScheduleType.REVIEW_SESSION },
             ];
 
-            for (const item of scheduleData) {
-                let subjectId: number | null = null;
-                if (item.subject) {
-                    const sub = await prisma.subject.findFirst({
-                        where: { title: { contains: item.subject }, userId: null }
-                    });
-                    subjectId = sub?.id || null;
-                }
+            // Optimization: Fetch subject IDs in parallel and create schedules in batch
+            const uniqueSubjectNames = [...new Set(scheduleData
+              .map(item => item.subject)
+              .filter((s): s is string => s !== null)
+            )];
 
-                await prisma.classSchedule.create({
-                    data: {
-                        userId: data.user.id,
-                        subjectId: subjectId,
-                        dayOfWeek: item.day,
-                        startTime: item.startTime,
-                        endTime: item.endTime,
-                        type: item.type,
-                        room: item.type === ScheduleType.CLASS ? 'Room 301' : 'Library',
-                    }
-                });
-            }
+            const subjectMap = new Map<string, number>();
+
+            // Fetch subjects in parallel
+            await Promise.all(uniqueSubjectNames.map(async (name) => {
+              const sub = await prisma.subject.findFirst({
+                where: { title: { contains: name }, userId: null }
+              });
+              if (sub) {
+                subjectMap.set(name, sub.id);
+              }
+            }));
+
+            const schedulesToCreate = scheduleData.map(item => {
+              let subjectId: number | null = null;
+              if (item.subject && subjectMap.has(item.subject)) {
+                subjectId = subjectMap.get(item.subject) || null;
+              }
+
+              return {
+                userId: data.user.id,
+                subjectId: subjectId,
+                dayOfWeek: item.day,
+                startTime: item.startTime,
+                endTime: item.endTime,
+                type: item.type,
+                room: item.type === ScheduleType.CLASS ? 'Room 301' : 'Library',
+              };
+            });
+
+            await prisma.classSchedule.createMany({
+              data: schedulesToCreate
+            });
         } catch (seedError) {
             console.error("Error seeding schedule for new user:", seedError);
             // Don't fail registration if seeding fails
