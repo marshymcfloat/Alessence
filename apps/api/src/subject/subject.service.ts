@@ -1,10 +1,14 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { Subject, TaskStatusEnum, Topic } from '@repo/db';
 import { SubjectWithTaskProgress } from '@repo/types';
 import { CreateSubjectDTO, CreateTopicDTO } from '@repo/types/nest';
 import { capitalizeString } from '@repo/utils';
-import { DbService } from 'src/db/db.service';
-import { GeminiService } from 'src/gemini/gemini.service';
+import { DbService } from '../db/db.service';
+import { GeminiService } from '../gemini/gemini.service';
 
 @Injectable()
 export class SubjectService {
@@ -14,41 +18,46 @@ export class SubjectService {
   ) {}
 
   async getAll(userId: string): Promise<SubjectWithTaskProgress[]> {
-    const subjectsWithTasks = await this.dbService.subject.findMany({
+    const subjects = await this.dbService.subject.findMany({
       where: {
         isEnrolled: true,
         userId: userId, // Only return subjects owned by this user
       },
+    });
 
-      include: {
-        tasks: {
-          where: {
-            userId: userId, // Only include tasks owned by this user
-          },
-          select: {
-            status: true,
-          },
-        },
+    const subjectIds = subjects.map((s) => s.id);
+
+    // Group tasks by subjectId and status to avoid N+1 and large payload
+    const taskGroups = await this.dbService.task.groupBy({
+      by: ['subjectId', 'status'],
+      where: {
+        userId: userId,
+        subjectId: { in: subjectIds },
+      },
+      _count: {
+        _all: true,
       },
     });
 
-    const subjectsWithProgress = subjectsWithTasks.map((subject) => {
-      const { tasks, ...restOfSubject } = subject;
+    const subjectsWithProgress = subjects.map((subject) => {
+      const subjectTasks = taskGroups.filter((g) => g.subjectId === subject.id);
 
-      const taskCounts = {
-        total: tasks.length,
-        done: tasks.filter((task) => task.status === TaskStatusEnum.DONE)
-          .length,
-        onProgress: tasks.filter(
-          (task) => task.status === TaskStatusEnum.ON_PROGRESS,
-        ).length,
-        planned: tasks.filter((task) => task.status === TaskStatusEnum.PLANNED)
-          .length,
-      };
+      const getCount = (status: TaskStatusEnum) =>
+        subjectTasks.find((g) => g.status === status)?._count._all || 0;
+
+      const done = getCount(TaskStatusEnum.DONE);
+      const onProgress = getCount(TaskStatusEnum.ON_PROGRESS);
+      const planned = getCount(TaskStatusEnum.PLANNED);
+      const total = done + onProgress + planned;
 
       return {
-        ...restOfSubject,
-        taskCounts,
+        ...subject,
+        taskCounts: {
+          total,
+          done,
+          onProgress,
+          planned,
+        },
       };
     });
 
@@ -115,9 +124,12 @@ export class SubjectService {
 
     // First pass: Create roots
     const rootTopics = systemTopics.filter((t) => t.parentId === null);
-    
+
     // Helper to clone a topic and its children
-    const cloneTopicTree = async (originalTopic: Topic, newParentId: number | null) => {
+    const cloneTopicTree = async (
+      originalTopic: Topic,
+      newParentId: number | null,
+    ) => {
       const newTopic = await this.dbService.topic.create({
         data: {
           title: originalTopic.title,
@@ -126,11 +138,13 @@ export class SubjectService {
           parentId: newParentId,
         },
       });
-      
+
       topicMap.set(originalTopic.id, newTopic.id);
 
       // Find children
-      const children = systemTopics.filter(t => t.parentId === originalTopic.id);
+      const children = systemTopics.filter(
+        (t) => t.parentId === originalTopic.id,
+      );
       for (const child of children) {
         await cloneTopicTree(child, newTopic.id);
       }
@@ -215,7 +229,9 @@ export class SubjectService {
 
     if (!subject) throw new NotFoundException('Subject not found');
     if (subject.userId === null) {
-      throw new BadRequestException('Cannot directly edit system subjects. Please customize (fork) it first.');
+      throw new BadRequestException(
+        'Cannot directly edit system subjects. Please customize (fork) it first.',
+      );
     }
 
     return this.dbService.topic.create({
@@ -244,7 +260,9 @@ export class SubjectService {
 
     if (!topic) throw new NotFoundException('Topic not found');
     if (topic.subject.userId === null) {
-      throw new BadRequestException('Cannot delete topics from system subjects. Please customize (fork) it first.');
+      throw new BadRequestException(
+        'Cannot delete topics from system subjects. Please customize (fork) it first.',
+      );
     }
 
     return this.dbService.topic.delete({
@@ -263,7 +281,9 @@ export class SubjectService {
     }
 
     if (parentTopic.subject.userId === null) {
-      throw new BadRequestException('Cannot generate topics for system subjects. Please customize (fork) it first.');
+      throw new BadRequestException(
+        'Cannot generate topics for system subjects. Please customize (fork) it first.',
+      );
     }
 
     const subTopics = await this.geminiService.generateSubTopics(
