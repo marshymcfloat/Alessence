@@ -309,6 +309,11 @@ model Note {
   user       User         @relation(fields: [userId], references: [id])
   tags       NoteTag[]
   sharedWith SharedNote[]
+
+  @@index([subjectId])
+  @@index([fileId])
+  @@index([taskId])
+  @@index([userId])
 }
 
 model Tag {
