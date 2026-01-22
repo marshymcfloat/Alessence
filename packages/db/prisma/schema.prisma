@@ -118,6 +118,8 @@ model Subject {
   masteryEntries SubjectMastery[]
   topics         Topic[]
   classSchedules ClassSchedule[]
+
+  @@index([userId])
 }
 
 model TopicMastery {
@@ -174,6 +176,9 @@ model File {
   exams          Exam[]                 @relation("ExamToFile")
   summaries      Summary[]              @relation("FileToSummary")
   sharedWith     SharedFile[]
+
+  @@index([subjectId])
+  @@index([userId])
 }
 
 model Exam {
@@ -194,6 +199,9 @@ model Exam {
   attempts       ExamAttempt[]
   questions      Question[]
   sourceFiles    File[]             @relation("ExamToFile")
+
+  @@index([subjectId])
+  @@index([userId])
 }
 
 model Question {
@@ -256,6 +264,9 @@ model Task {
   notes       Note[]
   subject     Subject?       @relation(fields: [subjectId], references: [id])
   user        User?          @relation(fields: [userId], references: [id])
+
+  @@index([subjectId])
+  @@index([userId])
 }
 
 model Summary {
@@ -290,6 +301,9 @@ model StudySession {
   updatedAt      DateTime          @updatedAt
   subject        Subject?          @relation(fields: [subjectId], references: [id])
   user           User              @relation(fields: [userId], references: [id])
+
+  @@index([subjectId])
+  @@index([userId])
 }
 
 model Note {
