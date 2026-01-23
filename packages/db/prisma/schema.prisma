@@ -235,6 +235,9 @@ model ExamAttempt {
   exam        Exam              @relation(fields: [examId], references: [id], onDelete: Cascade)
   user        User              @relation(fields: [userId], references: [id])
   answers     UserAnswer[]
+
+  @@index([examId])
+  @@index([userId])
 }
 
 model UserAnswer {
@@ -417,6 +420,9 @@ model StudyGoal {
   updatedAt     DateTime       @updatedAt
   subject       Subject?       @relation(fields: [subjectId], references: [id])
   user          User           @relation(fields: [userId], references: [id])
+
+  @@index([subjectId])
+  @@index([userId])
 }
 
 model Friendship {
@@ -430,6 +436,7 @@ model Friendship {
   requester   User                 @relation("FriendshipRequester", fields: [requesterId], references: [id], onDelete: Cascade)
 
   @@unique([requesterId, addresseeId])
+  @@index([addresseeId])
 }
 
 enum SemesterEnum {
@@ -522,6 +529,7 @@ model SharedFile {
   recipient   User            @relation("SharedFileRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@unique([fileId, recipientId])
+  @@index([recipientId])
 }
 
 model SharedNote {
@@ -537,6 +545,7 @@ model SharedNote {
   recipient   User            @relation("SharedNoteRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@unique([noteId, recipientId])
+  @@index([recipientId])
 }
 
 model SharedFlashcardDeck {
@@ -552,6 +561,7 @@ model SharedFlashcardDeck {
   recipient   User            @relation("SharedDeckRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
 
   @@unique([deckId, recipientId])
+  @@index([recipientId])
 }
 
 enum SharePermission {
