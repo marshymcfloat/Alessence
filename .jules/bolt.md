@@ -5,3 +5,7 @@
 ## 2024-05-23 - [Database Schema Optimization]
 **Learning:** Core tables (`StudySession`, `Note`, `Task`, `Exam`) were missing indexes on `userId` and `subjectId`, which are the primary filtering keys for almost all dashboard queries. In PostgreSQL, foreign keys are not automatically indexed, leading to sequential scans on these high-growth tables.
 **Action:** Always audit `schema.prisma` for missing foreign key indexes, especially for `userId` on high-volume tables like activity logs, notes, or tasks. Explicitly add `@@index([foreignKeyId])`.
+
+## 2025-02-18 - [Linting Side Effects]
+**Learning:** `pnpm lint` in `apps/api` runs `eslint --fix`, which can introduce breaking changes (e.g., removing non-null assertions `!`) that cause build failures. It also formats many files, creating noise.
+**Action:** Be cautious running `pnpm lint` in `apps/api`. If run, verify it didn't break functionality or readability. Use `git restore` to revert unintended formatting if necessary.

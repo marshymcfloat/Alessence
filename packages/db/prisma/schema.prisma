@@ -286,6 +286,9 @@ model Summary {
   subject     Subject?            @relation(fields: [subjectId], references: [id])
   user        User?               @relation(fields: [userId], references: [id])
   sourceFiles File[]              @relation("FileToSummary")
+
+  @@index([subjectId])
+  @@index([userId])
 }
 
 model StudySession {
@@ -352,6 +355,7 @@ model NoteTag {
   tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
 
   @@unique([noteId, tagId])
+  @@index([tagId])
 }
 
 model FlashcardDeck {
@@ -530,6 +534,7 @@ model SharedFile {
 
   @@unique([fileId, recipientId])
   @@index([recipientId])
+  @@index([ownerId])
 }
 
 model SharedNote {
@@ -546,6 +551,7 @@ model SharedNote {
 
   @@unique([noteId, recipientId])
   @@index([recipientId])
+  @@index([ownerId])
 }
 
 model SharedFlashcardDeck {
@@ -562,6 +568,7 @@ model SharedFlashcardDeck {
 
   @@unique([deckId, recipientId])
   @@index([recipientId])
+  @@index([ownerId])
 }
 
 enum SharePermission {
@@ -638,6 +645,7 @@ model UserAchievement {
 
   @@unique([userId, achievementId])
   @@index([userId])
+  @@index([achievementId])
 }
 
 model UserXP {
