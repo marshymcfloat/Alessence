@@ -94,7 +94,6 @@ model SubjectMastery {
   subject      Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   @@unique([userId, subjectId])
-  @@index([userId])
 }
 
 model Subject {
@@ -135,7 +134,6 @@ model TopicMastery {
   topic          Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
 
   @@unique([userId, topicId])
-  @@index([userId])
   @@index([nextReviewAt])
 }
 
@@ -375,6 +373,7 @@ model FlashcardDeck {
 
   @@index([userId])
   @@index([subjectId])
+  @@index([sourceFileId])
 }
 
 model Flashcard {
@@ -644,7 +643,6 @@ model UserAchievement {
   achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
 
   @@unique([userId, achievementId])
-  @@index([userId])
   @@index([achievementId])
 }
 
