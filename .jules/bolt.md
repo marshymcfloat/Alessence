@@ -9,3 +9,9 @@
 ## 2025-02-18 - [Linting Side Effects]
 **Learning:** `pnpm lint` in `apps/api` runs `eslint --fix`, which can introduce breaking changes (e.g., removing non-null assertions `!`) that cause build failures. It also formats many files, creating noise.
 **Action:** Be cautious running `pnpm lint` in `apps/api`. If run, verify it didn't break functionality or readability. Use `git restore` to revert unintended formatting if necessary.
+
+## 2025-02-18 - [Redundant Database Indexes & Lint Config]
+**Learning:** Postgres composite unique indexes (e.g., `[a, b]`) automatically serve as an index for `a`. Separate indexes on `a` are redundant and waste storage/write ops.
+**Action:** Audit `schema.prisma` for `@@unique([a, b])` alongside `@@index([a])` and remove the latter.
+**Learning:** ESLint 9+ changed CLI flags (`--no-warnings` is gone, use `--max-warnings 0`) and requires `eslint.config.js`. Broken lint scripts in monorepos can block verification.
+**Action:** Ensure tooling scripts are up to date with dependencies.
