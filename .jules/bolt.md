@@ -9,3 +9,7 @@
 ## 2025-02-18 - [Linting Side Effects]
 **Learning:** `pnpm lint` in `apps/api` runs `eslint --fix`, which can introduce breaking changes (e.g., removing non-null assertions `!`) that cause build failures. It also formats many files, creating noise.
 **Action:** Be cautious running `pnpm lint` in `apps/api`. If run, verify it didn't break functionality or readability. Use `git restore` to revert unintended formatting if necessary.
+
+## 2025-02-23 - [Optimizing Aggregation Queries]
+**Learning:** `getDeckStatistics` was performing 5 separate database queries (4 counts + 1 select) to gather stats for a single deck. This increased latency and DB load significantly for frequent dashboard views.
+**Action:** Replace multiple `count` queries with a single `findMany` query selecting only necessary fields (`repetitions`, `interval`, `easeFactor`, `nextReviewAt`), then aggregate metrics in-memory. This reduces DB roundtrips from 5 to 1.

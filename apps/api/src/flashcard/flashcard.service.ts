@@ -3,11 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  FlashcardDeck,
-  Flashcard,
-  FlashcardReview,
-} from '@repo/db';
+import { FlashcardDeck, Flashcard, FlashcardReview } from '@repo/db';
 import {
   CreateFlashcardDeckDTO,
   UpdateFlashcardDeckDTO,
@@ -15,8 +11,8 @@ import {
   UpdateFlashcardDTO,
   ReviewFlashcardDTO,
 } from '@repo/types/nest';
-import { DbService } from 'src/db/db.service';
-import { GeminiService } from 'src/gemini/gemini.service';
+import { DbService } from '../db/db.service';
+import { GeminiService } from '../gemini/gemini.service';
 
 @Injectable()
 export class FlashcardService {
@@ -116,7 +112,7 @@ export class FlashcardService {
     updateDeckDto: UpdateFlashcardDeckDTO,
     userId: string,
   ): Promise<FlashcardDeck> {
-    const deck = await this.getDeckById(id, userId);
+    await this.getDeckById(id, userId);
 
     const updatedDeck = await this.dbService.flashcardDeck.update({
       where: { id },
@@ -143,7 +139,7 @@ export class FlashcardService {
   }
 
   async deleteDeck(id: number, userId: string): Promise<void> {
-    const deck = await this.getDeckById(id, userId);
+    await this.getDeckById(id, userId);
     await this.dbService.flashcardDeck.delete({
       where: { id },
     });
@@ -211,7 +207,7 @@ export class FlashcardService {
     updateCardDto: UpdateFlashcardDTO,
     userId: string,
   ): Promise<Flashcard> {
-    const card = await this.getCardById(id, userId);
+    await this.getCardById(id, userId);
 
     const updatedCard = await this.dbService.flashcard.update({
       where: { id },
@@ -231,7 +227,7 @@ export class FlashcardService {
   }
 
   async deleteCard(id: number, userId: string): Promise<void> {
-    const card = await this.getCardById(id, userId);
+    await this.getCardById(id, userId);
     await this.dbService.flashcard.delete({
       where: { id },
     });
@@ -388,43 +384,33 @@ export class FlashcardService {
 
     const now = new Date();
 
-    const [totalCards, dueCards, newCards, masteredCards, allCards] =
-      await Promise.all([
-        this.dbService.flashcard.count({
-          where: { deckId },
-        }),
-        this.dbService.flashcard.count({
-          where: {
-            deckId,
-            OR: [
-              { nextReviewAt: null },
-              { nextReviewAt: { lte: now } },
-            ],
-          },
-        }),
-        this.dbService.flashcard.count({
-          where: {
-            deckId,
-            repetitions: 0,
-          },
-        }),
-        this.dbService.flashcard.count({
-          where: {
-            deckId,
-            repetitions: { gte: 5 },
-            interval: { gte: 30 },
-          },
-        }),
-        this.dbService.flashcard.findMany({
-          where: { deckId },
-          select: { easeFactor: true },
-        }),
-      ]);
+    // Fetch all cards with necessary fields in a single query
+    // This replaces 4 count queries and 1 findMany query
+    const cards = await this.dbService.flashcard.findMany({
+      where: { deckId },
+      select: {
+        repetitions: true,
+        interval: true,
+        easeFactor: true,
+        nextReviewAt: true,
+      },
+    });
+
+    const totalCards = cards.length;
+
+    const dueCards = cards.filter(
+      (card) => card.nextReviewAt === null || card.nextReviewAt <= now,
+    ).length;
+
+    const newCards = cards.filter((card) => card.repetitions === 0).length;
+
+    const masteredCards = cards.filter(
+      (card) => card.repetitions >= 5 && card.interval >= 30,
+    ).length;
 
     const averageEaseFactor =
-      allCards.length > 0
-        ? allCards.reduce((sum, card) => sum + card.easeFactor, 0) /
-          allCards.length
+      totalCards > 0
+        ? cards.reduce((sum, card) => sum + card.easeFactor, 0) / totalCards
         : 0;
 
     return {
@@ -464,7 +450,9 @@ export class FlashcardService {
     });
 
     if (files.length !== fileIds.length) {
-      throw new NotFoundException('One or more files not found or you do not have permission to access them');
+      throw new NotFoundException(
+        'One or more files not found or you do not have permission to access them',
+      );
     }
 
     // Combine file content
@@ -488,4 +476,3 @@ export class FlashcardService {
     return generatedCards;
   }
 }
-
