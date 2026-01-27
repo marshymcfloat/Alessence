@@ -10,3 +10,7 @@
 **Learning:** `pnpm lint` in `apps/api` runs `eslint --fix`, which can introduce breaking changes (e.g., removing non-null assertions `!`) that cause build failures. It also formats many files, creating noise.
 **Action:** Be cautious running `pnpm lint` in `apps/api`. If run, verify it didn't break functionality or readability. Use `git restore` to revert unintended formatting if necessary.
 
+
+## 2026-01-27 - [Optimizing AI Evaluation Costs]
+**Learning:** `GeminiService.evaluateAnswer` was calling the AI model for every answer that wasn't extremely short (<= 2 words), including Multiple Choice and True/False questions. This wastes API tokens and increases latency.
+**Action:** Passed `QuestionType` to `evaluateAnswer` and enforced deterministic case-insensitive comparison for `MULTIPLE_CHOICE` and `TRUE_FALSE` types, bypassing the AI call completely for these cases.

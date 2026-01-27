@@ -260,12 +260,27 @@ export class GeminiService {
     userAnswer: string,
     correctAnswer: string,
     questionText: string,
+    questionType?: QuestionTypeEnum,
   ): Promise<{ isCorrect: boolean; reason?: string }> {
     const normalizedUserAnswer = userAnswer.trim();
     const normalizedCorrectAnswer = correctAnswer.trim();
 
     if (!normalizedUserAnswer || !normalizedCorrectAnswer) {
       return { isCorrect: false, reason: 'Empty answer provided.' };
+    }
+
+    // Optimization: For Multiple Choice and True/False, use strict comparison
+    if (
+      questionType === QuestionTypeEnum.MULTIPLE_CHOICE ||
+      questionType === QuestionTypeEnum.TRUE_FALSE
+    ) {
+      const isCorrect =
+        normalizedUserAnswer.toLowerCase() ===
+        normalizedCorrectAnswer.toLowerCase();
+      return {
+        isCorrect,
+        reason: isCorrect ? 'Exact match.' : `Expected "${correctAnswer}".`,
+      };
     }
 
     const userWords = normalizedUserAnswer.split(/\s+/).length;
