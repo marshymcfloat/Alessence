@@ -276,6 +276,7 @@ export class ExamService {
       userAnswer,
       question.correctAnswer,
       question.text,
+      question.type,
     );
 
     return { isCorrect: isCorrectResult.isCorrect };
@@ -310,6 +311,7 @@ export class ExamService {
           userAnswer,
           question.correctAnswer,
           question.text,
+          question.type,
         );
 
         return { questionId, isCorrect: isCorrectResult.isCorrect };
