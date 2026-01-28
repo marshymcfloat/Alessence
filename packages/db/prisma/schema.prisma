@@ -94,6 +94,7 @@ model SubjectMastery {
   subject      Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
   @@unique([userId, subjectId])
+  @@index([subjectId])
 }
 
 model Subject {
@@ -135,6 +136,7 @@ model TopicMastery {
 
   @@unique([userId, topicId])
   @@index([nextReviewAt])
+  @@index([topicId])
 }
 
 model Topic {

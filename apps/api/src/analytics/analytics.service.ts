@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DbService } from 'src/db/db.service';
+import { DbService } from '../db/db.service';
 import { AttemptStatusEnum, SessionStatusEnum, TaskStatusEnum } from '@repo/db';
 
 export interface ExamScoreTrend {
@@ -60,9 +60,13 @@ export class AnalyticsService {
         score: { not: null },
         completedAt: { gte: startDate },
       },
-      include: {
+      select: {
+        completedAt: true,
+        score: true,
         exam: {
-          include: {
+          select: {
+            id: true,
+            description: true,
             subject: {
               select: {
                 id: true,
@@ -92,18 +96,18 @@ export class AnalyticsService {
       });
   }
 
-  async getSubjectPerformance(
-    userId: string,
-  ): Promise<SubjectPerformance[]> {
+  async getSubjectPerformance(userId: string): Promise<SubjectPerformance[]> {
     const attempts = await this.dbService.examAttempt.findMany({
       where: {
         userId,
         status: AttemptStatusEnum.COMPLETED,
         score: { not: null },
       },
-      include: {
+      select: {
+        score: true,
         exam: {
-          include: {
+          select: {
+            id: true,
             subject: {
               select: {
                 id: true,
@@ -228,10 +232,7 @@ export class AnalyticsService {
     });
 
     // Group by date
-    const dateMap = new Map<
-      string,
-      { completed: number; total: number }
-    >();
+    const dateMap = new Map<string, { completed: number; total: number }>();
 
     tasks.forEach((task) => {
       const dateStr = task.createdAt.toISOString().split('T')[0];
@@ -281,4 +282,3 @@ export class AnalyticsService {
     return weakAreas;
   }
 }
-
