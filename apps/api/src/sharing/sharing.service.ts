@@ -132,7 +132,9 @@ export class SharingService {
       where: { recipientId: userId },
       include: {
         file: { select: { id: true, name: true, type: true, fileUrl: true } },
-        owner: { select: { id: true, name: true, email: true, profilePicture: true } },
+        owner: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -223,8 +225,12 @@ export class SharingService {
     const shared = await this.dbService.sharedNote.findMany({
       where: { recipientId: userId },
       include: {
-        note: { select: { id: true, title: true, content: true, isMarkdown: true } },
-        owner: { select: { id: true, name: true, email: true, profilePicture: true } },
+        note: {
+          select: { id: true, title: true, content: true, isMarkdown: true },
+        },
+        owner: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -323,7 +329,9 @@ export class SharingService {
             _count: { select: { cards: true } },
           },
         },
-        owner: { select: { id: true, name: true, email: true, profilePicture: true } },
+        owner: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -367,7 +375,9 @@ export class SharingService {
     }
 
     if (shared.permission !== SharePermission.COPY) {
-      throw new ForbiddenException('You do not have permission to copy this deck.');
+      throw new ForbiddenException(
+        'You do not have permission to copy this deck.',
+      );
     }
 
     // Create a copy of the deck
@@ -401,10 +411,11 @@ export class SharingService {
     const [files, notes, decks] = await Promise.all([
       this.dbService.sharedFile.count({ where: { recipientId: userId } }),
       this.dbService.sharedNote.count({ where: { recipientId: userId } }),
-      this.dbService.sharedFlashcardDeck.count({ where: { recipientId: userId } }),
+      this.dbService.sharedFlashcardDeck.count({
+        where: { recipientId: userId },
+      }),
     ]);
 
     return { files, notes, decks, total: files + notes + decks };
   }
 }
-

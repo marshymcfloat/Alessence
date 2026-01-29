@@ -72,4 +72,3 @@ export class ProfileController {
     return this.profileService.getPublicProfile(userId, user.userId);
   }
 }
-

@@ -66,4 +66,3 @@ export class AnalyticsController {
     return { weakAreas, userId: user.userId };
   }
 }
-

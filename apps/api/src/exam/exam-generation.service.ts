@@ -35,17 +35,24 @@ export class ExamGenerationService {
       let weakTopics: string[] = [];
       if (exam.userId) {
         try {
-          const weaknesses = await this.progressService.getWeakTopics(exam.userId);
+          const weaknesses = await this.progressService.getWeakTopics(
+            exam.userId,
+          );
           // Filter weaknesses relevant to this exam's subject (if specified)
           weakTopics = weaknesses
             .filter((w) => !exam.subjectId || w.subjectId === exam.subjectId)
             .map((w) => w.title);
-            
+
           if (weakTopics.length > 0) {
-            console.log(`[RAG] Injecting ${weakTopics.length} weak topics into prompt for Exam ${exam.id}`);
+            console.log(
+              `[RAG] Injecting ${weakTopics.length} weak topics into prompt for Exam ${exam.id}`,
+            );
           }
         } catch (error) {
-          console.error('[RAG] Failed to fetch weak topics, proceeding without them:', error);
+          console.error(
+            '[RAG] Failed to fetch weak topics, proceeding without them:',
+            error,
+          );
         }
       }
 

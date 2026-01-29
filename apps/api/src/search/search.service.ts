@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DbService } from 'src/db/db.service';
+import { DbService } from '../db/db.service';
 
 export interface SearchResult {
   type: 'note' | 'task' | 'file' | 'exam';
@@ -19,40 +19,125 @@ export class SearchService {
     }
 
     const searchTerm = query.trim();
-    const results: SearchResult[] = [];
 
-    // Search Notes
-    const notes = await this.dbService.note.findMany({
-      where: {
-        userId: userId, // Only return notes owned by this user
-        OR: [
-          {
-            title: {
-              contains: searchTerm,
-              mode: 'insensitive',
+    // Execute all queries in parallel to reduce latency
+    const [notes, tasks, files, exams] = await Promise.all([
+      // Search Notes
+      this.dbService.note.findMany({
+        where: {
+          userId: userId, // Only return notes owned by this user
+          OR: [
+            {
+              title: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
             },
-          },
-          {
-            content: {
-              contains: searchTerm,
-              mode: 'insensitive',
+            {
+              content: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
             },
-          },
-        ],
-      },
-      select: {
-        id: true,
-        title: true,
-        content: true,
-        subject: {
-          select: {
-            id: true,
-            title: true,
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          content: true,
+          subject: {
+            select: {
+              id: true,
+              title: true,
+            },
           },
         },
-      },
-      take: 10,
-    });
+        take: 10,
+      }),
+
+      // Search Tasks
+      this.dbService.task.findMany({
+        where: {
+          userId: userId, // Only return tasks owned by this user
+          OR: [
+            {
+              title: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
+            },
+            {
+              description: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        },
+        select: {
+          id: true,
+          title: true,
+          description: true,
+          status: true,
+          deadline: true,
+          subject: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+        take: 10,
+      }),
+
+      // Search Files
+      this.dbService.file.findMany({
+        where: {
+          userId: userId, // Only return files owned by this user
+          name: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          subject: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+        take: 10,
+      }),
+
+      // Search Exams
+      this.dbService.exam.findMany({
+        where: {
+          userId: userId, // Only return exams owned by this user
+          description: {
+            contains: searchTerm,
+            mode: 'insensitive',
+          },
+        },
+        select: {
+          id: true,
+          description: true,
+          status: true,
+          subject: {
+            select: {
+              id: true,
+              title: true,
+            },
+          },
+        },
+        take: 10,
+      }),
+    ]);
+
+    const results: SearchResult[] = [];
 
     results.push(
       ...notes.map((note) => ({
@@ -65,41 +150,6 @@ export class SearchService {
         },
       })),
     );
-
-    // Search Tasks
-    const tasks = await this.dbService.task.findMany({
-      where: {
-        userId: userId, // Only return tasks owned by this user
-        OR: [
-          {
-            title: {
-              contains: searchTerm,
-              mode: 'insensitive',
-            },
-          },
-          {
-            description: {
-              contains: searchTerm,
-              mode: 'insensitive',
-            },
-          },
-        ],
-      },
-      select: {
-        id: true,
-        title: true,
-        description: true,
-        status: true,
-        deadline: true,
-        subject: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
-      take: 10,
-    });
 
     results.push(
       ...tasks.map((task) => ({
@@ -115,29 +165,6 @@ export class SearchService {
       })),
     );
 
-    // Search Files
-    const files = await this.dbService.file.findMany({
-      where: {
-        userId: userId, // Only return files owned by this user
-        name: {
-          contains: searchTerm,
-          mode: 'insensitive',
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        type: true,
-        subject: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
-      take: 10,
-    });
-
     results.push(
       ...files.map((file) => ({
         type: 'file' as const,
@@ -149,29 +176,6 @@ export class SearchService {
         },
       })),
     );
-
-    // Search Exams
-    const exams = await this.dbService.exam.findMany({
-      where: {
-        userId: userId, // Only return exams owned by this user
-        description: {
-          contains: searchTerm,
-          mode: 'insensitive',
-        },
-      },
-      select: {
-        id: true,
-        description: true,
-        status: true,
-        subject: {
-          select: {
-            id: true,
-            title: true,
-          },
-        },
-      },
-      take: 10,
-    });
 
     results.push(
       ...exams.map((exam) => ({
@@ -188,4 +192,3 @@ export class SearchService {
     return results;
   }
 }
-

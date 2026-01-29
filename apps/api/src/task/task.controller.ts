@@ -52,7 +52,11 @@ export class TaskController {
     @Body() updateTaskDto: CreateTaskDTO,
     @GetUser() user: AuthenticatedUser,
   ): Promise<UpdateTaskStatusReturnType> {
-    const updatedTask = await this.taskService.updateTask(+id, updateTaskDto, user.userId);
+    const updatedTask = await this.taskService.updateTask(
+      +id,
+      updateTaskDto,
+      user.userId,
+    );
 
     return { updatedTask, userId: user.userId };
   }
@@ -63,7 +67,11 @@ export class TaskController {
     @Query('status') status: TaskStatusEnum,
     @GetUser() user: AuthenticatedUser,
   ): Promise<UpdateTaskStatusReturnType> {
-    const updatedTask = await this.taskService.updateTaskStatus(+id, status, user.userId);
+    const updatedTask = await this.taskService.updateTaskStatus(
+      +id,
+      status,
+      user.userId,
+    );
 
     return { updatedTask, userId: user.userId };
   }

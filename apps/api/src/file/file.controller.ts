@@ -28,8 +28,12 @@ export class FileController {
     @UploadedFiles() files: Array<Express.Multer.File>,
     @GetUser() user: AuthenticatedUser,
   ) {
-    const uploadedFiles = await this.fileService.createMultipleFilesWithEmbeddings(files, user.userId);
-    
+    const uploadedFiles =
+      await this.fileService.createMultipleFilesWithEmbeddings(
+        files,
+        user.userId,
+      );
+
     // Trigger cross-document linking in background for each file
     for (const file of uploadedFiles) {
       // Don't await - run in background
@@ -37,7 +41,7 @@ export class FileController {
         // Ignore linking errors
       });
     }
-    
+
     return uploadedFiles;
   }
 

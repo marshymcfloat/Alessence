@@ -53,7 +53,10 @@ export class FriendshipController {
     @Param('friendshipId', ParseIntPipe) friendshipId: number,
     @GetUser() user: AuthenticatedUser,
   ) {
-    return this.friendshipService.acceptFriendRequest(friendshipId, user.userId);
+    return this.friendshipService.acceptFriendRequest(
+      friendshipId,
+      user.userId,
+    );
   }
 
   /**
@@ -64,7 +67,10 @@ export class FriendshipController {
     @Param('friendshipId', ParseIntPipe) friendshipId: number,
     @GetUser() user: AuthenticatedUser,
   ) {
-    return this.friendshipService.rejectFriendRequest(friendshipId, user.userId);
+    return this.friendshipService.rejectFriendRequest(
+      friendshipId,
+      user.userId,
+    );
   }
 
   /**
@@ -75,7 +81,10 @@ export class FriendshipController {
     @Param('friendshipId', ParseIntPipe) friendshipId: number,
     @GetUser() user: AuthenticatedUser,
   ) {
-    return this.friendshipService.cancelFriendRequest(friendshipId, user.userId);
+    return this.friendshipService.cancelFriendRequest(
+      friendshipId,
+      user.userId,
+    );
   }
 
   /**
@@ -121,4 +130,3 @@ export class FriendshipController {
     return this.friendshipService.getFriendshipCounts(user.userId);
   }
 }
-

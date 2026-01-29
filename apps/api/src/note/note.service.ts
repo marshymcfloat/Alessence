@@ -272,4 +272,3 @@ export class NoteService {
     return notes;
   }
 }
-

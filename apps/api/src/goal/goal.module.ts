@@ -10,4 +10,3 @@ import { DbModule } from 'src/db/db.module';
   exports: [GoalService],
 })
 export class GoalModule {}
-

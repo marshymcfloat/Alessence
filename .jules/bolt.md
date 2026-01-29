@@ -14,3 +14,7 @@
 ## 2026-01-27 - [Optimizing AI Evaluation Costs]
 **Learning:** `GeminiService.evaluateAnswer` was calling the AI model for every answer that wasn't extremely short (<= 2 words), including Multiple Choice and True/False questions. This wastes API tokens and increases latency.
 **Action:** Passed `QuestionType` to `evaluateAnswer` and enforced deterministic case-insensitive comparison for `MULTIPLE_CHOICE` and `TRUE_FALSE` types, bypassing the AI call completely for these cases.
+
+## 2024-05-24 - [Parallelizing Independent Queries]
+**Learning:** `SearchService.searchAll` was executing 4 independent database queries sequentially, summing up their latencies.
+**Action:** Use `Promise.all` to execute independent queries in parallel, reducing total latency to the maximum of the individual query times.

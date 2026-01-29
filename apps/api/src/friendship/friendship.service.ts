@@ -12,7 +12,12 @@ export interface UserSearchResult {
   name: string;
   email: string;
   profilePicture: string | null;
-  friendshipStatus: 'none' | 'pending_sent' | 'pending_received' | 'friends' | 'blocked';
+  friendshipStatus:
+    | 'none'
+    | 'pending_sent'
+    | 'pending_received'
+    | 'friends'
+    | 'blocked';
   friendshipId?: number;
 }
 
@@ -130,7 +135,9 @@ export class FriendshipService {
     addresseeId: string,
   ): Promise<FriendRequest> {
     if (requesterId === addresseeId) {
-      throw new BadRequestException('You cannot send a friend request to yourself.');
+      throw new BadRequestException(
+        'You cannot send a friend request to yourself.',
+      );
     }
 
     // Check if addressee exists
@@ -160,7 +167,9 @@ export class FriendshipService {
         throw new ConflictException('A friend request already exists.');
       }
       if (existingFriendship.status === FriendshipStatusEnum.BLOCKED) {
-        throw new BadRequestException('Cannot send friend request to this user.');
+        throw new BadRequestException(
+          'Cannot send friend request to this user.',
+        );
       }
     }
 
@@ -172,8 +181,12 @@ export class FriendshipService {
         status: FriendshipStatusEnum.PENDING,
       },
       include: {
-        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
-        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
+        requester: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
+        addressee: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
       },
     });
 
@@ -190,8 +203,12 @@ export class FriendshipService {
     const friendship = await this.dbService.friendship.findUnique({
       where: { id: friendshipId },
       include: {
-        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
-        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
+        requester: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
+        addressee: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
       },
     });
 
@@ -205,15 +222,21 @@ export class FriendshipService {
     }
 
     if (friendship.status !== FriendshipStatusEnum.PENDING) {
-      throw new BadRequestException('This friend request is no longer pending.');
+      throw new BadRequestException(
+        'This friend request is no longer pending.',
+      );
     }
 
     const updatedFriendship = await this.dbService.friendship.update({
       where: { id: friendshipId },
       data: { status: FriendshipStatusEnum.ACCEPTED },
       include: {
-        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
-        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
+        requester: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
+        addressee: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
       },
     });
 
@@ -241,7 +264,9 @@ export class FriendshipService {
     }
 
     if (friendship.status !== FriendshipStatusEnum.PENDING) {
-      throw new BadRequestException('This friend request is no longer pending.');
+      throw new BadRequestException(
+        'This friend request is no longer pending.',
+      );
     }
 
     await this.dbService.friendship.delete({
@@ -270,7 +295,9 @@ export class FriendshipService {
     }
 
     if (friendship.status !== FriendshipStatusEnum.PENDING) {
-      throw new BadRequestException('This friend request is no longer pending.');
+      throw new BadRequestException(
+        'This friend request is no longer pending.',
+      );
     }
 
     await this.dbService.friendship.delete({
@@ -361,8 +388,12 @@ export class FriendshipService {
         status: FriendshipStatusEnum.PENDING,
       },
       include: {
-        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
-        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
+        requester: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
+        addressee: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -378,8 +409,12 @@ export class FriendshipService {
         status: FriendshipStatusEnum.PENDING,
       },
       include: {
-        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
-        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
+        requester: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
+        addressee: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -395,8 +430,12 @@ export class FriendshipService {
         OR: [{ requesterId: currentUserId }, { addresseeId: currentUserId }],
       },
       include: {
-        requester: { select: { id: true, name: true, email: true, profilePicture: true } },
-        addressee: { select: { id: true, name: true, email: true, profilePicture: true } },
+        requester: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
+        addressee: {
+          select: { id: true, name: true, email: true, profilePicture: true },
+        },
       },
       orderBy: { updatedAt: 'desc' },
     });
@@ -418,9 +457,11 @@ export class FriendshipService {
   /**
    * Get friendship counts for the current user
    */
-  async getFriendshipCounts(
-    currentUserId: string,
-  ): Promise<{ friends: number; pendingReceived: number; pendingSent: number }> {
+  async getFriendshipCounts(currentUserId: string): Promise<{
+    friends: number;
+    pendingReceived: number;
+    pendingSent: number;
+  }> {
     const [friends, pendingReceived, pendingSent] = await Promise.all([
       this.dbService.friendship.count({
         where: {
@@ -462,4 +503,3 @@ export class FriendshipService {
     return !!friendship;
   }
 }
-
