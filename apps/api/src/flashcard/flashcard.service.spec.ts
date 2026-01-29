@@ -33,7 +33,10 @@ describe('FlashcardService', () => {
 
   it('should calculate deck statistics correctly', async () => {
     // Mock deck exists
-    dbService.flashcardDeck.findFirst.mockResolvedValue({ id: 1, userId: 'user1' });
+    dbService.flashcardDeck.findFirst.mockResolvedValue({
+      id: 1,
+      userId: 'user1',
+    });
 
     const now = new Date();
     // Create dates relative to now to ensure stability
@@ -46,29 +49,29 @@ describe('FlashcardService', () => {
         easeFactor: 2.5,
         repetitions: 1,
         interval: 1,
-        nextReviewAt: pastDate
+        nextReviewAt: pastDate,
       },
       // 2. New card (never reviewed, so due)
       {
         easeFactor: 2.5,
         repetitions: 0,
         interval: 0,
-        nextReviewAt: null
+        nextReviewAt: null,
       },
       // 3. Mastered card (reps >= 5, interval >= 30, future)
       {
         easeFactor: 3.0,
         repetitions: 6,
         interval: 40,
-        nextReviewAt: futureDate
+        nextReviewAt: futureDate,
       },
       // 4. Learning/Normal card (future)
       {
         easeFactor: 2.0,
         repetitions: 2,
         interval: 3,
-        nextReviewAt: futureDate
-      }
+        nextReviewAt: futureDate,
+      },
     ];
 
     // Mock findMany to return the cards

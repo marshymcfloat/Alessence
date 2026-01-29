@@ -17,13 +17,13 @@ export class CalendarController {
   ) {
     const startDate = start ? new Date(start) : new Date();
     const endDate = end ? new Date(end) : new Date();
-    
+
     // Default to current month if not provided
     if (!start || !end) {
       const now = new Date();
       startDate.setDate(1);
       startDate.setHours(0, 0, 0, 0);
-      
+
       endDate.setMonth(endDate.getMonth() + 1);
       endDate.setDate(0);
       endDate.setHours(23, 59, 59, 999);
@@ -53,4 +53,3 @@ export class CalendarController {
     return { events, userId: user.userId };
   }
 }
-

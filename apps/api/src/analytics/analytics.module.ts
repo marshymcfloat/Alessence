@@ -10,4 +10,3 @@ import { AuthModule } from 'src/auth/auth.module';
   providers: [AnalyticsService],
 })
 export class AnalyticsModule {}
-

@@ -3,15 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  StudySession,
-  SessionStatusEnum,
-  SessionTypeEnum,
-} from '@repo/db';
-import {
-  CreateStudySessionDTO,
-  UpdateStudySessionDTO,
-} from '@repo/types/nest';
+import { StudySession, SessionStatusEnum, SessionTypeEnum } from '@repo/db';
+import { CreateStudySessionDTO, UpdateStudySessionDTO } from '@repo/types/nest';
 import { DbService } from 'src/db/db.service';
 
 @Injectable()
@@ -100,16 +93,19 @@ export class StudySessionService {
 
     if (updateSessionDto.status !== undefined) {
       updateData.status = updateSessionDto.status;
-      
+
       // If completing the session, set completedAt and calculate actual duration
       if (updateSessionDto.status === SessionStatusEnum.COMPLETED) {
         updateData.completedAt = new Date();
         const startedAt = new Date(session.startedAt);
         const now = new Date();
-        const elapsed = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
-        const totalPausedDuration = updateSessionDto.pausedDuration ?? session.pausedDuration ?? 0;
+        const elapsed = Math.floor(
+          (now.getTime() - startedAt.getTime()) / 1000,
+        );
+        const totalPausedDuration =
+          updateSessionDto.pausedDuration ?? session.pausedDuration ?? 0;
         updateData.actualDuration = Math.max(0, elapsed - totalPausedDuration);
-        
+
         // Ensure completedAt is set even if it wasn't set before
         if (!updateData.completedAt) {
           updateData.completedAt = new Date();
@@ -183,4 +179,3 @@ export class StudySessionService {
     return activeSession;
   }
 }
-

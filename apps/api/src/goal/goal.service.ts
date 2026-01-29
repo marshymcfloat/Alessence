@@ -11,7 +11,10 @@ import { DbService } from 'src/db/db.service';
 export class GoalService {
   constructor(private readonly dbService: DbService) {}
 
-  async create(createGoalDto: CreateGoalDTO, userId: string): Promise<StudyGoal> {
+  async create(
+    createGoalDto: CreateGoalDTO,
+    userId: string,
+  ): Promise<StudyGoal> {
     const { periodType, targetMinutes, subjectId, startDate } = createGoalDto;
 
     // Check if user already has an active goal of the same type and subject
@@ -26,7 +29,7 @@ export class GoalService {
 
     if (existingGoal) {
       throw new BadRequestException(
-        `You already have an active ${periodType.toLowerCase()} goal${subjectId ? ' for this subject' : ''}. Please update or deactivate it first.`
+        `You already have an active ${periodType.toLowerCase()} goal${subjectId ? ' for this subject' : ''}. Please update or deactivate it first.`,
       );
     }
 
@@ -168,7 +171,10 @@ export class GoalService {
   /**
    * Calculate progress for a goal based on completed study sessions
    */
-  async getGoalProgress(goalId: number, userId: string): Promise<{
+  async getGoalProgress(
+    goalId: number,
+    userId: string,
+  ): Promise<{
     goal: StudyGoal;
     currentMinutes: number;
     targetMinutes: number;
@@ -186,13 +192,35 @@ export class GoalService {
 
     if (goal.periodType === GoalPeriodEnum.DAILY) {
       // For daily goals, use the current day (UTC)
-      periodStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
-      periodEnd = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+      periodStart = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          0,
+          0,
+          0,
+          0,
+        ),
+      );
+      periodEnd = new Date(
+        Date.UTC(
+          now.getUTCFullYear(),
+          now.getUTCMonth(),
+          now.getUTCDate(),
+          23,
+          59,
+          59,
+          999,
+        ),
+      );
     } else {
       // For weekly goals, find the start of the week (Monday) in UTC
       const dayOfWeek = now.getUTCDay();
       const diff = now.getUTCDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust for Sunday
-      const mondayDate = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff, 0, 0, 0, 0));
+      const mondayDate = new Date(
+        Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), diff, 0, 0, 0, 0),
+      );
       periodStart = new Date(mondayDate);
       periodEnd = new Date(mondayDate);
       periodEnd.setUTCDate(periodStart.getUTCDate() + 6);
@@ -234,7 +262,7 @@ export class GoalService {
     const currentMinutes = Math.floor(totalSeconds / 60);
     const progressPercentage = Math.min(
       (currentMinutes / goal.targetMinutes) * 100,
-      100
+      100,
     );
 
     return {
@@ -262,9 +290,8 @@ export class GoalService {
   > {
     const activeGoals = await this.getActiveGoals(userId);
     const progressPromises = activeGoals.map((goal) =>
-      this.getGoalProgress(goal.id, userId)
+      this.getGoalProgress(goal.id, userId),
     );
     return Promise.all(progressPromises);
   }
 }
-

@@ -11,4 +11,3 @@ import { GeminiModule } from 'src/gemini/gemini.module';
   exports: [FlashcardService],
 })
 export class FlashcardModule {}
-

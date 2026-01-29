@@ -3,7 +3,13 @@ import { DrillService } from './drill.service';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from '../auth/decorator/get-user.decorator';
 import type { AuthenticatedUser } from '../auth/decorator/get-user.decorator';
-import { IsNotEmpty, IsOptional, IsString, IsIn, IsNumber } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  IsIn,
+  IsNumber,
+} from 'class-validator';
 
 export class GenerateDrillDto {
   @IsString()
@@ -69,4 +75,3 @@ export class DrillController {
     return this.drillService.generateAuditDrill(dto, user.userId);
   }
 }
-

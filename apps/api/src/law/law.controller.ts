@@ -90,4 +90,3 @@ export class LawController {
     return this.lawService.generateTaxAdvice(query, user.userId);
   }
 }
-

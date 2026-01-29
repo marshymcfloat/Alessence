@@ -28,16 +28,21 @@ export class LawService {
   /**
    * Generate a case digest from full case text
    */
-  async generateCaseDigest(caseText: string, userId: string): Promise<CaseDigest> {
+  async generateCaseDigest(
+    caseText: string,
+    userId: string,
+  ): Promise<CaseDigest> {
     if (!caseText || caseText.trim().length < 100) {
-      throw new BadRequestException('Case text is too short. Please provide the full case text.');
+      throw new BadRequestException(
+        'Case text is too short. Please provide the full case text.',
+      );
     }
 
     const digest = await this.geminiService.generateCaseDigest(caseText);
-    
+
     // Optionally save to notes
     // This could be expanded to auto-save digests
-    
+
     return digest;
   }
 
@@ -51,10 +56,15 @@ export class LawService {
     deckId?: number,
   ): Promise<{ flashcards: CodalFlashcard[]; savedCount?: number }> {
     if (!articleText || articleText.trim().length < 20) {
-      throw new BadRequestException('Article text is too short. Please provide the full provision.');
+      throw new BadRequestException(
+        'Article text is too short. Please provide the full provision.',
+      );
     }
 
-    const flashcards = await this.geminiService.generateCodalFlashcards(articleText, lawName);
+    const flashcards = await this.geminiService.generateCodalFlashcards(
+      articleText,
+      lawName,
+    );
 
     // If deckId is provided, save to existing deck
     if (deckId) {
@@ -98,13 +108,21 @@ export class LawService {
       throw new BadRequestException('File not found or has no text content.');
     }
 
-    return this.generateCodalFlashcards(file.contentText, file.name, userId, deckId);
+    return this.generateCodalFlashcards(
+      file.contentText,
+      file.name,
+      userId,
+      deckId,
+    );
   }
 
   /**
    * Generate expert tax advice
    */
-  async generateTaxAdvice(query: string, userId: string): Promise<{
+  async generateTaxAdvice(
+    query: string,
+    userId: string,
+  ): Promise<{
     answer: string;
     citations: string[];
     disclaimer: string;
@@ -116,4 +134,3 @@ export class LawService {
     return this.geminiService.generateTaxAdvice(query);
   }
 }
-

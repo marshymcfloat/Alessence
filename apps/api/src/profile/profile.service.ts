@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { DbService } from '../db/db.service';
 import { put } from '@vercel/blob';
 import type { UpdateProfileDto } from './dto/update-profile.dto';
@@ -48,14 +52,16 @@ export class ProfileService {
     ]);
 
     // Calculate XP progress for display
-    const calculateLevel = (totalXp: number) => Math.floor(Math.sqrt(totalXp / 100)) + 1;
+    const calculateLevel = (totalXp: number) =>
+      Math.floor(Math.sqrt(totalXp / 100)) + 1;
     const getXPForLevel = (level: number) => Math.pow(level - 1, 2) * 100;
-    
+
     const currentLevel = xp?.level || 1;
     const totalXpValue = xp?.totalXp || 0;
     const currentLevelXP = getXPForLevel(currentLevel);
     const nextLevelXP = getXPForLevel(currentLevel + 1);
-    const xpProgress = ((totalXpValue - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
+    const xpProgress =
+      ((totalXpValue - currentLevelXP) / (nextLevelXP - currentLevelXP)) * 100;
 
     return {
       ...user,
@@ -72,7 +78,7 @@ export class ProfileService {
         level: currentLevel,
         totalXp: totalXpValue,
         xpProgress: Math.min(xpProgress, 100),
-        recentAchievements: achievements.map(ua => ({
+        recentAchievements: achievements.map((ua) => ({
           ...ua.achievement,
           unlockedAt: ua.unlockedAt,
         })),
@@ -121,7 +127,9 @@ export class ProfileService {
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.mimetype)) {
-      throw new BadRequestException('Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.');
+      throw new BadRequestException(
+        'Invalid file type. Please upload a JPEG, PNG, GIF, or WebP image.',
+      );
     }
 
     // Validate file size (max 5MB)
@@ -132,10 +140,14 @@ export class ProfileService {
 
     try {
       // Upload to Vercel Blob
-      const blob = await put(`profile-pictures/${userId}-${Date.now()}.${file.originalname.split('.').pop()}`, file.buffer, {
-        access: 'public',
-        contentType: file.mimetype,
-      });
+      const blob = await put(
+        `profile-pictures/${userId}-${Date.now()}.${file.originalname.split('.').pop()}`,
+        file.buffer,
+        {
+          access: 'public',
+          contentType: file.mimetype,
+        },
+      );
 
       // Update user profile picture URL
       const updated = await this.dbService.user.update({
@@ -223,4 +235,3 @@ export class ProfileService {
     };
   }
 }
-
