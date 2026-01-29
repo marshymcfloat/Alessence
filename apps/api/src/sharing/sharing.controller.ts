@@ -136,7 +136,11 @@ export class SharingController {
     @Body() dto: CopyDeckDto,
     @GetUser() user: AuthenticatedUser,
   ) {
-    return this.sharingService.copySharedDeck(shareId, user.userId, dto.subjectId);
+    return this.sharingService.copySharedDeck(
+      shareId,
+      user.userId,
+      dto.subjectId,
+    );
   }
 
   // ==================== SUMMARY ====================
@@ -146,4 +150,3 @@ export class SharingController {
     return this.sharingService.getSharedWithMeSummary(user.userId);
   }
 }
-

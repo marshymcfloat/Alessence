@@ -118,12 +118,13 @@ export class ExamHistoryService {
     return attempts
       .filter((attempt) => attempt.completedAt)
       .map((attempt, index) => {
-        const duration = attempt.completedAt && attempt.startedAt
-          ? Math.floor(
-              (attempt.completedAt.getTime() - attempt.startedAt.getTime()) /
-                1000,
-            )
-          : undefined;
+        const duration =
+          attempt.completedAt && attempt.startedAt
+            ? Math.floor(
+                (attempt.completedAt.getTime() - attempt.startedAt.getTime()) /
+                  1000,
+              )
+            : undefined;
 
         const dateStr = attempt.completedAt!.toISOString().split('T')[0];
         return {
@@ -137,10 +138,7 @@ export class ExamHistoryService {
       });
   }
 
-  async getAttemptDetails(
-    attemptId: number,
-    userId: string,
-  ): Promise<any> {
+  async getAttemptDetails(attemptId: number, userId: string): Promise<any> {
     const attempt = await this.dbService.examAttempt.findFirst({
       where: {
         id: attemptId,
@@ -200,10 +198,7 @@ export class ExamHistoryService {
     };
   }
 
-  async getWrongAnswers(
-    examId: number,
-    userId: string,
-  ): Promise<any[]> {
+  async getWrongAnswers(examId: number, userId: string): Promise<any[]> {
     const attempts = await this.dbService.examAttempt.findMany({
       where: {
         examId,
@@ -284,10 +279,7 @@ export class ExamHistoryService {
     );
   }
 
-  async getWrongAnswerStatistics(
-    examId: number,
-    userId: string,
-  ): Promise<any> {
+  async getWrongAnswerStatistics(examId: number, userId: string): Promise<any> {
     const attempts = await this.dbService.examAttempt.findMany({
       where: {
         examId,
@@ -336,4 +328,3 @@ export class ExamHistoryService {
     };
   }
 }
-

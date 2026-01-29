@@ -9,10 +9,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import {
-  CreateStudySessionDTO,
-  UpdateStudySessionDTO,
-} from '@repo/types/nest';
+import { CreateStudySessionDTO, UpdateStudySessionDTO } from '@repo/types/nest';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import type { AuthenticatedUser } from 'src/auth/decorator/get-user.decorator';
 import { StudySessionService } from './study-session.service';
@@ -37,7 +34,9 @@ export class StudySessionController {
   async getActive(
     @GetUser() user: AuthenticatedUser,
   ): Promise<{ session: StudySession | null; userId: string }> {
-    const session = await this.studySessionService.getActiveSession(user.userId);
+    const session = await this.studySessionService.getActiveSession(
+      user.userId,
+    );
 
     return { session, userId: user.userId };
   }
@@ -93,4 +92,3 @@ export class StudySessionController {
     return { success: true };
   }
 }
-

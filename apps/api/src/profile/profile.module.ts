@@ -10,4 +10,3 @@ import { DbModule } from '../db/db.module';
   exports: [ProfileService],
 })
 export class ProfileModule {}
-

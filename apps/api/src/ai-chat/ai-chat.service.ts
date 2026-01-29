@@ -1,4 +1,8 @@
-import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+} from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { GeminiService } from 'src/gemini/gemini.service';
 
@@ -184,12 +188,18 @@ export class AiChatService {
 
     // Build context from files and subject
     const fileContext = await this.getFileContext(userId, context?.fileIds);
-    const subjectContext = await this.getSubjectContext(userId, context?.subjectId);
+    const subjectContext = await this.getSubjectContext(
+      userId,
+      context?.subjectId,
+    );
 
     // Build conversation for the AI
     const conversationParts = conversationHistory
       .slice(-10) // Keep last 10 messages for context
-      .map((msg) => `${msg.role === 'user' ? 'Student' : 'Assistant'}: ${msg.content}`)
+      .map(
+        (msg) =>
+          `${msg.role === 'user' ? 'Student' : 'Assistant'}: ${msg.content}`,
+      )
       .join('\n\n');
 
     let effectiveSystemPrompt = SYSTEM_PROMPT;
@@ -212,10 +222,11 @@ Please provide a helpful, accurate, and educational response. If the question re
 
       // Generate suggested follow-up questions
       const followUpPrompt = `Based on this conversation about "${message}", suggest 3 brief follow-up questions the student might want to ask. Return only the questions, one per line, no numbering.`;
-      
+
       let suggestedFollowUps: string[] = [];
       try {
-        const followUps = await this.geminiService.generateContent(followUpPrompt);
+        const followUps =
+          await this.geminiService.generateContent(followUpPrompt);
         suggestedFollowUps = followUps
           .split('\n')
           .map((q) => q.trim())
@@ -228,7 +239,9 @@ Please provide a helpful, accurate, and educational response. If the question re
       return { response, suggestedFollowUps };
     } catch (error) {
       console.error('AI Chat error:', error);
-      throw new BadRequestException('Failed to generate response. Please try again.');
+      throw new BadRequestException(
+        'Failed to generate response. Please try again.',
+      );
     }
   }
 
@@ -240,8 +253,11 @@ Please provide a helpful, accurate, and educational response. If the question re
     concept: string,
     context?: ChatContext,
   ): Promise<string> {
-    const subjectContext = await this.getSubjectContext(userId, context?.subjectId);
-    
+    const subjectContext = await this.getSubjectContext(
+      userId,
+      context?.subjectId,
+    );
+
     const prompt = `${SYSTEM_PROMPT}
 ${subjectContext}
 
@@ -267,8 +283,11 @@ Keep the explanation focused and exam-ready.`;
     count: number = 5,
     context?: ChatContext,
   ): Promise<{ questions: Array<{ question: string; answer: string }> }> {
-    const subjectContext = await this.getSubjectContext(userId, context?.subjectId);
-    
+    const subjectContext = await this.getSubjectContext(
+      userId,
+      context?.subjectId,
+    );
+
     const prompt = `${SYSTEM_PROMPT}
 ${subjectContext}
 
@@ -284,7 +303,7 @@ Format as JSON array:
 Focus on concepts likely to appear in professional exams (CPA Board Exam, Bar Exam).`;
 
     const response = await this.geminiService.generateContent(prompt);
-    
+
     try {
       // Extract JSON from response
       const jsonMatch = response.match(/\[[\s\S]*\]/);
@@ -294,7 +313,7 @@ Focus on concepts likely to appear in professional exams (CPA Board Exam, Bar Ex
     } catch {
       // If parsing fails, return empty
     }
-    
+
     return { questions: [] };
   }
 
@@ -307,15 +326,17 @@ Focus on concepts likely to appear in professional exams (CPA Board Exam, Bar Ex
     style: 'brief' | 'detailed' | 'exam-focused' = 'exam-focused',
   ): Promise<string> {
     const fileContext = await this.getFileContext(userId, fileIds);
-    
+
     if (!fileContext) {
       throw new BadRequestException('No content found in the selected files.');
     }
 
     const styleInstructions = {
       brief: 'Provide a brief summary highlighting the main points.',
-      detailed: 'Provide a comprehensive summary covering all important details.',
-      'exam-focused': 'Provide an exam-focused summary highlighting key concepts, formulas, and points likely to be tested.',
+      detailed:
+        'Provide a comprehensive summary covering all important details.',
+      'exam-focused':
+        'Provide an exam-focused summary highlighting key concepts, formulas, and points likely to be tested.',
     };
 
     const prompt = `${SYSTEM_PROMPT}
@@ -397,7 +418,11 @@ Structure the summary with clear headings and bullet points for easy review.`;
   /**
    * Update conversation title
    */
-  async updateConversationTitle(userId: string, conversationId: number, title: string) {
+  async updateConversationTitle(
+    userId: string,
+    conversationId: number,
+    title: string,
+  ) {
     const existing = await this.dbService.chatConversation.findFirst({
       where: { id: conversationId, userId },
     });
@@ -485,7 +510,9 @@ Structure the summary with clear headings and bullet points for easy review.`;
     });
 
     // Convert DB messages to chat format
-    const conversationHistory: ChatMessage[] = (conversation.messages || []).map((msg) => ({
+    const conversationHistory: ChatMessage[] = (
+      conversation.messages || []
+    ).map((msg) => ({
       role: msg.role.toLowerCase() as 'user' | 'assistant',
       content: msg.content,
       timestamp: msg.createdAt,

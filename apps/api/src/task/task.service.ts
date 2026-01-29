@@ -52,7 +52,11 @@ export class TaskService {
     return newTask;
   }
 
-  async updateTaskStatus(id: number, status: TaskStatusEnum, userId: string): Promise<Task> {
+  async updateTaskStatus(
+    id: number,
+    status: TaskStatusEnum,
+    userId: string,
+  ): Promise<Task> {
     try {
       // Verify ownership
       const task = await this.dbService.task.findFirst({
@@ -60,7 +64,9 @@ export class TaskService {
       });
 
       if (!task) {
-        throw new BadRequestException('Task not found or you do not have permission to update it.');
+        throw new BadRequestException(
+          'Task not found or you do not have permission to update it.',
+        );
       }
 
       const updatedTask = await this.dbService.task.update({
@@ -80,7 +86,11 @@ export class TaskService {
     }
   }
 
-  async updateTask(id: number, updateTaskDto: CreateTaskDTO, userId: string): Promise<Task> {
+  async updateTask(
+    id: number,
+    updateTaskDto: CreateTaskDTO,
+    userId: string,
+  ): Promise<Task> {
     const { deadline, status, title, description, subject } = updateTaskDto;
 
     if (!updateTaskDto) {
@@ -94,7 +104,9 @@ export class TaskService {
       });
 
       if (!task) {
-        throw new BadRequestException('Task not found or you do not have permission to update it.');
+        throw new BadRequestException(
+          'Task not found or you do not have permission to update it.',
+        );
       }
 
       const updatedTask = await this.dbService.task.update({
@@ -122,17 +134,16 @@ export class TaskService {
       });
 
       if (!task) {
-        throw new BadRequestException('Task not found or you do not have permission to delete it.');
+        throw new BadRequestException(
+          'Task not found or you do not have permission to delete it.',
+        );
       }
 
       await this.dbService.task.delete({
         where: { id },
       });
     } catch (error) {
-      console.error(
-        'There is an error while attempting to delete task',
-        error,
-      );
+      console.error('There is an error while attempting to delete task', error);
       throw new BadRequestException(
         'There is an error while attempting to delete task',
       );

@@ -139,10 +139,7 @@ export class CalendarService {
     });
   }
 
-  async getEventsForDate(
-    userId: string,
-    date: Date,
-  ): Promise<CalendarEvent[]> {
+  async getEventsForDate(userId: string, date: Date): Promise<CalendarEvent[]> {
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
 
@@ -152,4 +149,3 @@ export class CalendarService {
     return this.getCalendarEvents(userId, startOfDay, endOfDay);
   }
 }
-

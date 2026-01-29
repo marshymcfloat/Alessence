@@ -7,4 +7,3 @@ import { DbModule } from 'src/db/db.module';
   controllers: [HealthController],
 })
 export class HealthModule {}
-

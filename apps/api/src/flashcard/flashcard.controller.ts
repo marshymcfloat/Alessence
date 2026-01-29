@@ -20,11 +20,7 @@ import {
 } from '@repo/types/nest';
 import { GetUser } from 'src/auth/decorator/get-user.decorator';
 import type { AuthenticatedUser } from 'src/auth/decorator/get-user.decorator';
-import {
-  FlashcardDeck,
-  Flashcard,
-  FlashcardReview,
-} from '@repo/db';
+import { FlashcardDeck, Flashcard, FlashcardReview } from '@repo/db';
 
 @Controller('flashcard')
 export class FlashcardController {
@@ -215,4 +211,3 @@ export class FlashcardController {
     return { cards, userId: user.userId };
   }
 }
-

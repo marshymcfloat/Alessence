@@ -10,4 +10,3 @@ import { DbModule } from 'src/db/db.module';
   exports: [FriendshipService],
 })
 export class FriendshipModule {}
-

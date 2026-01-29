@@ -11,4 +11,3 @@ import { GeminiModule } from 'src/gemini/gemini.module';
   exports: [LawService],
 })
 export class LawModule {}
-

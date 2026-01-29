@@ -27,7 +27,10 @@ export class SubjectController {
     @Body() createSubjectDTO: CreateSubjectDTO,
     @GetUser() user: AuthenticatedUser,
   ): Promise<CreateNewSubjectReturnType> {
-    const newSubject = await this.subjectService.create(createSubjectDTO, user.userId);
+    const newSubject = await this.subjectService.create(
+      createSubjectDTO,
+      user.userId,
+    );
 
     const userId = user.userId;
     return { newSubject, userId };

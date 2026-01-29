@@ -66,4 +66,3 @@ export class SummaryController {
     return this.summaryService.remove(id, user.userId);
   }
 }
-

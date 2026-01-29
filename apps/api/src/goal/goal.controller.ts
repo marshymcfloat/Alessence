@@ -95,4 +95,3 @@ export class GoalController {
     return { success: true };
   }
 }
-

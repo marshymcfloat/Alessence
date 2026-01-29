@@ -77,4 +77,3 @@ export class NoteController {
     return { success: true };
   }
 }
-

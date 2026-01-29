@@ -1,4 +1,9 @@
-import { Injectable, BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { AttemptStatusEnum } from '@repo/db';
 import { GeminiService } from 'src/gemini/gemini.service';
@@ -70,7 +75,9 @@ export class ExamAttemptService {
     });
 
     if (!exam) {
-      throw new NotFoundException('Exam not found or you do not have access to it.');
+      throw new NotFoundException(
+        'Exam not found or you do not have access to it.',
+      );
     }
 
     if (exam.status !== 'READY') {
@@ -169,7 +176,9 @@ export class ExamAttemptService {
     });
 
     if (!attempt) {
-      throw new NotFoundException('Attempt not found or you do not have access to it.');
+      throw new NotFoundException(
+        'Attempt not found or you do not have access to it.',
+      );
     }
 
     if (attempt.status === AttemptStatusEnum.COMPLETED) {
@@ -186,14 +195,14 @@ export class ExamAttemptService {
       const timeLimitSeconds = attempt.exam.timeLimit * 60;
       if (timeTaken > timeLimitSeconds + 10) {
         // Allow 10 seconds grace period
-        throw new BadRequestException('Time limit exceeded. Your attempt has been invalidated.');
+        throw new BadRequestException(
+          'Time limit exceeded. Your attempt has been invalidated.',
+        );
       }
     }
 
     // Create a map of questions for quick lookup
-    const questionMap = new Map(
-      attempt.exam.questions.map((q) => [q.id, q]),
-    );
+    const questionMap = new Map(attempt.exam.questions.map((q) => [q.id, q]));
 
     // Evaluate answers
     const evaluatedAnswers = await Promise.all(
@@ -217,7 +226,9 @@ export class ExamAttemptService {
         // Update Topic Mastery if topic is linked
         if (question.topicId) {
           // Fire and forget - don't block
-          this.progressService.updateTopicMastery(userId, question.topicId, evaluation.isCorrect).catch(console.error);
+          this.progressService
+            .updateTopicMastery(userId, question.topicId, evaluation.isCorrect)
+            .catch(console.error);
         }
 
         return {
@@ -264,7 +275,7 @@ export class ExamAttemptService {
     // We do this after transaction to avoid locking or complex rollback on gamification failure
     try {
       await this.progressService.checkExamAchievements(userId, score);
-      
+
       // Update Subject Mastery
       // We need subjectId from exam
       if (attempt.exam.subjectId) {
@@ -350,4 +361,3 @@ export class ExamAttemptService {
     });
   }
 }
-

@@ -56,10 +56,7 @@ export class AiChatController {
    * Main chat endpoint
    */
   @Post('message')
-  chat(
-    @Body() dto: ChatDto,
-    @GetUser() user: AuthenticatedUser,
-  ) {
+  chat(@Body() dto: ChatDto, @GetUser() user: AuthenticatedUser) {
     return this.aiChatService.chat(
       user.userId,
       dto.message,
@@ -156,7 +153,11 @@ export class AiChatController {
     @Body() dto: UpdateTitleDto,
     @GetUser() user: AuthenticatedUser,
   ) {
-    return this.aiChatService.updateConversationTitle(user.userId, id, dto.title);
+    return this.aiChatService.updateConversationTitle(
+      user.userId,
+      id,
+      dto.title,
+    );
   }
 
   /**
@@ -186,4 +187,3 @@ export class AiChatController {
     );
   }
 }
-

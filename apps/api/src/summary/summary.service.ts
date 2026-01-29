@@ -29,7 +29,10 @@ export class SummaryService {
 
     if (newFiles && newFiles.length > 0) {
       const createdFiles =
-        await this.fileService.createMultipleFilesWithEmbeddings(newFiles, user.userId);
+        await this.fileService.createMultipleFilesWithEmbeddings(
+          newFiles,
+          user.userId,
+        );
       newFileIds = createdFiles.map((file) => file.id);
     }
 
@@ -90,7 +93,7 @@ export class SummaryService {
 
   async findOne(id: number, userId: string): Promise<Summary | null> {
     return this.dbService.summary.findFirst({
-      where: { 
+      where: {
         id,
         userId: userId, // Verify ownership
       },
@@ -118,7 +121,9 @@ export class SummaryService {
     });
 
     if (!summary) {
-      throw new Error('Summary not found or you do not have permission to delete it.');
+      throw new Error(
+        'Summary not found or you do not have permission to delete it.',
+      );
     }
 
     await this.dbService.summary.delete({
