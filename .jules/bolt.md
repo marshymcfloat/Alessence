@@ -18,3 +18,7 @@
 ## 2024-05-24 - [Parallelizing Independent Queries]
 **Learning:** `SearchService.searchAll` was executing 4 independent database queries sequentially, summing up their latencies.
 **Action:** Use `Promise.all` to execute independent queries in parallel, reducing total latency to the maximum of the individual query times.
+
+## 2025-05-27 - [N+1 Document Link Resolution]
+**Learning:** `getDocumentLinks` was iterating over links and fetching each target (File, Note, Topic) individually, causing N+1 queries.
+**Action:** Collected IDs by type and used `findMany` with `where: { id: { in: ids } }` and `Promise.all` to fetch all targets in 3 parallel queries. Used Maps for O(1) re-association.
