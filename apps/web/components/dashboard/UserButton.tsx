@@ -14,7 +14,8 @@ import { logoutAction, getCurrentUser } from "@/lib/actions/authActions";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter, useParams } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Avatar } from "../ui/avatar";
+import Image from "next/image";
 import { LoaderCircle } from "lucide-react";
 import type { SafeUser } from "@repo/types";
 
@@ -39,11 +40,16 @@ const UserButton = () => {
   const params = useParams();
   const userId = params.id as string;
   const [mounted, setMounted] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   // Ensure consistent rendering between server and client
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [userId]); // Reset error when user changes (though userId comes from params, better to track profilePicture if available in scope but simple reset on mount/param change is safe enough)
 
   const { data: userData, isLoading } = useQuery({
     queryKey: ["currentUser"],
@@ -87,16 +93,28 @@ const UserButton = () => {
     <DropdownMenu>
       <DropdownMenuTrigger className="cursor-pointer rounded-full outline-none transition-opacity hover:opacity-90">
         <Avatar className="size-9 border-2 border-white/50">
-          {showLoading ? (
-            <AvatarFallback className="bg-gray-200 dark:bg-gray-700">
+          {!mounted || isLoading ? (
+            <div className="bg-gray-200 dark:bg-gray-700 flex size-full items-center justify-center rounded-full">
               <LoaderCircle className="size-4 animate-spin" />
-            </AvatarFallback>
+            </div>
           ) : (
             <>
-              <AvatarImage src={profilePicture || undefined} alt={displayName} />
-              <AvatarFallback className="bg-gradient-to-br from-pink-500 to-purple-600 font-bold text-white">
-                {initials}
-              </AvatarFallback>
+              {profilePicture && !imageError ? (
+                <div className="relative size-full">
+                  <Image
+                    src={profilePicture}
+                    alt={displayName}
+                    fill
+                    sizes="36px"
+                    className="object-cover"
+                    onError={() => setImageError(true)}
+                  />
+                </div>
+              ) : (
+                <div className="bg-linear-to-br from-pink-500 to-purple-600 font-bold text-white flex size-full items-center justify-center rounded-full">
+                  {initials}
+                </div>
+              )}
             </>
           )}
         </Avatar>

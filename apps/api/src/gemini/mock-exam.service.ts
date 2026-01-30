@@ -17,7 +17,9 @@ export class MockExamGeminiService {
       throw new Error('GEMINI_API_KEY not found');
     }
     this.genAI = new GoogleGenerativeAI(apiKey);
-    this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    this.model = this.genAI.getGenerativeModel({
+      model: 'gemini-3-flash-preview',
+    });
   }
 
   async generateMockFinalsExam(

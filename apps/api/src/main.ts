@@ -8,7 +8,7 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3001;
   app.use(cookieParser());
   app.enableCors({ origin: [process.env.ORIGIN_URL], credentials: true });
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
   console.log(`🚀 Backend server is listening on port ${port}`);
 }
