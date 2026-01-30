@@ -4,11 +4,11 @@ import {
   ConflictException,
   Logger,
 } from '@nestjs/common';
-import { DbService } from 'src/db/db.service';
+import { DbService } from '../db/db.service';
 import { put } from '@vercel/blob';
 import { File, AcceptedFileType, DocumentLinkType } from '@repo/db';
 import { GoogleGenAI } from '@google/genai';
-import { GeminiService } from 'src/gemini/gemini.service';
+import { GeminiService } from '../gemini/gemini.service';
 
 import mammoth from 'mammoth';
 import { PDFParse } from 'pdf-parse';
@@ -316,45 +316,69 @@ export class FileService {
     });
 
     // Enrich links with target names
-    const enrichedLinks = await Promise.all(
-      links.map(async (link) => {
-        const isSource =
-          link.sourceType === DocumentLinkType.FILE && link.sourceId === fileId;
-        const linkedType = isSource ? link.targetType : link.sourceType;
-        const linkedId = isSource ? link.targetId : link.sourceId;
+    // Optimization: Collect IDs and fetch in bulk to avoid N+1 queries
+    const fileIds: number[] = [];
+    const noteIds: number[] = [];
+    const topicIds: number[] = [];
 
-        let linkedName = '';
-        switch (linkedType) {
-          case DocumentLinkType.FILE:
-            const file = await this.dbService.file.findUnique({
-              where: { id: linkedId },
-            });
-            linkedName = file?.name || 'Unknown File';
-            break;
-          case DocumentLinkType.NOTE:
-            const note = await this.dbService.note.findUnique({
-              where: { id: linkedId },
-            });
-            linkedName = note?.title || 'Unknown Note';
-            break;
-          case DocumentLinkType.TOPIC:
-            const topic = await this.dbService.topic.findUnique({
-              where: { id: linkedId },
-            });
-            linkedName = topic?.title || 'Unknown Topic';
-            break;
-          default:
-            linkedName = 'Unknown';
-        }
+    // Pre-process links to identify targets
+    const linksWithTargetInfo = links.map((link) => {
+      const isSource =
+        link.sourceType === DocumentLinkType.FILE && link.sourceId === fileId;
+      const linkedType = isSource ? link.targetType : link.sourceType;
+      const linkedId = isSource ? link.targetId : link.sourceId;
 
-        return {
-          ...link,
-          linkedType,
-          linkedId,
-          linkedName,
-        };
-      }),
-    );
+      if (linkedType === DocumentLinkType.FILE) fileIds.push(linkedId);
+      if (linkedType === DocumentLinkType.NOTE) noteIds.push(linkedId);
+      if (linkedType === DocumentLinkType.TOPIC) topicIds.push(linkedId);
+
+      return { ...link, linkedType, linkedId };
+    });
+
+    // Bulk fetch names using Promise.all for concurrency
+    const [files, notes, topics] = await Promise.all([
+      fileIds.length > 0
+        ? this.dbService.file.findMany({
+            where: { id: { in: fileIds } },
+            select: { id: true, name: true },
+          })
+        : Promise.resolve([] as { id: number; name: string }[]),
+      noteIds.length > 0
+        ? this.dbService.note.findMany({
+            where: { id: { in: noteIds } },
+            select: { id: true, title: true },
+          })
+        : Promise.resolve([] as { id: number; title: string }[]),
+      topicIds.length > 0
+        ? this.dbService.topic.findMany({
+            where: { id: { in: topicIds } },
+            select: { id: true, title: true },
+          })
+        : Promise.resolve([] as { id: number; title: string }[]),
+    ]);
+
+    // Create lookup maps for O(1) access
+    const fileMap = new Map(files.map((f) => [f.id, f.name]));
+    const noteMap = new Map(notes.map((n) => [n.id, n.title]));
+    const topicMap = new Map(topics.map((t) => [t.id, t.title]));
+
+    // Map names back to links
+    const enrichedLinks = linksWithTargetInfo.map((link) => {
+      let linkedName = 'Unknown';
+
+      if (link.linkedType === DocumentLinkType.FILE) {
+        linkedName = fileMap.get(link.linkedId) || 'Unknown File';
+      } else if (link.linkedType === DocumentLinkType.NOTE) {
+        linkedName = noteMap.get(link.linkedId) || 'Unknown Note';
+      } else if (link.linkedType === DocumentLinkType.TOPIC) {
+        linkedName = topicMap.get(link.linkedId) || 'Unknown Topic';
+      }
+
+      return {
+        ...link,
+        linkedName,
+      };
+    });
 
     return enrichedLinks;
   }
