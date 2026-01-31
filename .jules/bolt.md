@@ -22,3 +22,7 @@
 ## 2025-05-27 - [N+1 Document Link Resolution]
 **Learning:** `getDocumentLinks` was iterating over links and fetching each target (File, Note, Topic) individually, causing N+1 queries.
 **Action:** Collected IDs by type and used `findMany` with `where: { id: { in: ids } }` and `Promise.all` to fetch all targets in 3 parallel queries. Used Maps for O(1) re-association.
+
+## 2025-05-27 - [Frontend Data Caching]
+**Learning:** React Query defaults to `staleTime: 0`, causing `PerformanceDashboard` to refetch 6 independent analytics queries every time the user switches tabs, even though analytics data is slow-moving.
+**Action:** Always set a reasonable `staleTime` (e.g., 5 minutes) for dashboard/analytics components that do not require real-time updates. This significantly reduces network traffic and database load.
