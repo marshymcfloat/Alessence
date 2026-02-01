@@ -97,74 +97,45 @@ export class AnalyticsService {
   }
 
   async getSubjectPerformance(userId: string): Promise<SubjectPerformance[]> {
-    const attempts = await this.dbService.examAttempt.findMany({
-      where: {
-        userId,
-        status: AttemptStatusEnum.COMPLETED,
-        score: { not: null },
-      },
-      select: {
-        score: true,
-        exam: {
-          select: {
-            id: true,
-            subject: {
-              select: {
-                id: true,
-                title: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // Group by subject
-    const subjectMap = new Map<
-      number,
+    // Optimization: Use raw SQL to aggregate in DB instead of fetching all attempts
+    // This significantly reduces data transfer and memory usage for users with many attempts.
+    const results = await this.dbService.$queryRaw<
       {
         subjectId: number;
         subjectTitle: string;
-        scores: number[];
-        examIds: Set<number>;
-      }
-    >();
+        averageScore: number;
+        bestScore: number;
+        worstScore: number;
+        totalAttempts: number;
+        totalExams: number;
+      }[]
+    >`
+      SELECT
+        s."id" as "subjectId",
+        s."title" as "subjectTitle",
+        AVG(ea."score") as "averageScore",
+        MAX(ea."score") as "bestScore",
+        MIN(ea."score") as "worstScore",
+        COUNT(ea."id")::int as "totalAttempts",
+        COUNT(DISTINCT e."id")::int as "totalExams"
+      FROM "ExamAttempt" ea
+      JOIN "Exam" e ON ea."examId" = e."id"
+      JOIN "Subject" s ON e."subjectId" = s."id"
+      WHERE ea."userId" = ${userId}
+        AND ea."status" = ${AttemptStatusEnum.COMPLETED}::"AttemptStatusEnum"
+        AND ea."score" IS NOT NULL
+      GROUP BY s."id", s."title"
+    `;
 
-    attempts.forEach((attempt) => {
-      const subject = attempt.exam.subject;
-      if (!subject) return;
-
-      if (!subjectMap.has(subject.id)) {
-        subjectMap.set(subject.id, {
-          subjectId: subject.id,
-          subjectTitle: subject.title,
-          scores: [],
-          examIds: new Set(),
-        });
-      }
-
-      const data = subjectMap.get(subject.id)!;
-      data.scores.push(attempt.score!);
-      data.examIds.add(attempt.exam.id);
-    });
-
-    return Array.from(subjectMap.values()).map((data) => {
-      const scores = data.scores;
-      const averageScore =
-        scores.reduce((sum, score) => sum + score, 0) / scores.length;
-      const bestScore = Math.max(...scores);
-      const worstScore = Math.min(...scores);
-
-      return {
-        subjectId: data.subjectId,
-        subjectTitle: data.subjectTitle,
-        averageScore: Math.round(averageScore * 100) / 100,
-        totalExams: data.examIds.size,
-        totalAttempts: scores.length,
-        bestScore: Math.round(bestScore * 100) / 100,
-        worstScore: Math.round(worstScore * 100) / 100,
-      };
-    });
+    return results.map((result) => ({
+      subjectId: result.subjectId,
+      subjectTitle: result.subjectTitle,
+      averageScore: Math.round(result.averageScore * 100) / 100,
+      totalExams: result.totalExams,
+      totalAttempts: result.totalAttempts,
+      bestScore: Math.round(result.bestScore * 100) / 100,
+      worstScore: Math.round(result.worstScore * 100) / 100,
+    }));
   }
 
   async getStudyTimeAnalytics(

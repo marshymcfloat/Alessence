@@ -30,6 +30,7 @@ describe('AnalyticsService', () => {
     task: {
       findMany: jest.fn(),
     },
+    $queryRaw: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -45,6 +46,7 @@ describe('AnalyticsService', () => {
 
     service = module.get<AnalyticsService>(AnalyticsService);
     dbService = module.get<DbService>(DbService);
+    jest.clearAllMocks();
   });
 
   it('should be defined', () => {
@@ -86,29 +88,18 @@ describe('AnalyticsService', () => {
 
   describe('getSubjectPerformance', () => {
     it('should return subject performance', async () => {
-      const mockAttempts = [
+      const mockResult = [
         {
-          score: 80,
-          exam: {
-            id: 1,
-            subject: {
-              id: 101,
-              title: 'Math',
-            },
-          },
-        },
-        {
-          score: 90,
-          exam: {
-            id: 2,
-            subject: {
-              id: 101,
-              title: 'Math',
-            },
-          },
+          subjectId: 101,
+          subjectTitle: 'Math',
+          averageScore: 85,
+          bestScore: 90,
+          worstScore: 80,
+          totalAttempts: 2,
+          totalExams: 2,
         },
       ];
-      mockDbService.examAttempt.findMany.mockResolvedValue(mockAttempts);
+      mockDbService.$queryRaw.mockResolvedValue(mockResult);
 
       const result = await service.getSubjectPerformance('user1');
       expect(result).toEqual([
@@ -122,6 +113,7 @@ describe('AnalyticsService', () => {
           worstScore: 80,
         },
       ]);
+      expect(mockDbService.$queryRaw).toHaveBeenCalled();
     });
   });
 });
