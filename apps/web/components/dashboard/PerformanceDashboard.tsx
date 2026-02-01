@@ -34,31 +34,37 @@ export function PerformanceDashboard() {
   const { data: scoreTrends, isLoading: loadingTrends } = useQuery({
     queryKey: ["exam-score-trends", timeRange],
     queryFn: () => getExamScoreTrends(timeRange),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: subjectPerformance, isLoading: loadingPerformance } = useQuery({
     queryKey: ["subject-performance"],
     queryFn: getSubjectPerformance,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: studyTime, isLoading: loadingStudyTime } = useQuery({
     queryKey: ["study-time", timeRange],
     queryFn: () => getStudyTimeAnalytics(timeRange),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: taskCompletion, isLoading: loadingTasks } = useQuery({
     queryKey: ["task-completion", timeRange],
     queryFn: () => getTaskCompletionRates(timeRange),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: weakAreas, isLoading: loadingWeakAreas } = useQuery({
     queryKey: ["weak-areas"],
     queryFn: getWeakAreas,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: gamificationStats, isLoading: loadingStats } = useQuery({
     queryKey: ["gamification-stats"],
     queryFn: getGamificationStats,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const isLoading =
