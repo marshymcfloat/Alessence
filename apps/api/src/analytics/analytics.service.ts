@@ -146,42 +146,28 @@ export class AnalyticsService {
     startDate.setDate(startDate.getDate() - days);
     startDate.setHours(0, 0, 0, 0);
 
-    const sessions = await this.dbService.studySession.findMany({
-      where: {
-        userId: userId, // Only return sessions owned by this user
-        status: SessionStatusEnum.COMPLETED,
-        completedAt: { gte: startDate },
-        actualDuration: { not: null },
-      },
-      orderBy: {
-        completedAt: 'asc',
-      },
-    });
+    // Optimization: Use raw SQL to aggregate in DB instead of fetching all sessions
+    const results = await this.dbService.$queryRaw<
+      { date: Date; duration: number; count: number }[]
+    >`
+      SELECT
+        "completedAt"::date as "date",
+        SUM("actualDuration")::int as "duration",
+        COUNT(*)::int as "count"
+      FROM "StudySession"
+      WHERE "userId" = ${userId}
+        AND "status" = ${SessionStatusEnum.COMPLETED}::"SessionStatusEnum"
+        AND "completedAt" >= ${startDate}
+        AND "actualDuration" IS NOT NULL
+      GROUP BY "completedAt"::date
+      ORDER BY "completedAt"::date ASC
+    `;
 
-    // Group by date
-    const dateMap = new Map<string, { duration: number; count: number }>();
-
-    sessions.forEach((session) => {
-      if (!session.completedAt || !session.actualDuration) return;
-
-      const dateStr = session.completedAt.toISOString().split('T')[0];
-      if (!dateStr) return;
-      if (!dateMap.has(dateStr)) {
-        dateMap.set(dateStr, { duration: 0, count: 0 });
-      }
-
-      const data = dateMap.get(dateStr)!;
-      data.duration += session.actualDuration;
-      data.count += 1;
-    });
-
-    return Array.from(dateMap.entries())
-      .map(([date, data]) => ({
-        date,
-        duration: data.duration,
-        sessionCount: data.count,
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
+    return results.map((r) => ({
+      date: r.date.toISOString().split('T')[0],
+      duration: r.duration,
+      sessionCount: r.count,
+    }));
   }
 
   async getTaskCompletionRates(

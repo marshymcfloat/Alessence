@@ -121,10 +121,10 @@ export class ExamService {
     this.logger.log(`Handling 'exam.created' event for Exam [ID: ${exam.id}]`);
 
     try {
-      const examWithFiles = (await this.dbService.exam.findUniqueOrThrow({
+      const examWithFiles = await this.dbService.exam.findUniqueOrThrow({
         where: { id: exam.id },
         include: { sourceFiles: true },
-      })) as Exam & { sourceFiles: File[]; questionTypes: QuestionTypeEnum[] };
+      });
 
       const context = examWithFiles.sourceFiles
         .map((file) => file.contentText)
