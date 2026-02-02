@@ -1,7 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AnalyticsService } from './analytics.service';
 import { DbService } from '../db/db.service';
-import { AttemptStatusEnum } from '@repo/db';
 
 jest.mock(
   '@repo/db',
@@ -9,7 +8,7 @@ jest.mock(
     return {
       PrismaClient: class {},
       AttemptStatusEnum: { COMPLETED: 'COMPLETED' },
-      SessionStatusEnum: {},
+      SessionStatusEnum: { COMPLETED: 'COMPLETED' },
       TaskStatusEnum: {},
     };
   },
@@ -111,6 +110,29 @@ describe('AnalyticsService', () => {
           totalAttempts: 2,
           bestScore: 90,
           worstScore: 80,
+        },
+      ]);
+      expect(mockDbService.$queryRaw).toHaveBeenCalled();
+    });
+  });
+
+  describe('getStudyTimeAnalytics', () => {
+    it('should return study time analytics', async () => {
+      const mockResult = [
+        {
+          date: new Date('2024-01-01'),
+          duration: 5400,
+          count: 2,
+        },
+      ];
+      mockDbService.$queryRaw.mockResolvedValue(mockResult);
+
+      const result = await service.getStudyTimeAnalytics('user1');
+      expect(result).toEqual([
+        {
+          date: '2024-01-01',
+          duration: 5400,
+          sessionCount: 2,
         },
       ]);
       expect(mockDbService.$queryRaw).toHaveBeenCalled();

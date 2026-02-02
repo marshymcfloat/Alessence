@@ -139,10 +139,10 @@ export class SummaryService {
     );
 
     try {
-      const summaryWithFiles = (await this.dbService.summary.findUniqueOrThrow({
+      const summaryWithFiles = await this.dbService.summary.findUniqueOrThrow({
         where: { id: summary.id },
         include: { sourceFiles: true },
-      })) as Summary & { sourceFiles: File[] };
+      });
 
       if (
         !summaryWithFiles.sourceFiles ||
