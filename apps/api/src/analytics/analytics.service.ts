@@ -178,42 +178,27 @@ export class AnalyticsService {
     startDate.setDate(startDate.getDate() - days);
     startDate.setHours(0, 0, 0, 0);
 
-    const tasks = await this.dbService.task.findMany({
-      where: {
-        userId: userId, // Only return tasks owned by this user
-        createdAt: { gte: startDate },
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
-    });
+    // Optimization: Use raw SQL to aggregate in DB instead of fetching all tasks
+    const results = await this.dbService.$queryRaw<
+      { date: Date; total: number; completed: number }[]
+    >`
+      SELECT
+        "createdAt"::date as "date",
+        COUNT(*)::int as "total",
+        SUM(CASE WHEN "status" = ${TaskStatusEnum.DONE}::"TaskStatusEnum" THEN 1 ELSE 0 END)::int as "completed"
+      FROM "Task"
+      WHERE "userId" = ${userId}
+        AND "createdAt" >= ${startDate}
+      GROUP BY "createdAt"::date
+      ORDER BY "createdAt"::date ASC
+    `;
 
-    // Group by date
-    const dateMap = new Map<string, { completed: number; total: number }>();
-
-    tasks.forEach((task) => {
-      const dateStr = task.createdAt.toISOString().split('T')[0];
-      if (!dateStr) return;
-      if (!dateMap.has(dateStr)) {
-        dateMap.set(dateStr, { completed: 0, total: 0 });
-      }
-
-      const data = dateMap.get(dateStr)!;
-      data.total += 1;
-      if (task.status === TaskStatusEnum.DONE) {
-        data.completed += 1;
-      }
-    });
-
-    return Array.from(dateMap.entries())
-      .map(([date, data]) => ({
-        date,
-        completed: data.completed,
-        total: data.total,
-        completionRate:
-          data.total > 0 ? (data.completed / data.total) * 100 : 0,
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
+    return results.map((r) => ({
+      date: r.date.toISOString().split('T')[0],
+      completed: r.completed,
+      total: r.total,
+      completionRate: r.total > 0 ? (r.completed / r.total) * 100 : 0,
+    }));
   }
 
   async getWeakAreas(userId: string): Promise<WeakArea[]> {
