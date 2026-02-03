@@ -26,3 +26,7 @@
 ## 2025-05-27 - [Frontend Data Caching]
 **Learning:** React Query defaults to `staleTime: 0`, causing `PerformanceDashboard` to refetch 6 independent analytics queries every time the user switches tabs, even though analytics data is slow-moving.
 **Action:** Always set a reasonable `staleTime` (e.g., 5 minutes) for dashboard/analytics components that do not require real-time updates. This significantly reduces network traffic and database load.
+
+## 2024-05-24 - [Database Aggregation vs In-Memory Processing]
+**Learning:** `getTaskCompletionRates` was fetching all tasks for a user and iterating over them in Node.js to group and count. This is O(N) data transfer and memory usage.
+**Action:** Use `$queryRaw` with `GROUP BY` and `COUNT`/`SUM` aggregations to offload processing to the database, returning only the summary statistics (O(D) where D is days).

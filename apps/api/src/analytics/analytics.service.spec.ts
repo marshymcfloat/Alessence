@@ -9,7 +9,7 @@ jest.mock(
       PrismaClient: class {},
       AttemptStatusEnum: { COMPLETED: 'COMPLETED' },
       SessionStatusEnum: { COMPLETED: 'COMPLETED' },
-      TaskStatusEnum: {},
+      TaskStatusEnum: { DONE: 'DONE' },
     };
   },
   { virtual: true },
@@ -133,6 +133,30 @@ describe('AnalyticsService', () => {
           date: '2024-01-01',
           duration: 5400,
           sessionCount: 2,
+        },
+      ]);
+      expect(mockDbService.$queryRaw).toHaveBeenCalled();
+    });
+  });
+
+  describe('getTaskCompletionRates', () => {
+    it('should return task completion rates', async () => {
+      const mockResult = [
+        {
+          date: new Date('2024-01-01'),
+          total: 10,
+          completed: 5,
+        },
+      ];
+      mockDbService.$queryRaw.mockResolvedValue(mockResult);
+
+      const result = await service.getTaskCompletionRates('user1');
+      expect(result).toEqual([
+        {
+          date: '2024-01-01',
+          completed: 5,
+          total: 10,
+          completionRate: 50,
         },
       ]);
       expect(mockDbService.$queryRaw).toHaveBeenCalled();
