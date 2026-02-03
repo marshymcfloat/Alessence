@@ -164,7 +164,7 @@ export class AnalyticsService {
     `;
 
     return results.map((r) => ({
-      date: r.date.toISOString().split('T')[0],
+      date: r.date.toISOString().split('T')[0] ?? '',
       duration: r.duration,
       sessionCount: r.count,
     }));
@@ -194,7 +194,7 @@ export class AnalyticsService {
     `;
 
     return results.map((r) => ({
-      date: r.date.toISOString().split('T')[0],
+      date: r.date.toISOString().split('T')[0] ?? '',
       completed: r.completed,
       total: r.total,
       completionRate: r.total > 0 ? (r.completed / r.total) * 100 : 0,
