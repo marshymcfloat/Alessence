@@ -78,11 +78,9 @@ export function StudySessionHistory() {
     );
   }
 
-  const sessions = data.data.sessions.filter(
-    (s) => s.status === SessionStatusEnum.COMPLETED
-  );
+  const { sessions, totalCount, totalDuration } = data.data;
 
-  if (sessions.length === 0) {
+  if (totalCount === 0) {
     return (
       <Card className="p-6">
         <div className="text-center py-8">
@@ -97,11 +95,6 @@ export function StudySessionHistory() {
       </Card>
     );
   }
-
-  // Calculate total study time
-  const totalTime = sessions.reduce((acc, session) => {
-    return acc + (session.actualDuration || session.duration);
-  }, 0);
 
   // Group by date
   const sessionsByDate = sessions.reduce((acc, session) => {
@@ -125,11 +118,11 @@ export function StudySessionHistory() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-muted-foreground">Total Sessions</p>
-            <p className="text-2xl font-bold">{sessions.length}</p>
+            <p className="text-2xl font-bold">{totalCount}</p>
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Total Time</p>
-            <p className="text-2xl font-bold">{formatDuration(totalTime)}</p>
+            <p className="text-2xl font-bold">{formatDuration(totalDuration)}</p>
           </div>
         </div>
       </Card>

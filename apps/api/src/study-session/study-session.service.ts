@@ -3,9 +3,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { StudySession, SessionStatusEnum, SessionTypeEnum } from '@repo/db';
+import { StudySession, SessionStatusEnum } from '@repo/db';
 import { CreateStudySessionDTO, UpdateStudySessionDTO } from '@repo/types/nest';
-import { DbService } from 'src/db/db.service';
+import { DbService } from '../db/db.service';
 
 @Injectable()
 export class StudySessionService {
@@ -38,25 +38,49 @@ export class StudySessionService {
     return newSession;
   }
 
-  async getAll(userId: string): Promise<StudySession[]> {
-    const sessions = await this.dbService.studySession.findMany({
-      where: {
-        userId: userId, // Only return sessions owned by this user
-      },
-      include: {
-        subject: {
-          select: {
-            id: true,
-            title: true,
+  async getAll(userId: string): Promise<{
+    sessions: StudySession[];
+    totalCount: number;
+    totalDuration: number;
+  }> {
+    const [stats, sessions] = await Promise.all([
+      this.dbService.studySession.aggregate({
+        where: {
+          userId,
+          status: SessionStatusEnum.COMPLETED,
+        },
+        _count: {
+          id: true,
+        },
+        _sum: {
+          actualDuration: true,
+        },
+      }),
+      this.dbService.studySession.findMany({
+        where: {
+          userId,
+          status: SessionStatusEnum.COMPLETED,
+        },
+        include: {
+          subject: {
+            select: {
+              id: true,
+              title: true,
+            },
           },
         },
-      },
-      orderBy: {
-        startedAt: 'desc',
-      },
-    });
+        orderBy: {
+          startedAt: 'desc',
+        },
+        take: 100,
+      }),
+    ]);
 
-    return sessions;
+    return {
+      sessions,
+      totalCount: stats._count.id,
+      totalDuration: stats._sum.actualDuration || 0,
+    };
   }
 
   async getById(id: number, userId: string): Promise<StudySession> {
