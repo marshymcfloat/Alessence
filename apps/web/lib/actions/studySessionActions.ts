@@ -60,7 +60,12 @@ export async function createStudySessionAction(
 }
 
 export async function getAllStudySessions(): Promise<
-  ActionReturnType<{ sessions: StudySession[]; userId: string }>
+  ActionReturnType<{
+    sessions: StudySession[];
+    userId: string;
+    totalCount: number;
+    totalDuration: number;
+  }>
 > {
   try {
     const cookieHeader = await cookies();
@@ -82,8 +87,12 @@ export async function getAllStudySessions(): Promise<
       }
     );
 
-    const data: { sessions: StudySession[]; userId: string } =
-      await response.json();
+    const data: {
+      sessions: StudySession[];
+      userId: string;
+      totalCount: number;
+      totalDuration: number;
+    } = await response.json();
 
     if (!response.ok) {
       return {

@@ -21,12 +21,16 @@ export class StudySessionController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get()
-  async getAll(
-    @GetUser() user: AuthenticatedUser,
-  ): Promise<{ sessions: StudySession[]; userId: string }> {
-    const sessions = await this.studySessionService.getAll(user.userId);
+  async getAll(@GetUser() user: AuthenticatedUser): Promise<{
+    sessions: StudySession[];
+    userId: string;
+    totalCount: number;
+    totalDuration: number;
+  }> {
+    const { sessions, totalCount, totalDuration } =
+      await this.studySessionService.getAll(user.userId);
 
-    return { sessions, userId: user.userId };
+    return { sessions, userId: user.userId, totalCount, totalDuration };
   }
 
   @UseGuards(AuthGuard('jwt'))

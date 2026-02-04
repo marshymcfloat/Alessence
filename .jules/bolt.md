@@ -30,3 +30,7 @@
 ## 2024-05-24 - [Database Aggregation vs In-Memory Processing]
 **Learning:** `getTaskCompletionRates` was fetching all tasks for a user and iterating over them in Node.js to group and count. This is O(N) data transfer and memory usage.
 **Action:** Use `$queryRaw` with `GROUP BY` and `COUNT`/`SUM` aggregations to offload processing to the database, returning only the summary statistics (O(D) where D is days).
+
+## 2025-05-27 - [Optimizing Study Session History]
+**Learning:** `StudySessionService.getAll` was fetching the entire session history (potential thousands of records) just to display the last 7 days and calculate a total count/duration. This is O(N) transfer and O(N) client-side processing.
+**Action:** Split the operation into two parallel queries: one `findMany` limited to the latest 100 sessions for the UI list, and one `aggregate` query to calculate total count and duration in the database.
