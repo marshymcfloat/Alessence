@@ -1,9 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DbService } from 'src/db/db.service';
-import { FileService } from 'src/file/file.service';
-import { GeminiService } from 'src/gemini/gemini.service';
+import { DbService } from '../db/db.service';
+import { FileService } from '../file/file.service';
+import { GeminiService } from '../gemini/gemini.service';
 import { SummaryStatusEnum, SummaryTemplateEnum } from '@repo/db';
-import { AuthenticatedUser } from 'src/auth/decorator/get-user.decorator';
+import { AuthenticatedUser } from '../auth/decorator/get-user.decorator';
 import { CreateSummaryDto } from '@repo/types/nest';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import type { Summary, File } from '@repo/db';
@@ -66,12 +66,23 @@ export class SummaryService {
   }
 
   async findAll(userId: string, subjectId?: number): Promise<Summary[]> {
-    return this.dbService.summary.findMany({
+    // Optimization: Select only necessary fields, excluding the large 'content' field
+    const summaries = await this.dbService.summary.findMany({
       where: {
         userId: userId, // Only return summaries owned by this user
         ...(subjectId ? { subjectId } : {}),
       },
-      include: {
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        status: true,
+        template: true,
+        subjectId: true,
+        userId: true,
+        createdAt: true,
+        updatedAt: true,
+        // Exclude content to reduce payload size
         subject: {
           select: {
             id: true,
@@ -89,6 +100,8 @@ export class SummaryService {
         createdAt: 'desc',
       },
     });
+
+    return summaries as unknown as Summary[];
   }
 
   async findOne(id: number, userId: string): Promise<Summary | null> {
