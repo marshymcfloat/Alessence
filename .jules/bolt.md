@@ -34,3 +34,7 @@
 ## 2025-05-27 - [Optimizing Study Session History]
 **Learning:** `StudySessionService.getAll` was fetching the entire session history (potential thousands of records) just to display the last 7 days and calculate a total count/duration. This is O(N) transfer and O(N) client-side processing.
 **Action:** Split the operation into two parallel queries: one `findMany` limited to the latest 100 sessions for the UI list, and one `aggregate` query to calculate total count and duration in the database.
+
+## 2024-05-22 - [Optimizing List Payloads]
+**Learning:** Selecting all fields in a Prisma `findMany` query includes large text fields (like `content`) by default, which can significantly increase payload size and memory usage for list endpoints.
+**Action:** Use `select` to explicitly define only the necessary fields for list views, excluding large blobs. This is a high-impact, low-risk optimization.
