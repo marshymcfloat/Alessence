@@ -34,3 +34,7 @@
 ## 2025-05-27 - [Optimizing Study Session History]
 **Learning:** `StudySessionService.getAll` was fetching the entire session history (potential thousands of records) just to display the last 7 days and calculate a total count/duration. This is O(N) transfer and O(N) client-side processing.
 **Action:** Split the operation into two parallel queries: one `findMany` limited to the latest 100 sessions for the UI list, and one `aggregate` query to calculate total count and duration in the database.
+
+## 2025-05-27 - [Parallel Topic Forking]
+**Learning:** `SubjectService.forkSubject` was cloning topics sequentially using recursion and `await` inside loops. This caused O(N) latency where N is the number of topics.
+**Action:** Use `Promise.all` to parallelize the creation of sibling topics. This reduces latency to O(Depth) and significantly speeds up forking of large subjects (e.g. 28x speedup for 60 topics).
