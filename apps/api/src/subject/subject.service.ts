@@ -145,14 +145,14 @@ export class SubjectService {
       const children = systemTopics.filter(
         (t) => t.parentId === originalTopic.id,
       );
-      for (const child of children) {
-        await cloneTopicTree(child, newTopic.id);
-      }
+      // Parallelize processing of children
+      await Promise.all(
+        children.map((child) => cloneTopicTree(child, newTopic.id)),
+      );
     };
 
-    for (const root of rootTopics) {
-      await cloneTopicTree(root, null);
-    }
+    // Parallelize processing of root topics
+    await Promise.all(rootTopics.map((root) => cloneTopicTree(root, null)));
 
     return newSubject;
   }
